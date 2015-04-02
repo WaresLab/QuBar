@@ -109,12 +109,12 @@ Ways to summarize:
 ## Interactive, but adjusting the wrong thing?
 
 ```{r, echo=FALSE}
-maxindivs=5
+maxindivs=50
 library(plot3D)
-#Q = 10 # this is PRIOR information
+Q = 10 # this is PRIOR information
 maxn = min(5*Q,maxindivs) #above 70 this behaves funny???? OR IT MAY BE SOME MULTIPLE OF Q*maxn that is problem?
 
-obsvdk = Nsite
+#obsvdk = Nsite
 #maxk = 2*obsvdk #must be greater than obsvdk
 
 inputPanel(

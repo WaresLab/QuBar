@@ -27,7 +27,7 @@ When we use a standardized genetic marker to identify species from environmental
 
 ## Typically...
 
-Individual tissue/sample harvested, preserved, DNA isolated, PCR, sequencing, match via BLAST or similar algorithm
+Individual tissue/sample harvested, preserved, DNA isolated, PCR, sequencing, match via BLAST or similar algorithm. Requires a database of 'knowns' already, study only as good as prior knowledge can make it!
 
 <style type="text/css">
 img {     
@@ -71,7 +71,7 @@ img {
 
 Goal: environmental sample of organisms (pile of amphipods from an estuary; jar of cladocerans from Carolina Bay; gut contents of a fish), use standard barcode marker, identify what species are present...
 
-...and their relative abundance, with some reliability
+...and their relative abundance, with *some* reliability **without using frequency of amplicon sequences**
 
 <style type="text/css">
 img {     
@@ -84,8 +84,8 @@ img {
 
 ## What information?
 
-- may be able to gauge/estimate total # indivs (volume, count) as upper limit
-- within *closely* related taxa, PCR efficiency and/or volume may not vary as much
+- may be able to gauge/estimate total # indivs (volume, count) as **upper limit**
+- within *closely* related taxa, PCR efficiency and/or volume may not vary as much (so frequency not always useless)
 - **summary statistics from the sequence data?!**
 
 ## Summary statistics
@@ -106,7 +106,7 @@ Ways to summarize:
 > - the number of segregating sites, however, is **sample-size dependent** and ***not frequency dependent*** (it is just a number)
 
 
-## Interactive, but adjusting the wrong thing?
+## Probability of segregating sites for a sample size, given $\theta$
 
 ```{r, echo=FALSE}
 maxindivs=50
@@ -123,6 +123,8 @@ inputPanel(
   
   sliderInput("Nsite", label = "segregating sites:",
               min = 0, max = 20, value = 1, step = 1)
+  
+  
 )
 
 
@@ -167,7 +169,7 @@ for (n in 2:maxn) {
   
 }
   
-  hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=30,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35,main=paste((expression(theta))," = ",Qt))
+  hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=40,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35,main=paste((expression(theta))," = ",Qt))
 
 
 })
@@ -255,15 +257,15 @@ can be transformed into *true diversity*, or the effective number of haplotypes.
 
 $$ ^2D = (\sum\limits_{i=1}p_{i}^2)^{-1} = \frac{1}{\sum\limits_{i=1}p_{i}^2} $$ 
 
-close but no, that isn't it. (Shannon diversity *has* been used instead of Haplotype diversity, but they are not equivalent)...do we need to use haplotype diversity or can we simply use True Diversity on haplotype counts?
+close but no, that isn't it. (Shannon diversity *has* been used instead of Haplotype diversity, but they are not exactly equivalent)...do we need to use haplotype diversity or can we simply use True Diversity on haplotype counts?
 
-## Stuff to Look at
+## Doesn't matter which
 
+We are still dealing with how to handle, probabilistically, the number of individuals that went into our observation *given* the prior information about system
 
-![picture of sherwin paper](images/sherwin.jpg)
+<div class="centered">
+![wipeboard](images/whiteplot.jpg)
 </div>
-
-CRAN package 'entropart' looks like a package that can let me play with how to work with True Diversity
 
 # Another trick | much to learn
 

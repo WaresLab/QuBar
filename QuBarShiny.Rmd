@@ -42,9 +42,22 @@ img {
 
 ## Problems?
 
-> - Imagine a microbe (bacterium). They are probably all the same size, more or less. They may (individual) have varying copies of the 16S gene (picante.R), and substitutions in the primer site affect PCR efficiency. 
+> - Imagine a microbe (bacterium). They are probably all the same size, more or less...? 
 
-> - But we use such data routinely (QIIME) to represent the relative abundance of microbial taxa!
+> - They may (individual) have varying copy number of the 16S gene (see picante.R), and substitutions in the primer site affect PCR efficiency...! 
+
+> - But we use such data routinely (e.g. QIIME) to represent the relative abundance of microbial taxa!
+
+<style type="text/css">
+img {     
+  max-height: 400px;     
+  max-width: 964px; 
+}
+</style>
+ 
+<div class="centered">
+![picture of cardinal](images/coralbugs.jpg)
+</div>
 
 
 # Now - think of small metazoans, eukaryotes...
@@ -67,12 +80,12 @@ img {
 
 
 
-## So lots of error. Almost useless other than presence/absence?
+## Potentially massive error. Almost useless other than presence/absence?
 
-- variable volume of individual
-- variable PCR efficiency
-- we are left with qPCR approaches to identify 'presence'...
-- or mixed environmental samples where abundance is unreliable!
+> - variable volume of individual (2 equal abundant species, one 2x the volume...)
+> - variable PCR efficiency (can cause orders of magnitude error)
+> - we are left with qPCR approaches to identify 'presence'...
+> - or mixed environmental samples where abundance is unreliable!
 
 ## Quantitative Barcoding (QuBar)
 
@@ -86,9 +99,9 @@ img {
   max-width: 964px; 
 }
 </style>
-
+<div class="centered">
 ![different plot](images/Rank_abundance_beetles.png)
-
+</div>
 ## What information?
 
 - may be able to gauge/estimate total # indivs (volume, count) as **upper limit**
@@ -104,7 +117,9 @@ Ways to summarize:
 > - how many unique haplotypes? haplotype diversity?
 > - how many variable/segregating sites in the alignment? (S)
 > - average pairwise differences ($\pi$)
-> - S, $\pi$ are estimators of the almighty $\theta$, population mutation rate :)
+> - S, $\pi$ are estimators of the almighty <div class="red2">  $\theta$ </div> the 'population mutation rate'
+
+
 
 ## Population mutation rate and DIVERSITY
 
@@ -181,6 +196,11 @@ for (n in 2:maxn) {
 
 })
 ```
+
+## Example from *Notochthamalus*
+
+Actual data file, estimate of theta for Noto is ~10, actual number sequences collected is (from data), sum stats from this sample includes blah, and reconstructed distribution then is...
+
 
 ## Hap Diversity
 

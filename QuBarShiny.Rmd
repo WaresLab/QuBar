@@ -46,7 +46,10 @@ img {
 
 > - But we use such data routinely (QIIME) to represent the relative abundance of microbial taxa!
 
-> - Now imagine small metazoans...
+
+# Now - think of small metazoans, eukaryotes...
+
+## 
 
 <style type="text/css">
 img {     
@@ -56,8 +59,12 @@ img {
 </style>
 <div class="centered">
 
-![picture of amphipod](images/amphi.jpg)
+![picture of amphipod](images/NotoJehl.jpg)
+![picture of worm](images/Spirobrancheus_giganteus.jpg)
+![picture of amphipod](images/amph2.jpg)
+
 </div>
+
 
 
 ## So lots of error. Almost useless other than presence/absence?
@@ -90,7 +97,7 @@ img {
 
 ## Summary statistics
 
-Collect buckets of DNA sequence data, align them to each other, that is a lot of information
+Collect related DNA sequence data, align them to each other, that is a lot of information
 
 Ways to summarize:
 

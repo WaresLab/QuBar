@@ -130,7 +130,7 @@ Ways to summarize:
 
 ## Probability of segregating sites for a sample size, given $\theta$
 
-```{r, echo=FALSE}
+```{r 3dchunk, echo=FALSE}
 maxindivs=50
 library(plot3D)
 Q = 10 # this is PRIOR information
@@ -340,14 +340,14 @@ We are still dealing with how to handle, probabilistically, the number of indivi
 
 ## Test THETA against DATA
 
-```{r nextfig, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
-#  print(obsvd) #now would be easy to print 95% HPD of obsvd, so for given theta and k this is the distribution of n
+```{r nextfig, ref.label='3dchunk',echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
+#print(obsvd) #now would be easy to print 95% HPD of obsvd, so for given theta and k this is the distribution of n
 
-# SOMEHOW YOU HAVE BROKEN 'OBSVD' FROM THE _MAR6.RMD FILE, FIX THIS NEXT...
+# hmmm doesn't print anything
 
-#  plot(obsvd,xlab="n",ylab="P(n|k)",ylim=c(0,0.15),main=paste("for K =",obsvdk, "and theta =",Q,"in black; for hapdiv in red"))
-#points(probs[,1],probs[,3],col='red')
-#abline(v=actual)
+plot(obsvd,xlab="n",ylab="P(n|k)",ylim=c(0,0.15),main=paste("for K =",obsvdk, "and theta =",Q,"in black; for hapdiv in red"))
+points(probs[,1],probs[,3],col='red')
+abline(v=actual)
 
 
 ```

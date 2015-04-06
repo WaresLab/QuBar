@@ -199,7 +199,51 @@ for (n in 2:maxn) {
 
 ## Example from *Notochthamalus*
 
-Actual data file, estimate of theta for Noto is ~10, actual number sequences collected is (from data), sum stats from this sample includes blah, and reconstructed distribution then is...
+```{r NotoPrior, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
+# rough estimates from Zakas Q is 10, hapdiv is 0.7
+# grabbing a file from Geneious....
+library(PopGenome)
+file<-readData("FastaSeqs") # actual sample size here is 20. That is the number I'd like to come out...AND, TO AN EXTENT, IT IS AT LEAST IN THE INTERVALS FOR BOTH...
+#actual<-20
+file@n.sites
+basic<-diversity.stats(file)
+Hapdiv<-basic@hap.diversity.within #haplotype diversity
+
+Nsite<-basic@n.biallelic.sites #number of seg sites taht are biallelic, for now assume ISM
+more<-basic@n.polyallelic.sites
+varsite<-Nsite+more
+
+filehaps <- F_ST.stats(file,mode="haplotype",only.haplotype.counts=TRUE)
+haplotypecounts <- filehaps@region.stats@haplotype.counts
+# this is helpful https://github.com/cran/PopGenome/blob/master/vignettes/Integration_of_new_Methods.Rnw 
+
+########
+
+#install.packages("entropart")
+library(entropart)
+#need frequencies of haplotypes reported from PopGenome so you can use entropart to get 2D
+hapfreq<-unlist(haplotypecounts)
+actual<-sum(hapfreq)
+hapfreq<-hapfreq/actual
+numhaps<-length(hapfreq)
+
+Simp<-expq(Simpson(Ps=hapfreq),q=2)
+Gini<-1-(1/Simp)
+
+# Watterson estimator of theta
+harm=0
+for (n in 1:(actual-1)){
+  harm=harm+1/n
+}
+
+QW <- varsite/harm
+
+```
+
+Evaluating a sample of sequences from the barnacle *Notochthamalus scabrosus*, where `r actual` individuals were haphazardly sampled from the data of Laughlin et al. [-@Laugh12], we see that these data would traditionally report haplotype diversity *H* of `r Hapdiv`, from `r numhaps` observed haplotypes (most dominant haplotype at frequency `r max(hapfreq)`), and in this instance the Gini-Simpson index is equal to `r Gini`. Now we have another statistic that can be calculated from previous data on the population, that focuses on the number of dominant haplotypes. Here, the inverse Simpson index $^2D$ is `r Simp`, the effective number of haplotypes in the system.
+
+# n.b. all numbers on previous slide automatically generated. change data set, numbers will automatically respond. thanks R!
+
 
 
 ## Hap Diversity
@@ -293,6 +337,22 @@ We are still dealing with how to handle, probabilistically, the number of indivi
 <div class="centered">
 ![wipeboard](images/whiteplot.jpg)
 </div>
+
+## Test THETA against DATA
+
+```{r nextfig, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
+#  print(obsvd) #now would be easy to print 95% HPD of obsvd, so for given theta and k this is the distribution of n
+
+# SOMEHOW YOU HAVE BROKEN 'OBSVD' FROM THE _MAR6.RMD FILE, FIX THIS NEXT...
+
+#  plot(obsvd,xlab="n",ylab="P(n|k)",ylim=c(0,0.15),main=paste("for K =",obsvdk, "and theta =",Q,"in black; for hapdiv in red"))
+#points(probs[,1],probs[,3],col='red')
+#abline(v=actual)
+
+
+```
+
+Remember that the input data for this single taxon included `r actual` individuals, the vertical line in plot above. 
 
 # Another trick | much to learn
 

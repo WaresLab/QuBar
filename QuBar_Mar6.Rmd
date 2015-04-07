@@ -33,6 +33,7 @@ Here we present the mathematical considerations necessary to develop these quant
 maxindivs=200
 ```
 
+
 The approach here is identifying information that can comfortably be used as prior information to establish the posterior probability of observing polymorphism data from an *unknown* number of input individuals for a taxon. Some information is clearly limiting: for example, if it is known that only about `r maxindivs` individual specimens were originally used for isolation of DNA, then the maximum number of total individuals recovered from this approach should be about `r maxindivs`. This is perhaps not exciting numerical advance in biology, but limits our prior belief nonetheless.
 
 ```{r hapdiv, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
@@ -175,35 +176,6 @@ for (n in 2:maxn) {
 hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=30,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35,main=paste((expression(theta))," = ",Q))
 
 ```
-
-
-```{r test for simulating data, eval=FALSE}
-library(PopGenome)
-
-# better help for the MS function
-# http://www.inside-r.org/packages/cran/PopGenome/docs/MS
-
-# load data
-file<-readData("FastaSeqs")
-
-# we apply the neutrality stats and with that output we run simulations
-file<-neutrality.stats(file,list(1:6))
-
-# this one gives a funny error
-ms.file <- MS(file, thetaID="Tajima", neutrality=TRUE)
-
-# this one appears to work but give an error with some path ¿?
-ms.file <- MS(file,,thetaID="Tajima",neutrality=TRUE,               MSMS="-N 1000 -SAA 200 -SaA 100 -SF 1e-2")
-
-# we can extract (when the previous thing works..) the simulated Tajima's D values
-MS.get.stats(ms.file)
-
-# NOTE!The executable file ms has to be stored in the current workspace. If you want to use the MSMS application, put the msms folder including the corresponding executable files in the current workspace.Both programs can be obtained from their websites (see references).
-
-# SO it looks like we need to download the software to our folder... and maybe that is why the function doesn't work yet. I'll check tomorrow.
-
-```
-
 
 ##Results
 

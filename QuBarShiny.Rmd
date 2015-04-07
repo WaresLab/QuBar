@@ -5,6 +5,8 @@ runtime: shiny
 output: ioslides_presentation
 ---
 
+# coin flip
+
 ## Barcoding
 
 <style type="text/css">
@@ -354,7 +356,6 @@ abline(v=actual)
 
 Remember that the input data for this single taxon included `r actual` individuals, the vertical line in plot above. 
 
-# Another trick | much to learn
 
 
 
@@ -364,6 +365,14 @@ Remember that the input data for this single taxon included `r actual` individua
 > - power/potential of some form of diversity of haplotypes, which appears to have greatest power to estimate *n* when high haplotype diversity (e.g., observed # haps likely closer to # individuals)
 > - overall high diversity and limited sample size may be best because cap on *n* (if I know ~200 total indivs in sample, n_i must be <200), # haplotypes puts minimum on *n*
 
+## Together with...
+
+<div class="centered">
+![paula](images/PAULA.JPG)
+</div>
+
+Paula Pappalardo!
+See Evernote figure for where this is going - actively coding (we are becoming fluent in .Rmd, git, more fun ways to talk like nerds)
 
 ## More Thoughts
 

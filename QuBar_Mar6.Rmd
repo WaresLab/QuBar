@@ -233,7 +233,7 @@ write.fasta(data.seqs.easy$org,"simSequences.fas")
 
 ```
 
-We simulated sequences data for 200 individuals using the combined approach ms [@Hudson2002] plus seq-gen [@Rambaut1997] implemented in the *phyclust* package [@Chen2011] of the R program [@RCoreTeam2013]. The ms function is used to simulate trees in a population that evolves under a Wrigth-Fisher model, and the seqgen function is used to generate the nucleotide sequences according to those/the tree/s.
+We simulated sequences data for 200 individuals using the combined approach ms [@Hudson2002] plus seq-gen [@Rambaut1997] implemented in the *phyclust* package [@Chen2011] of the R program [@RCoreTeam2013]. The ms() function is used to simulate trees in a population that evolves under a Wrigth-Fisher model, and the seqgen() function is used to generate the nucleotide sequences according to those/the tree/s. We simulated sequences for different levels of mutation rate ($\theta$) and saved the  sequences in fasta files representing our "original" populations. 
 
 ```{r simulating datasets with differents thetha,eval=FALSE}
 library(phyclust)
@@ -244,20 +244,85 @@ theta<-c(1:10)
 
 # Loop in theta, simulate sequences and save in fasta file
 for (i in theta){
-  # first, simulate tree
-  set.seed(1234)
-  tree<-ms(nsam=200, nreps=1, opts= "-T -t theta")
-  simtree<-read.tree(text=tree[3])
-  # second, generate 200 sequences with a length of 600 bp
-  set.seed(1234)
-  seqs<-seqgen(opts= "-mHKY -l600 -q", rooted.tree=simtree)
-  # third, read and save the simulated sequences
-  seqs.easy<-read.seqgen(seqs)
-  filename<-paste("simSeq",i,".fas",sep="")
-  write.fasta(seqs.easy$org,filename)
-  }
+    print(paste('Working in theta',i))
+    # first, simulate tree
+      set.seed(1234)
+      tree<-ms(nsam=20, nreps=1, opts= "-T -t i")
+      simtree<-read.tree(text=tree[3])
+    # second, generate 200 sequences with a length of 600 bp
+      set.seed(1234)
+      seqs<-seqgen(opts= "-mHKY -l600 -q", rooted.tree=simtree)
+    # third, read and save the simulated sequences
+      seqs.easy<-read.seqgen(seqs)
+      filename<-paste("simSeq",i,".fas",sep="")
+      write.fasta(seqs.easy$org,filename)
+    }
+
+# Ok, the loop looks nice but it doesn't work, the call of ms doesn't allow a variable, you need to write the number. This can probably be done with the "tbs" calls of the ms program, but I need to learn more on that, in the mean time, I'm running the sequences by hand, is just ten, so we can try them.
+    # first, simulate tree
+      set.seed(123)
+      tree<-ms(nsam=20, nreps=1, opts= "-T -t 10")
+      simtree<-read.tree(text=tree[3])
+    # second, generate 200 sequences with a length of 600 bp
+      set.seed(123)
+      seqs<-seqgen(opts= "-mHKY -l600 -q", rooted.tree=simtree)
+    # third, read and save the simulated sequences
+      seqs.easy<-read.seqgen(seqs)
+      filename<-paste("simSeq",1,".fas",sep="")
+      write.fasta(seqs.easy$org,filename)
+
+# trying to think because is still making me similar sequences!
+set.seed(123)
+tree1<-ms(nsam=20, nreps=1, opts= "-T -t 1")
+simtree1<-read.tree(text=tree1[3])
+tree2<-ms(nsam=20, nreps=1, opts= "-T -t 10")
+simtree2<-read.tree(text=tree2[3])
+par(mfrow = c(1, 2))
+plot(simtree1,main="Theta 1")
+plot(simtree2,main="Theta 10")
+
+set.seed(123)
+seqs1<-seqgen(opts= "-mHKY -l600 -q", rooted.tree=simtree1)
+seqs.easy1<-read.seqgen(seqs1)
+write.fasta(seqs.easy$org,"testTheta1.fas")
+seqs2<-seqgen(opts= "-mHKY -l600 -q", rooted.tree=simtree2)
+seqs.easy2<-read.seqgen(seqs2)
+write.fasta(seqs.easy$org,"testTheta2.fas")
+
+# sequences are identical!!#$%& sigh...
+
 ```
 
+For each of the simulated populations (200 individuals each) we estimated the genetic diversity using different indexes for these populations using the package *PopGenome*. 
+
+```{r genetic diversity in sim populations}
+library(PopGenome) 
+
+# In PopGenome, we can read all our fasta files at the same time, from our defined folder
+# I think I found a useful trick to name the path that will work for both of us
+ourpath<-getwd()
+gitpath<-paste(ourpath,"/SimSeqs",sep="")
+
+# converting FASTA file to GENOME object
+simSeq<-readData(gitpath,include.unknown=T)
+simSeq@n.sites # gives the number of sites in the alignment
+get.sum.data(simSeq) # gives the summary information of the alignment, with the @ you can get all of those summaries, for example:
+Varsites<-simSeq@n.biallelic.sites #number of biallelic sites (SNPs)
+Varsites
+
+# aplying the "diversity.stats" methods
+diversity.stats(simSeq,pi=TRUE)->divResults
+
+Piout<-divResults@Pi
+Totsites<-divResults@n.sites
+Piout2<-Piout/Totsites
+Piout2
+
+# aplying the "neutrality.stats"
+neuResults<-neutrality.stats(simSeq)
+Tajout<-neuResults@Tajima.D
+Tajout
+```
 
 
 # Results 

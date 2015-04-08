@@ -7,6 +7,7 @@ bibliography: QuBar.bib
 ---
 
 <!-- Paula: this manuscript is where I want to start clean from my prelim work to develop short paper together. -->
+# Introduction
 
 We start with what may seem like a trivial question: assume that you have been told that a series of fair coin flips resulted in 60% 'heads', 40% 'tails'. This is the only information given, but you already have made a judgment about how many coin flips occurred, and perhaps have generated a probability distribution in your head where the highest likelihood is for 5 or 10, rather than 50 or 100, events. This is taking advantage of what we know about the probability mass function of a binomial distribution, where the observed number of 'successes' in a series is related to the probability of success (presumably 50%) and the number of trials.  
 
@@ -22,7 +23,7 @@ The summary statistics for DNA sequence diversity are well established and gener
 
 Here we present the mathematical considerations necessary to develop these quantitative tools, and then evaluate the situations in which there is sufficient power to make meaningful statements about relative abundance from polymorphism data alone. 
 
-##Methods
+# Methods
 
 ```{r basic params, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 
@@ -72,7 +73,7 @@ probs
 
 ```
 
-There are also clear minimum bounds that can be established for the abundance of a taxon. Considering DNA sequence haplotypes as our most basic information, we ask how many *distinct* haplotypes are recovered in the data that match a particular taxon? For a haploid mitochondrial marker like the oft-used cytochrome oxidase I (COI), This number is the minimum number of individuals present (if the number happens to be 0, it is also likely to be the maximum number of individuals in the sample). The number of haplotypes recovered from a sample of a species can be summarized with "haplotype diversity", *H*, defined by Nei and Tajima (1981) as $$ H = \frac{N}{N-1}(1-\sum\limits_{i=1}x_{i}^2) $$ and representing the probability that sampling a new individual will result in sample of a new haplotype.
+There are also clear minimum bounds that can be established for the abundance of a taxon. Considering DNA sequence haplotypes as our most basic information, we ask how many *distinct* haplotypes are recovered in the data that match a particular taxon? For a haploid mitochondrial marker like the oft-used cytochrome oxidase I (COI), This number is the minimum number of individuals present (if the number happens to be 0, it is also likely to be the maximum number of individuals in the sample). The number of haplotypes recovered from a sample of a species can be summarized with "haplotype diversity", *H*, defined by Nei and Tajima (1981) as $$ H = \frac{N}{N-1}(1-\sum\limits_{i=1}x_{i}^2) $$ and representing the probability that sampling a new individual will result in sample of a new haplotype. N is the number of haplotypes, and *x*~i~ is the sample frequency of the i~th~ haplotype.
 
 An example of how *H* could be used is shown below for a sample in which `r numhaps` haplotypes are observed, *from a population or taxon with prior information about H*, here with *H* = `r Hapdiv`. In addition to assuming that prior information about the population is useful, here we assume a minimum of `r numhaps` individuals, and that what we do not know can be modeled by a Gamma distribution with the shape defined by the number of haplotypes and scale defined by our prior knowledge of *H*.
 
@@ -177,8 +178,10 @@ hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,co
 ```
 
 
-```{r test for simulating data, eval=FALSE}
-library(PopGenome)
+```{r testing how to simulate, eval=FALSE}
+# Here we have the detailed explanation of how to simulate data, I wrote a little bit of how to do it in PopGenome but I'm using here the approach in the phyloclust package that allows to work in windows too.
+# using PopGenome----
+# library(PopGenome)
 # PopGenome has the MS function that allows to use for coalescent simulations to derive the expected neutral distribution of Tajima's D. 
 # better help for the MS function
 # http://www.inside-r.org/packages/cran/PopGenome/docs/MS
@@ -193,8 +196,9 @@ library(PopGenome)
 # we can extract the simulated Tajima's D values
 #MS.get.stats(ms.file)
 
-# Another option if to use phyclust package that has a ms function included
+# Another option is to use phyclust package that has a ms function included----
 library(phyclust)
+# http://thirteen-01.stat.iastate.edu/snoweye/phyclust/?item=document
 
 # To read sequences from a fasta file
 data<-read.fasta("FastaSeqs/NotoSample.fas")
@@ -215,6 +219,7 @@ simtree
 
 # to simulate sequences (we use both our sequence length and number of sequences)
 set.seed(1234)
+# -l is to set the lenght of sequences, sadly, it only accepts the number and we cannot use data$seqlen or a variable (which would be more useful for us for loops)
 data.seqs<-seqgen(opts= "-mHKY -l481 -q", rooted.tree=simtree)
 class(data.seqs) #seqgen
 
@@ -228,9 +233,34 @@ write.fasta(data.seqs.easy$org,"simSequences.fas")
 
 ```
 
+We simulated sequences data for 200 individuals using the combined approach ms [@Hudson2002] plus seq-gen [@Rambaut1997] implemented in the *phyclust* package [@Chen2011] of the R program [@RCoreTeam2013]. The ms function is used to simulate trees in a population that evolves under a Wrigth-Fisher model, and the seqgen function is used to generate the nucleotide sequences according to those/the tree/s.
 
-##Results
+```{r simulating datasets with differents thetha,eval=FALSE}
+library(phyclust)
 
+# We are going to simulate sequence data for 200 individuals using different thetas:
+# Define theta values to use, for now I put from 1 to 10
+theta<-c(1:10)
+
+# Loop in theta, simulate sequences and save in fasta file
+for (i in theta){
+  # first, simulate tree
+  set.seed(1234)
+  tree<-ms(nsam=200, nreps=1, opts= "-T -t theta")
+  simtree<-read.tree(text=tree[3])
+  # second, generate 200 sequences with a length of 600 bp
+  set.seed(1234)
+  seqs<-seqgen(opts= "-mHKY -l600 -q", rooted.tree=simtree)
+  # third, read and save the simulated sequences
+  seqs.easy<-read.seqgen(seqs)
+  filename<-paste("simSeq",i,".fas",sep="")
+  write.fasta(seqs.easy$org,filename)
+  }
+```
+
+
+
+# Results 
 ```{r nextfig, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 #  print(obsvd) #now would be easy to print 95% HPD of obsvd, so for given theta and k this is the distribution of n
   plot(obsvd,xlab="n",ylab="P(n|k)",ylim=c(0,0.15),main=paste("for K =",obsvdk, "and theta =",Q,"in black; for hapdiv in red"))
@@ -247,12 +277,14 @@ Need to then adapt this to a sample from 4-5 species for which there is known in
 n.b. Marc Feldman was concerned about the two statistics double-dipping on the same theory... is this ABC, is this borrowing strength, is this inappropriate?? **AH. but certainly *S* and *H* are not independent observations thus cannot simply use product of the two to generate a Likelihood** perhaps identify which is better, useful, or are neither sufficient?
 
 
-##Discussion
+# Discussion
+
 Returning to the coin flip, it is worth evaluating wherein lies the strength of inferential signal. 50% gives NO information, could be 2 or infinite flips. So it is deviation that is signal in the coin flip example. Similarly, for a system of diversity such as this we need the *potential* for diverse outcomes to evaluate: low theta means nearly all sample sizes are possible, for example. In this sense, developing this with a mind for species that are broadly distributed and highly abundant is likely a more effective strategy than endemic small populations.
 
-##Acknowledgments
+# Acknowledgments
+
 Idea brought about by extended problem-solving session with J. Drake, helped greatly by C. Ewers-Saucedo and K. Bockrath. Work supported by funding from NSF-OCE-Chile, OVPR, and UGA Department of Genetics.
 
-##Literature Cited
+# Literature Cited
 
 

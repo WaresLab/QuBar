@@ -311,6 +311,13 @@ probs
 plot(probs[,1],probs[,3],col='blue')
 })
 ```
+## Doesn't matter which
+
+We are still dealing with how to handle, probabilistically, the number of individuals that went into our observation *given* the prior information about system
+
+<div class="centered">
+![wipeboard](images/whiteplot.jpg)
+</div>
 
 ## Other ways to handle diversity?
 
@@ -332,13 +339,12 @@ $$ ^2D = (\sum\limits_{i=1}p_{i}^2)^{-1} = \frac{1}{\sum\limits_{i=1}p_{i}^2} $$
 
 close but no, that isn't it. (Shannon diversity *has* been used instead of Haplotype diversity, but they are not exactly equivalent)...do we need to use haplotype diversity or can we simply use True Diversity on haplotype counts?
 
-## Doesn't matter which
+## post hoc
 
-We are still dealing with how to handle, probabilistically, the number of individuals that went into our observation *given* the prior information about system
+> - (note in my *Notochthamalus* slide earlier, we are already using both *H* and $^2D$  - but doesn't solve the *post hoc* nature of approach)
 
-<div class="centered">
-![wipeboard](images/whiteplot.jpg)
-</div>
+> - also, of course, these are not independent ways of thinking about diversity. so, for example, can figure out which way works better, but cannot easily combine into a likelihood (I think. And Marc Feldman agrees.)
+
 
 ## Test THETA against DATA
 
@@ -346,6 +352,8 @@ We are still dealing with how to handle, probabilistically, the number of indivi
 #print(obsvd) #now would be easy to print 95% HPD of obsvd, so for given theta and k this is the distribution of n
 
 # hmmm doesn't print anything
+# i think obsvd, probs, and actual all need to be cached so that this chunk can see them? BUT NOTE WHEN YOU RUN PRESENTATION, IT 
+# DOES SEE 'actual' and fills in the text below. 
 
 plot(obsvd,xlab="n",ylab="P(n|k)",ylim=c(0,0.15),main=paste("for K =",obsvdk, "and theta =",Q,"in black; for hapdiv in red"))
 points(probs[,1],probs[,3],col='red')
@@ -373,6 +381,8 @@ Remember that the input data for this single taxon included `r actual` individua
 
 Paula Pappalardo!
 See Evernote figure for where this is going - actively coding (we are becoming fluent in .Rmd, git, more fun ways to talk like nerds)
+
+# thanks!
 
 ## More Thoughts
 

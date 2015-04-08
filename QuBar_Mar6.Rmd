@@ -179,8 +179,6 @@ hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,co
 
 ```{r test for simulating data, eval=FALSE}
 library(PopGenome)
-library(phyclust)
-
 # PopGenome has the MS function that allows to use for coalescent simulations to derive the expected neutral distribution of Tajima's D. 
 # better help for the MS function
 # http://www.inside-r.org/packages/cran/PopGenome/docs/MS
@@ -196,7 +194,37 @@ library(phyclust)
 #MS.get.stats(ms.file)
 
 # Another option if to use phyclust package that has a ms function included
+library(phyclust)
 
+# To read sequences from a fasta file
+data<-read.fasta("FastaSeqs/NotoSample.fas")
+class(data) # class 'seq.data'
+data$org.code # this is the matrix with our original data
+data$nseq # number of sequences in our data
+data$seqlen # length of the sequences
+
+# we need to set a seed for our simulations
+set.seed(1234)
+
+# to simulate trees (we use our number of sequences as number of tips)
+data.trees<-ms(nsam=data$nseq, nreps=1, opts= "-T -t 0.2")
+
+# to extract the tree and convert it to 'phylo' object
+simtree<-read.tree(text=data.trees[3])
+simtree
+
+# to simulate sequences (we use both our sequence length and number of sequences)
+set.seed(1234)
+data.seqs<-seqgen(opts= "-mHKY -l481 -q", rooted.tree=simtree)
+class(data.seqs) #seqgen
+
+# to read the 'seqgen' object and convert to 'seq.data'
+data.seqs.easy<-read.seqgen(data.seqs)
+class(data.seqs.easy) #seq.data
+str(data.seqs.easy) # in $org we can find the sequences
+
+# to save in fasta file so we can use with PopGenome
+write.fasta(data.seqs.easy$org,"simSequences.fas")
 
 ```
 

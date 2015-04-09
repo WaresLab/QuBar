@@ -187,13 +187,16 @@ for (n in 2:maxn) {
     }
 
     PSKv[k,n]<-PSKv[k,n]+PSK
-    obsvd<-PSKv[obsvdk,]
+    obsvd<-PSKv[obsvdk,] #this is what ultimately is the distribution sliced for the observed number of seg sites
 
   }
   
 }
   
-  hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=40,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35,main=paste((expression(theta))," = ",Qt))
+#  hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=40,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35,main=paste((expression(theta))," = ",Qt))
+
+#obsvd<-PSKv[4,]
+#plot(obsvd,xlab="n",ylab="P(n|k)",ylim=c(0,0.15),main=paste("for K =",obsvdk, "and theta =",Q,"in black; for hapdiv in red"))
 
 
 })
@@ -239,7 +242,7 @@ for (n in 1:(actual-1)){
 }
 
 QW <- varsite/harm
-
+#plot(PSKv[varsite,])
 ```
 
 Evaluating a sample of sequences from the barnacle *Notochthamalus scabrosus*, where `r actual` individuals were haphazardly sampled from the data of Laughlin et al. [-@Laugh12], we see that these data would traditionally report haplotype diversity *H* of `r Hapdiv`, from `r numhaps` observed haplotypes (most dominant haplotype at frequency `r max(hapfreq)`), and in this instance the Gini-Simpson index is equal to `r Gini`. Now we have another statistic that can be calculated from previous data on the population, that focuses on the number of dominant haplotypes. Here, the inverse Simpson index $^2D$ is `r Simp`, the effective number of haplotypes in the system.
@@ -268,7 +271,7 @@ but note some frequency information in there...
 Have been experimenting with a gamma distribution but feels very *ad hoc*, e.g. what are parameters for gamma?
 
 ```{r, echo=FALSE}
-numhaps=5
+#numhaps=5 this should pass from previous chunk
 
 inputPanel(
   selectInput("numhaps", label = "numhaps/shape param:",
@@ -348,16 +351,18 @@ close but no, that isn't it. (Shannon diversity *has* been used instead of Haplo
 
 ## Test THETA against DATA
 
-```{r nextfig, ref.label='3dchunk',echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
+```{r nextfig, echo=FALSE,warning=FALSE,message=FALSE,fig.show='asis'}
 #print(obsvd) #now would be easy to print 95% HPD of obsvd, so for given theta and k this is the distribution of n
 
 # hmmm doesn't print anything
 # i think obsvd, probs, and actual all need to be cached so that this chunk can see them? BUT NOTE WHEN YOU RUN PRESENTATION, IT 
 # DOES SEE 'actual' and fills in the text below. 
+# if I refer back to 3dchunk it will give me the 3-D plot here...I want the 1-D what is up?
+#rearrange to get info from Noto before those calculations so that 'obsvd' based on real data...
 
-plot(obsvd,xlab="n",ylab="P(n|k)",ylim=c(0,0.15),main=paste("for K =",obsvdk, "and theta =",Q,"in black; for hapdiv in red"))
-points(probs[,1],probs[,3],col='red')
-abline(v=actual)
+#plot(PSKv[5,],xlab="n",ylab="P(n|k)") #hmmmm obsvd should just be PSKv[observed#sites,] but this stuff doesn't pass...
+#points(probs[,1],probs[,3],col='red')
+#abline(v=actual)
 
 
 ```

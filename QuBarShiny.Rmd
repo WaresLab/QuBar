@@ -132,7 +132,7 @@ Ways to summarize:
 > - average pairwise differences ($\pi$)
 > - S, $\pi$ are estimators of the almighty <div class="red2">  $\theta$ </div> the 'population mutation rate'
 
-## Example from *Notochthamalus*
+## Example from *Notochthamalus* {.smaller}
 
 ```{r NotoPrior, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 # rough estimates from Zakas Q is 10, hapdiv is 0.7
@@ -179,7 +179,11 @@ Evaluating a sample of sequences from the barnacle *Notochthamalus scabrosus*, w
 
 # n.b. all numbers on previous slide automatically generated. change data set, numbers will automatically respond. thanks R!
 
+## n.b. number 2
 
+The data on previous slide are from a small sample, an environmental sample of *N. scabrosus*. In order to apply this method, we are using *previous information* about *N. scabrosus* (or whatever population/species) to reverse-engineer coalescent maths.
+
+For example, I know from much work on this barnacle that $\theta$ is about 10. I also have prior information with which to estimate *H*.
 
 
 ## Population mutation rate and DIVERSITY
@@ -191,7 +195,7 @@ Evaluating a sample of sequences from the barnacle *Notochthamalus scabrosus*, w
 
 ## Probability: k, n, given $\theta$
 
-```{r 3dchunk, echo=FALSE}
+```{r 3dchunk,fig.width=12, fig.height=12, fig.show='hold', fig.align='center',echo=FALSE}
 maxindivs=50
 library(plot3D)
 #Q = 10 # this is PRIOR information
@@ -205,7 +209,7 @@ inputPanel(
               choices = c(1, 2, 3.5, 5, 10), selected = 2),
   
   sliderInput("Nsite", label = "segregating sites:",
-              min = 0, max = 20, value = 4, step = 1)
+              min = 1, max = 20, value = 4, step = 1)
   
   
 )

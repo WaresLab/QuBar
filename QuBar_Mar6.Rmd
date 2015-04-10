@@ -271,10 +271,11 @@ for (i in theta){
       filename<-paste("simSeq",1,".fas",sep="")
       write.fasta(seqs.easy$org,filename)
 
-# trying to think because is still making me similar sequences!
+# trying to think because is still making similar sequences!
 set.seed(123)
 tree1<-ms(nsam=20, nreps=1, opts= "-T -t 1")
 simtree1<-read.tree(text=tree1[3])
+set.seed(123)
 tree2<-ms(nsam=20, nreps=1, opts= "-T -t 10")
 simtree2<-read.tree(text=tree2[3])
 par(mfrow = c(1, 2))
@@ -282,13 +283,17 @@ plot(simtree1,main="Theta 1")
 plot(simtree2,main="Theta 10")
 
 set.seed(123)
-seqs1<-seqgen(opts= "-mHKY -l600 -q", rooted.tree=simtree1)
+seqs1<-seqgen(opts= "-mHKY -l600 -q -d15", rooted.tree=simtree1)
 seqs.easy1<-read.seqgen(seqs1)
-write.fasta(seqs.easy$org,"testTheta1.fas")
-seqs2<-seqgen(opts= "-mHKY -l600 -q", rooted.tree=simtree2)
+write.fasta(seqs.easy1$org,"test_d15.fas")
+set.seed(123)
+seqs2<-seqgen(opts= "-mHKY -l600 -q -d25", rooted.tree=simtree1)
 seqs.easy2<-read.seqgen(seqs2)
-write.fasta(seqs.easy$org,"testTheta2.fas")
-
+write.fasta(seqs.easy2$org,"test_d25.fas")
+set.seed(123)
+seqs3<-seqgen(opts= "-mHKY -l600 -q -d30", rooted.tree=simtree1)
+seqs.easy3<-read.seqgen(seqs3)
+write.fasta(seqs.easy3$org,"test_d30.fas")
 # sequences are identical!!#$%& sigh...
 
 ```
@@ -314,6 +319,7 @@ Varsites
 diversity.stats(simSeq,pi=TRUE)->divResults
 
 Piout<-divResults@Pi
+Piout
 Totsites<-divResults@n.sites
 Piout2<-Piout/Totsites
 Piout2

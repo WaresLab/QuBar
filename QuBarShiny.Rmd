@@ -104,6 +104,17 @@ img {
 <div class="centered">
 ![different plot](images/Rank_abundance_beetles.png)
 </div>
+
+## Why?
+
+Our ability to explore and interpret biodiversity - in space and time - is limited by throughput. Methods that have transformed microbial ecology are valuable for systems with eukaryotes but not yet as directly applied. 
+
+> - community assembly and coexistence
+
+> - compositional change : environmental tracking
+
+> - cryptic diversity (within species) as well as cryptic diversity (hard to observe)
+
 ## What information?
 
 - may be able to gauge/estimate total # indivs (volume, count) as **upper limit**
@@ -373,8 +384,10 @@ Remember that the input data for this single taxon included `r actual` individua
 ## Goals
 
 > - find strength/power/potential of *S* which seems to have greatest power when $\theta$ large relative to number observed segregating sites
-> - power/potential of some form of diversity of haplotypes, which appears to have greatest power to estimate *n* when high haplotype diversity (e.g., observed # haps likely closer to # individuals)
+> - power/potential of some form of diversity of haplotypes, also appears to have greatest power to estimate *n* when high haplotype diversity (e.g., observed # haps likely closer to # individuals)
 > - overall high diversity and limited sample size may be best because cap on *n* (if I know ~200 total indivs in sample, n_i must be <200), # haplotypes puts minimum on *n*
+
+## Big Picture
 
 ## Together with...
 

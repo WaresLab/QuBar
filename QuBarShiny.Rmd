@@ -175,7 +175,7 @@ QW <- varsite/harm
 #plot(PSKv[varsite,])
 ```
 
-Evaluating a sample of sequences from the barnacle *Notochthamalus scabrosus*, where `r actual` individuals were haphazardly sampled from the data of Laughlin et al. [-@Laugh12], we see that these data would traditionally report haplotype diversity *H* of `r Hapdiv`, from `r numhaps` observed haplotypes (most dominant haplotype at frequency `r max(hapfreq)`), and in this instance the Gini-Simpson index is equal to `r Gini`. Now we have another statistic that can be calculated from previous data on the population, that focuses on the number of dominant haplotypes. Here, the inverse Simpson index $^2D$ is `r Simp`, the effective number of haplotypes in the system.
+Evaluating a sample of sequences from the barnacle *Notochthamalus scabrosus*, where `r actual` individuals were haphazardly sampled from the data of Laughlin et al. [-@Laugh12], we see that these data would traditionally report haplotype diversity *H* of `r Hapdiv`, from `r numhaps` observed haplotypes (most dominant haplotype at frequency `r max(hapfreq)`), and in this instance the Gini-Simpson index is equal to `r Gini`. Now we have another statistic that can be calculated from previous data on the population, that focuses on the number of dominant haplotypes. Here, the inverse Simpson index $^2D$ is `r Simp`, the effective number of haplotypes in the system. The number of segregating sites is `r varsite`.
 
 # n.b. all numbers on previous slide automatically generated. change data set, numbers will automatically respond. thanks R!
 
@@ -189,15 +189,15 @@ Evaluating a sample of sequences from the barnacle *Notochthamalus scabrosus*, w
 > - the number of segregating sites, however, is **sample-size dependent** and ***not frequency dependent*** (it is just a number)
 
 
-## Probability of segregating sites for a sample size, given $\theta$
+## Probability: k, n, given $\theta$
 
 ```{r 3dchunk, echo=FALSE}
 maxindivs=50
 library(plot3D)
-Q = 10 # this is PRIOR information
-maxn = min(5*Q,maxindivs) #above 70 this behaves funny???? OR IT MAY BE SOME MULTIPLE OF Q*maxn that is problem?
-
-#obsvdk = Nsite
+#Q = 10 # this is PRIOR information
+#maxn = min(5*Q,maxindivs) #above 70 this behaves funny???? OR IT MAY BE SOME MULTIPLE OF Q*maxn that is problem?
+maxn = 50
+obsvdk = 8
 #maxk = 2*obsvdk #must be greater than obsvdk
 
 inputPanel(
@@ -205,7 +205,7 @@ inputPanel(
               choices = c(1, 2, 3.5, 5, 10), selected = 2),
   
   sliderInput("Nsite", label = "segregating sites:",
-              min = 0, max = 20, value = 1, step = 1)
+              min = 0, max = 20, value = 4, step = 1)
   
   
 )
@@ -215,11 +215,10 @@ inputPanel(
 renderPlot({
   
   
-maxn = 40 #above 70 this behaves funny???? OR IT MAY BE SOME MULTIPLE OF Q*maxn that 
-obsvdk = input$Nsite #OK this needs to be reactive...
+obsvdk = input$Nsite 
 
 maxk = 2*obsvdk #must be greater than obsvdk
-#maxk = 20 # lets just set as constant for now...
+
 
 
 
@@ -243,7 +242,7 @@ for (n in 2:maxn) {
     }
 
     PSKv[k,n]<-PSKv[k,n]+PSK
-    obsvd<-PSKv[varsite,] #this is what ultimately is the distribution sliced for the observed number of seg sites
+#    obsvd<-PSKv[varsite,] #this is what ultimately is the distribution sliced for the observed number of seg sites
 
   }
   
@@ -251,9 +250,7 @@ for (n in 2:maxn) {
   
   hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=40,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35,main=paste((expression(theta))," = ",Qt))
 
-#obsvd<-PSKv[4,]
-#plot(obsvd,xlab="n",ylab="P(n|k)",ylim=c(0,0.15),main=paste("for K =",obsvdk, "and theta =",Q,"in black; for hapdiv in red"))
-#plot(obsvd)
+
 
 })
 ```
@@ -361,22 +358,44 @@ close but no, that isn't it. (Shannon diversity *has* been used instead of Haplo
 ## Test THETA against DATA
 
 ```{r nextfig, echo=FALSE,warning=FALSE,message=FALSE,fig.show='asis'}
-#print(obsvd) #now would be easy to print 95% HPD of obsvd, so for given theta and k this is the distribution of n
+maxn2<-2*actual
+maxk2<-30
+a <- c(1:maxn2)
+b <- c(1:maxk2)
+PSKv2 <- numeric(maxn2*maxk2)
+PSKv2 <- matrix(PSKv2,ncol=maxn2)
+colnames(PSKv2)<-a
+rownames(PSKv2)<-b
+Qt<-10 #this is prior information, not calc'd from sample
 
-# hmmm doesn't print anything
-# i think obsvd, probs, and actual all need to be cached so that this chunk can see them? BUT NOTE WHEN YOU RUN PRESENTATION, IT 
-# DOES SEE 'actual' and fills in the text below. 
-# if I refer back to 3dchunk it will give me the 3-D plot here...I want the 1-D what is up?
-#rearrange to get info from Noto before those calculations so that 'obsvd' based on real data...
+for (n in 2:maxn2) {
 
-#plot(obsvd,xlab="n",ylab="P(n|k)") #hmmmm obsvd should just be PSKv[observed#sites,] but this stuff doesn't pass...
-#points(probs[,1],probs[,3],col='red')
-#abline(v=actual)
+  for (k in 0:maxk2) {
+
+    PSK2=0
+    for (i in 2:n) {
+      
+      PSK2<-PSK2 + ((-1)^i)*(choose((n-1),(i-1)))*((i-1)/(Qt+i-1))*(Qt/(Qt+i-1))^k
+      
+    }
+
+    PSKv2[k,n]<-PSKv2[k,n]+PSK2
+    obsvd2<-PSKv2[varsite,] #this is what ultimately is the distribution sliced for the observed number of seg sites
+
+  }
+  
+}
+
+
+
+plot(obsvd2,xlab="n",ylab="P(n|k)",ylim=c(0,0.15),main=paste("for K =",varsite, "and theta =",Qt))
+abline(v=actual,col="red")
+
 
 
 ```
 
-Remember that the input data for this single taxon included `r actual` individuals, the vertical line in plot above. 
+Remember that the input data for this single taxon included `r actual` individuals, the vertical line in plot above. NB THE DATA YOU INPUT RIGHT NOW MAY BE MIXED FOR NORTH AND SOUTH TYPES! FIX THIS INPUT FILE!
 
 
 

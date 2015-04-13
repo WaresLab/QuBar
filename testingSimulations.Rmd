@@ -61,6 +61,29 @@ write.fasta(data.seqs.easy$org,"simSequences.fas")
 
 ```
 
+```{r simulating diversity indexes with PopGenome}
+library(PopGenome)
+# PopGenome has the MS function that allows to use for coalescent simulations to derive the expected neutral distribution of Tajima's D. 
+# better help for the MS function
+# http://www.inside-r.org/packages/cran/PopGenome/docs/MS
+
+# load initial data
+file<-readData("FastaSeqs",include.unknown=T)
+get.sum.data(file)
+
+# we apply the neutrality stats and with that output we run simulations
+file<-neutrality.stats(file)
+
+# we call Hudson program
+ms.file <- MS(file, thetaID="Tajima", neutrality=TRUE)
+
+# we can extract the simulated Tajima's D (and other stats as well) in form of a matrix
+MS_getStats(ms.file)
+
+#MSMS allows for simulation with selection, we need the folder with the program and executable files to run it
+```
+
+
 We simulated sequences data for 200 individuals using the combined approach ms [@Hudson2002] plus seq-gen [@Rambaut1997] implemented in the *phyclust* package [@Chen2011] of the R program [@RCoreTeam2013]. The ms() function is used to simulate trees in a population that evolves under a Wrigth-Fisher model, and the seqgen() function is used to generate the nucleotide sequences according to those/the tree/s. We simulated sequences for different levels of mutation rate ($\theta$) and saved the  sequences in fasta files representing our "original" populations. 
 
 
@@ -127,10 +150,7 @@ write.fasta(seqs.easy10$org,"simPopTheta10.fas")
 
 ```
 
-
-```{r simulating datasets with differents thetha,eval=FALSE}
-library(phyclust)
-
+```{r failed loop}
 # We are going to simulate sequence data for 200 individuals using different thetas:
 # Define theta values to use, for now I put from 1 to 10
 theta<-c(1:10)
@@ -151,22 +171,15 @@ for (i in theta){
       write.fasta(seqs.easy$org,filename)
     }
 
-# Ok, the loop looks nice but it doesn't work, the call of ms doesn't allow a variable, you need to write the number. This can probably be done with the "tbs" calls of the ms program, but I need to learn more on that, in the mean time, I'm running the sequences by hand, is just ten, so we can try them.
-    # first, simulate tree
-      set.seed(123)
-      tree<-ms(nsam=20, nreps=1, opts= "-T -t 10")
-      simtree<-read.tree(text=tree[3])
-    # second, generate 200 sequences with a length of 600 bp
-      set.seed(123)
-      seqs<-seqgen(opts= "-mHKY -l600 -q", rooted.tree=simtree)
-    # third, read and save the simulated sequences
-      seqs.easy<-read.seqgen(seqs)
-      filename<-paste("simSeq",1,".fas",sep="")
-      write.fasta(seqs.easy$org,filename)
+# Ok, the loop looks nice but it doesn't work, the call of ms doesn't allow a variable, you need to write the number. This can probably be done with the "tbs" calls of the ms program, but I need to learn more on that, what I tried crush R...
+```
+
+```{r simulating datasets with differents thetha,eval=FALSE}
+library(phyclust)
 
 # trying to think because is still making similar sequences!
 set.seed(123)
-tree1<-ms(nsam=20, nreps=1, opts= "-T -t 1")
+tree1<-ms(nsam=20, nreps=1, opts= "-T -t 10")
 simtree1<-read.tree(text=tree1[3])
 set.seed(123)
 tree2<-ms(nsam=20, nreps=1, opts= "-T -t 10")
@@ -176,22 +189,25 @@ plot(simtree1,main="Theta 1")
 plot(simtree2,main="Theta 10")
 
 set.seed(123)
-seqs1<-seqgen(opts= "-mHKY -l600 -q -d15", rooted.tree=simtree1)
+seqs1<-seqgen(opts= "-mHKY -l600 -q -d0.1", rooted.tree=simtree1)
 seqs.easy1<-read.seqgen(seqs1)
-write.fasta(seqs.easy1$org,"test_d15.fas")
+write.fasta(seqs.easy1$org,"test_d01.fas")
 set.seed(123)
-seqs2<-seqgen(opts= "-mHKY -l600 -q -d25", rooted.tree=simtree1)
+seqs2<-seqgen(opts= "-mHKY -l600 -q -d0.2", rooted.tree=simtree1)
 seqs.easy2<-read.seqgen(seqs2)
-write.fasta(seqs.easy2$org,"test_d25.fas")
+write.fasta(seqs.easy2$org,"test_d02.fas")
 set.seed(123)
-seqs3<-seqgen(opts= "-mHKY -l600 -q -d30", rooted.tree=simtree1)
+seqs3<-seqgen(opts= "-mHKY -l600 -q -d0.3", rooted.tree=simtree1)
 seqs.easy3<-read.seqgen(seqs3)
-write.fasta(seqs.easy3$org,"test_d30.fas")
+write.fasta(seqs.easy3$org,"test_d03.fas")
 # sequences are identical!!#$%& sigh...
+
+# a1 for my example with 20 samples
+a1<-1+1/2+1/3+1/4+1/5+1/6+1/7+1/8+1/9+1/10+1/11+1/12+1/13+1/14+1/15+1/16+1/17+1/18+1/19
 
 ```
 
-For each of the simulated populations (200 individuals each) we estimated the genetic diversity using different indexes for these populations using the package *PopGenome*. 
+For each of the simulated populations (200 individuals each) we estimated the genetic diversity using different indexes included in the package *PopGenome*. Subsequently, we sampled populations of 20 individuals to simulate our observations, and used backcalculations to estimate the original population size.
 
 ```{r genetic diversity in sim populations}
 library(PopGenome) 
@@ -214,11 +230,41 @@ diversity.stats(simSeq,pi=TRUE)->divResults
 Piout<-divResults@Pi
 Piout
 Totsites<-divResults@n.sites
-Piout2<-Piout/Totsites
-Piout2
+Piout2<-Piout/Totsites #Pi per nucleotide
+# Haplotype diversity (H)
+divResults@hap.diversity.within
 
 # aplying the "neutrality.stats"
 neuResults<-neutrality.stats(simSeq)
+neu<-get.neutrality(neuResults,theta=T,stats=T)
+
 Tajout<-neuResults@Tajima.D
 Tajout
+neuResults@n.segregating.sites
 ```
+
+```{r subsamples}
+# We are going to "sample" 20 individuals from our simulated populations
+sizeNorth<-length(northLab)
+sizeSouth<-length(southLab)
+
+Pop1<-readData("C:/Users/Paula/Dropbox/Picoroco MS/alignout", include.unknown=T)
+ranSnnDivline = NULL
+
+for (i in 1:reps) {
+  # we sample from the pico file to make random northern group
+  randnorth<-as.character(sample(pico$Label,sizeNorth,replace=F))
+  # we keep the ones not sampled to make the southern group
+  randsouth<-as.character(setdiff(pico$Label, randnorth))
+  # now we set the random sampled populations for analysis
+  ranResults<-set.populations(ranPico,list(randnorth,randsouth))
+  ranResults@region.data@populations2 #check it works
+  ranSnn<-F_ST.stats.2(ranResults,snn=TRUE)
+  # and we saved the results for each rep in the ranSnnout vector
+  ranSnnDivline[i]<-ranSnn@Hudson.Snn
+}
+SnnquantDivline<-quantile(ranSnnDivline,probs=c(0.05,0.95))
+SnnPdivline<-ecdf(ranSnnDivline)
+SnnPvalDivline<-1-SnnPdivline(SnnByDivline)
+```
+

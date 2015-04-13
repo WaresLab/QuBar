@@ -412,25 +412,37 @@ abline(v=actual,col="red")
 
 Remember that the input data for this single taxon included `r actual` individuals, the vertical line in plot above. NB THE DATA YOU INPUT RIGHT NOW MAY BE MIXED FOR NORTH AND SOUTH TYPES! FIX THIS INPUT FILE! More caveats: what about effect of natural populations/barcodes being ***not wholly neutral*** in behavior???
 
+## Caveat selector
 
+> - worth remembering: "neutrality is dead" (Matt Hahn, 2015, but we've known for a while...)
+> - stat tests (e.g. Tajima's D) for standard mtCOI barcode clear evidence of purifying selection (Wares 2010, 2011; Ewers and Wares 2012)
+> - this analysis must account for diversity AND diversity processes at locus of choice
+> - hoping for analytical but may need to try something like approximate Bayesian
 
+## Simulations
+
+<div class="centered">
+![paula](images/wipe2.jpg)
+</div>
+
+may need to include simulations that influence site frequency spectrum to match input data?
 
 ## Goals
 
 > - find strength/power/potential of *S* which seems to have greatest power when $\theta$ large relative to number observed segregating sites
 > - power/potential of some form of diversity of haplotypes, also appears to have greatest power to estimate *n* when high haplotype diversity (e.g., observed # haps likely closer to # individuals)
 > - overall high diversity and limited sample size may be best because cap on *n* (if I know ~200 total indivs in sample, n_i must be <200), # haplotypes puts minimum on *n*
+> - remember that individual barcode/identification of specimens is pricey and inefficient...not sure that this will improve markedly
 
-## Simulations
-<div class="centered">
-![paula](images/wipe2.jpg)
-</div>
+
 
 ## Big Picture
 
 Simple: I'm lazy. Good taxonomists are expensive. I want to improve our ability to do community surveys. Greater environmental sampling leads to greater environmental knowledge.
 
 When the world is changing so fast, there is an urgency to find solutions and applications.
+
+> - Not totally clear that this qualifies as a solution, but a good exploration.
 
 ## Together with...
 

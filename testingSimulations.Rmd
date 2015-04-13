@@ -6,7 +6,7 @@ output: pdf_document
 ---
 
 
-```{r testing how to simulate, eval=FALSE}
+```{r testing how to simulate data, eval=FALSE}
 # Here we have the detailed explanation of how to simulate data, I wrote a little bit of how to do it in PopGenome but I'm using here the approach in the phyloclust package that allows to work in windows too.
 # using PopGenome----
 # library(PopGenome)
@@ -71,16 +71,42 @@ library(PopGenome)
 file<-readData("FastaSeqs",include.unknown=T)
 get.sum.data(file)
 
-# we apply the neutrality stats and with that output we run simulations
+# first we need to apply the neutrality stats
 file<-neutrality.stats(file)
 
 # we call Hudson program
-ms.file <- MS(file, thetaID="Tajima", neutrality=TRUE)
+ms.file <- MS(file, niter=20,thetaID="Tajima", neutrality=TRUE)
+ms.file
 
 # we can extract the simulated Tajima's D (and other stats as well) in form of a matrix
 MS_getStats(ms.file)
 
+# we can extract the pvalue of simulated values <= than observed
+ms.file@prob.less[1]
+# also the observed values for each test
+ms.file@obs.val[1]
+
+# To define PARAMETERS we need to create an object of class "test.params" and use the option params=file in the MS function
+# to create the object
+parDefined<-new("test.params")
+
+# to add values #http://www.inside-r.org/node/132342 
+# theta..... it has to be a vector of lenght n.regions
+parDefined@theta<-5
+# growth values.....if (+) means that the population was smaller in the past, if (-) the population was larger in the past
+# a growth value of 10 is the ones that minimize Tajima's D
+parDefined@growth<-25
+
+#to run simulations and get stats
+ms.file1<- MS(file, niter=35, thetaID="user", params=parDefined,neutrality=TRUE)
+MS_getStats(ms.file1)->sumFile1
+mean(sumFile1[,"Tajima.D"])
+
+# average Tajima's D value
+
+
 #MSMS allows for simulation with selection, we need the folder with the program and executable files to run it
+http://www.mabs.at/ewing/msms/quickStart.shtml
 ```
 
 

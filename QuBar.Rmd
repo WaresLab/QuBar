@@ -11,6 +11,8 @@ output: html_document
 
 Documenting the distribution and abundance of biodiversity is perhaps more important now than ever as scientists evaluate how populations are responding to environmental change. Though technological advances have rapidly improved some elements of this, there are still glaring deficiencies in our ability to efficiently catalog the diversity of even related guilds at a location. Next generation sequencing has transformed the study of microbial and viral diversity, but eukaryotic diversity remains a more difficult prospect.
 
+HERE I AM JOHN WORKING ON THIS FILE and now will commit!!
+
 The reasons for this include the very diversity of these organisms. Though it is also known that "barcode" loci in microbes may vary in abundance among taxa and populations leading to inexact measures of relative abundance (picante ref), such a problem may be exacerbated when individuals of different life stages and different species vary in size and thus cellular quantity - a typical metazoan barcode locus, mitochondrial COI, would then over-represent the abundance of larger individuals. 
 
 Additionally, differential amplification of barcode genes, with efficiency declining with every base pair mismatch between genomic and primer sites, leads to further uncontrolled biases in enumerating the relative abundance of taxa (DOI: 10.1111/nph.12923) DOI: 10.1111/1755-0998.12355. Given the goal of including diversity that may be distantly related (e.g. the zooplankton from freshwater pools in South Carolina incorporate greater than 400 million years of phylogenetic diversity), we are often left with presence-absence data at best unless a skilled taxonomist can individually key these organisms out.

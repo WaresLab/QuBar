@@ -74,12 +74,18 @@ get.sum.data(file)
 # first we need to apply the neutrality stats
 file<-neutrality.stats(file)
 
-# we call Hudson program
+# or the F_ST stats if we want haplotype diversity
+file<-F_ST.stats(file)
+
+# we call Hudson program, thetaID needs to be defined for any module
 ms.file <- MS(file, niter=20,thetaID="Tajima", neutrality=TRUE)
 ms.file
 
+ms.file <- MS(file, niter=20,thetaID="Tajima", F_ST=TRUE)
+ms.file
+
 # we can extract the simulated Tajima's D (and other stats as well) in form of a matrix
-MS_getStats(ms.file)
+MS_getStats(ms.file) #stats change depending what module we choose
 
 # we can extract the pvalue of simulated values <= than observed
 ms.file@prob.less[1]
@@ -87,23 +93,45 @@ ms.file@prob.less[1]
 ms.file@obs.val[1]
 
 # To define PARAMETERS we need to create an object of class "test.params" and use the option params=file in the MS function
-# to create the object
-parDefined<-new("test.params")
-
-# to add values #http://www.inside-r.org/node/132342 
-# theta..... it has to be a vector of lenght n.regions
-parDefined@theta<-5
-# growth values.....if (+) means that the population was smaller in the past, if (-) the population was larger in the past
-# a growth value of 10 is the ones that minimize Tajima's D
-parDefined@growth<-25
+    # to create the object
+    parDefined<-new("test.params")
+    
+    # to add values #http://www.inside-r.org/node/132342 
+    # ---theta---- it has to be a vector of lenght n.regions
+    parDefined@theta<-5
+    # ----growth values-----if (+) means that the population was smaller in the past, if (-) the population was larger in the past
+    # a growth value of 10 is the ones that minimize Tajima's D
+    parDefined@growth<-10
+    
+    # ----segregating sites-----single numeric value
+    #parDefined@fixed.seg.sites<-1
+    
+    # ----seeds----specify 3 random number seeds. a vector of length 3 with positive integer values is expected.IS NOT WORKING, ERROR MESSAGE
+    #parDefined@seeds<-c(1,2,3)
 
 #to run simulations and get stats
-ms.file1<- MS(file, niter=35, thetaID="user", params=parDefined,neutrality=TRUE)
-MS_getStats(ms.file1)->sumFile1
+    set.seed(123)
+    ms.file1<- MS(file,niter=30, thetaID="user", params=parDefined,neutrality=TRUE)
+    set.seed(123)
+    ms.file2<- MS(file, niter=10, thetaID="user", params=parDefined,F_ST=TRUE)
+    MS_getStats(ms.file1)->sumFile1
+    MS_getStats(ms.file2)->sumFile2
+    sumFile1
+    View(sumFile2)
+
+theta= 1.494709 
+a=NULL
+for (i in 1:5){
+  (theta/(theta+i-1))->a[i+0]
+  }
+sum(a)
+# to average estimators accross all the simulated populations
+# neutrality module
 mean(sumFile1[,"Tajima.D"])
-
-# average Tajima's D value
-
+mean(sumFile1[,"theta_Tajima"])
+var(sumFile1[,"theta_Tajima"])
+mean(sumFile1[,"theta_Watterson"])
+var(sumFile1[,"theta_Watterson"])
 
 #MSMS allows for simulation with selection, we need the folder with the program and executable files to run it
 http://www.mabs.at/ewing/msms/quickStart.shtml
@@ -200,32 +228,35 @@ for (i in theta){
 # Ok, the loop looks nice but it doesn't work, the call of ms doesn't allow a variable, you need to write the number. This can probably be done with the "tbs" calls of the ms program, but I need to learn more on that, what I tried crush R...
 ```
 
-```{r simulating datasets with differents thetha,eval=FALSE}
+```{r simulating datasets with phyclust,eval=FALSE}
 library(phyclust)
 
 # trying to think because is still making similar sequences!
 set.seed(123)
-tree1<-ms(nsam=20, nreps=1, opts= "-T -t 10")
-simtree1<-read.tree(text=tree1[3])
+tree<-ms(nsam=20, nreps=1, opts= "-T -t 1 -G 10")
+simtree<-read.tree(text=tree[3])
 set.seed(123)
+
 tree2<-ms(nsam=20, nreps=1, opts= "-T -t 10")
 simtree2<-read.tree(text=tree2[3])
 par(mfrow = c(1, 2))
 plot(simtree1,main="Theta 1")
 plot(simtree2,main="Theta 10")
 
+# changing -s, according to the ms manual, changes theta
 set.seed(123)
-seqs1<-seqgen(opts= "-mHKY -l600 -q -d0.1", rooted.tree=simtree1)
+seqs1<-seqgen(opts= "-mHKY -l600 -q -s0.004", rooted.tree=simtree)
 seqs.easy1<-read.seqgen(seqs1)
-write.fasta(seqs.easy1$org,"test_d01.fas")
+write.fasta(seqs.easy1$org,"test_s0004.fas")
 set.seed(123)
-seqs2<-seqgen(opts= "-mHKY -l600 -q -d0.2", rooted.tree=simtree1)
+seqs2<-seqgen(opts= "-mHKY -l600 -q -s0.0035", rooted.tree=simtree)
 seqs.easy2<-read.seqgen(seqs2)
-write.fasta(seqs.easy2$org,"test_d02.fas")
+write.fasta(seqs.easy2$org,"test_s00035.fas")
 set.seed(123)
-seqs3<-seqgen(opts= "-mHKY -l600 -q -d0.3", rooted.tree=simtree1)
+seqs3<-seqgen(opts= "-mHKY -l600 -q -s0.003", rooted.tree=simtree)
 seqs.easy3<-read.seqgen(seqs3)
-write.fasta(seqs.easy3$org,"test_d03.fas")
+write.fasta(seqs.easy3$org,"test_s0003.fas")
+
 # sequences are identical!!#$%& sigh...
 
 # a1 for my example with 20 samples

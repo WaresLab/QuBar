@@ -5,6 +5,7 @@ date: '`r format(Sys.time(), "%d %B, %Y")`'
 output: html_document
 ---
 
+here we are trying to mess up the sync to see what happen
 ***n.b. maybe you should describe the pitfalls of allele frequency approaches to relative abundance, but not dwell on them. for example, though differential amplification is most certainly an issue (cite that NGS paper) there are approaches that intend to minimize this issue. additionally, a barcoding project may focus on a limited taxon, e.g. at family level or lower, in which case barcode efficiency is less problematic. here we just state that this is an issue for PCR efficiency and copy number reasons, and thus we are exploring what information is available solely from the summary statistics of pooled/aligned sequence data***
 
 ***n.b. 2 there are perhaps some advances or ideas in your Shiny paper to synchronize into this so that you and Paula can work on it.***

@@ -66,23 +66,29 @@ library(ape)
 library(muscle)
 library(seqinr)
 
-# I used all this chunk at the beggining, to read sequences and convert to fasta, and check alignment, but the final files used for the analysis were edited by eye in MEGA, so I just load those in next chunks
+austroGB <- read.delim("picoroco27Mar2015_allBarnacles.txt",header=TRUE) 
+
+# subset things we need later and are useful in the text (like min and max lat)
+austroGBlat<-austroGB[complete.cases(austroGB$Latitude),]
+
+# subsetting just Austromegabalanus psittacus
+picoroco<-subset(austroGB, grepl("psit",austroGB$Species))
+fabio <- which(austroGB$Origen=='museum')
+picoroco[-fabio,]->picoroco
+taltal<-which(picoroco$SiteName=='Taltal') # there is only one sample
+picoroco[-taltal,]->picoroco
+droplevels(picoroco)->pico
 
 # We need to convert the "Sequence" column to characters
 # to check all the samples
-austroGB$SequenceNew<-as.character(austroGB$Sequence)
-austroSeq <- strsplit(austroGB$SequenceNew, "")
-names(austroSeq)<-austroGB$Label
-
-# to use just the picorocos
-picoroco$SequenceNew<-as.character(picoroco$Sequence)
-picoSeq <- strsplit(picoroco$SequenceNew, "") #is alist, each component is a list of characters with all the bases
-names(picoSeq)<-picoroco$Label # to add the labels
+pico$SequenceNew<-as.character(pico$Sequence)
+picoSeq <- strsplit(pico$SequenceNew, "")
+names(picoSeq)<-pico$Label
 
 # to transform to a FASTA file and use it with the "muscle" package
-seqinr::write.fasta(austroSeq, names=austroGB$Label,file.out = "allSamples.fasta")
-# to transform to a FASTA file and use it with the "muscle" package
-seqinr::write.fasta(picoSeq, names=picoroco$Label,file.out = "pico.fasta")
+seqinr::write.fasta(picoSeq, names=pico$Label,file.out = "pico.fasta")
+
+
 
 # now we can align the sequences with the function muscle of the muscle package, if out=NULL it returns a muscle object, but if it is not NULL, it returns a FASTA file in the folder indicated
 # this one is to use later
@@ -99,28 +105,36 @@ library(PopGenome)
 # http://www.inside-r.org/packages/cran/PopGenome/docs/MS
 
 # load initial data
-file<-readData("FastaSeqs",include.unknown=T)
-get.sum.data(file)
+file<-readData("FastaSeqsPau",include.unknown=T)
+
+# useful stuff
+get.sum.data(file)->summary
+nrow(summary)->fileNumber
+# the slot "region.data" contains more detailed information 
+file@region.data
 
 # first we need to apply the neutrality stats
 file<-neutrality.stats(file)
 
 # or the F_ST stats if we want haplotype diversity
 file<-F_ST.stats(file)
+
 file@Pi #Nei's diversity (within population)
 file@region.stats@haplotype.counts->haplotypecounts
+haplotypecounts
 
 # to get number of haplotypes
-hapfreq<-unlist(haplotypecounts)
+hapfreq<-unlist(haplotypecounts[7])
 actual<-sum(hapfreq)
 hapfreq<-hapfreq/actual
 numhaps<-length(hapfreq)
+numhaps
 
 # to get Pi in another way
 diversity.stats(file,pi=TRUE)->file
 file@Pi #also says is Nei's pi
 
-# we call Hudson program, thetaID needs to be defined for any module
+# we call Hudson program, thetaID needs to be defined for any module----
 ms.file <- MS(file, niter=20,thetaID="Tajima", neutrality=TRUE)
 ms.file
 
@@ -135,13 +149,13 @@ ms.file@prob.less[1]
 # also the observed values for each test
 ms.file@obs.val[1]
 
-# To define PARAMETERS we need to create an object of class "test.params" and use the option params=file in the MS function
+# To define PARAMETERS we need to create an object of class "test.params" and use the option params=file in the MS function----
     # to create the object
     parDefined<-new("test.params")
     
     # to add values #http://www.inside-r.org/node/132342 
     # ---theta---- it has to be a vector of lenght n.regions
-    parDefined@theta<-5
+    parDefined@theta<-rep(10,fileNumber)
     # ----growth values-----if (+) means that the population was smaller in the past, if (-) the population was larger in the past
     # a growth value of 10 is the ones that minimize Tajima's D
     parDefined@growth<-10
@@ -154,17 +168,26 @@ ms.file@obs.val[1]
 
 #to run simulations and get stats
     set.seed(123)
-    ms.file1<- MS(file,niter=30, thetaID="user", params=parDefined,neutrality=TRUE)
+    ms.file1<- MS(file,niter=100, thetaID="user", params=parDefined,neutrality=TRUE)
     set.seed(123)
-    ms.file2<- MS(file, niter=10, thetaID="user", params=parDefined,F_ST=TRUE)
+    ms.file2<- MS(file, niter=100, thetaID="user", params=parDefined,F_ST=TRUE)
     MS_getStats(ms.file1)->sumFile1
     MS_getStats(ms.file2)->sumFile2
-    sumFile1
-    View(sumFile2)
+    
 
-theta= 2.005128
+#to run simulations and get stats
+set.seed(123);  ms.file1<- MS(file,niter=100, thetaID="Tajima", neutrality=TRUE)
+set.seed(123);   ms.file2<- MS(file, niter=100, thetaID="Tajima", F_ST=TRUE)
+MS_getStats(ms.file1)->sumFile1
+MS_getStats(ms.file2)->sumFile2
+ms.file1@prob.less[1]
+ms.file2@prob.less[1]
+
+# small piece of code to try to back calculate number of haplotypes...I don't think it really works
+theta= 4.763545
+n.samples=105
 a=NULL
-for (i in 1:20){
+for (i in 1:210){
   (theta/(theta+i-1))->a[i+0]
   }
 sum(a)
@@ -172,10 +195,17 @@ sum(a)
 # to average estimators accross all the simulated populations
 # neutrality module
 mean(sumFile1[,"Tajima.D"])
+variance(sumFile[,"Tajima.D"])
+mean(sumFile1[,"n.segregating.sites"])
+variance(sumFile[,"n.segregating.sites"])
 mean(sumFile1[,"theta_Tajima"])
 var(sumFile1[,"theta_Tajima"])
 mean(sumFile1[,"theta_Watterson"])
 var(sumFile1[,"theta_Watterson"])
+
+# F_ST module
+mean(sumFile2[,"hap.diversity.within"])
+mean(sumFile2[,"Pi"])
 
 #MSMS allows for simulation with selection, we need the folder with the program and executable files to run it
 http://www.mabs.at/ewing/msms/quickStart.shtml

@@ -337,10 +337,10 @@ plot(probs[,1],probs[,3],col='blue')
 
 ## Doesn't matter which
 
-We are still dealing with how to handle, probabilistically, the number of individuals that went into our observation *given* the prior information about system
+<div class="columns-2">
+  ![Image](images/white2.jpg)
 
-<div class="centered">
-![wipeboard](images/whiteplot.jpg)
+  We are still dealing with how to handle, probabilistically, the number of individuals that went into our observation *given* the prior information about system
 </div>
 
 ## Other ways to handle diversity?

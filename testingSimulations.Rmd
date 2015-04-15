@@ -61,6 +61,37 @@ write.fasta(data.seqs.easy$org,"simSequences.fas")
 
 ```
 
+```{r creating datasets of different size from picoroco file}
+library(ape)
+library(muscle)
+library(seqinr)
+
+# I used all this chunk at the beggining, to read sequences and convert to fasta, and check alignment, but the final files used for the analysis were edited by eye in MEGA, so I just load those in next chunks
+
+# We need to convert the "Sequence" column to characters
+# to check all the samples
+austroGB$SequenceNew<-as.character(austroGB$Sequence)
+austroSeq <- strsplit(austroGB$SequenceNew, "")
+names(austroSeq)<-austroGB$Label
+
+# to use just the picorocos
+picoroco$SequenceNew<-as.character(picoroco$Sequence)
+picoSeq <- strsplit(picoroco$SequenceNew, "") #is alist, each component is a list of characters with all the bases
+names(picoSeq)<-picoroco$Label # to add the labels
+
+# to transform to a FASTA file and use it with the "muscle" package
+seqinr::write.fasta(austroSeq, names=austroGB$Label,file.out = "allSamples.fasta")
+# to transform to a FASTA file and use it with the "muscle" package
+seqinr::write.fasta(picoSeq, names=picoroco$Label,file.out = "pico.fasta")
+
+# now we can align the sequences with the function muscle of the muscle package, if out=NULL it returns a muscle object, but if it is not NULL, it returns a FASTA file in the folder indicated
+# this one is to use later
+muscle::muscle("pico.fasta",out="C:/Users/Paula/Dropbox/Picoroco MS/alignout/picoroco.fasta")
+
+```
+
+
+
 ```{r simulating diversity indexes with PopGenome}
 library(PopGenome)
 # PopGenome has the MS function that allows to use for coalescent simulations to derive the expected neutral distribution of Tajima's D. 
@@ -76,6 +107,18 @@ file<-neutrality.stats(file)
 
 # or the F_ST stats if we want haplotype diversity
 file<-F_ST.stats(file)
+file@Pi #Nei's diversity (within population)
+file@region.stats@haplotype.counts->haplotypecounts
+
+# to get number of haplotypes
+hapfreq<-unlist(haplotypecounts)
+actual<-sum(hapfreq)
+hapfreq<-hapfreq/actual
+numhaps<-length(hapfreq)
+
+# to get Pi in another way
+diversity.stats(file,pi=TRUE)->file
+file@Pi #also says is Nei's pi
 
 # we call Hudson program, thetaID needs to be defined for any module
 ms.file <- MS(file, niter=20,thetaID="Tajima", neutrality=TRUE)
@@ -119,12 +162,13 @@ ms.file@obs.val[1]
     sumFile1
     View(sumFile2)
 
-theta= 1.494709 
+theta= 2.005128
 a=NULL
-for (i in 1:5){
+for (i in 1:20){
   (theta/(theta+i-1))->a[i+0]
   }
 sum(a)
+
 # to average estimators accross all the simulated populations
 # neutrality module
 mean(sumFile1[,"Tajima.D"])
@@ -298,6 +342,7 @@ neu<-get.neutrality(neuResults,theta=T,stats=T)
 Tajout<-neuResults@Tajima.D
 Tajout
 neuResults@n.segregating.sites
+
 ```
 
 ```{r subsamples}

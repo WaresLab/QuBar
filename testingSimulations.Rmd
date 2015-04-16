@@ -96,6 +96,23 @@ muscle::muscle("pico.fasta",out="C:/Users/Paula/Dropbox/Picoroco MS/alignout/pic
 
 ```
 
+```{r testing pi values with different modules}
+library(PopGenome)
+
+file1<-readData("FastaSeqsPau",include.unknown=T)
+# F_ST stats 
+file1<-F_ST.stats(file1)
+file1@hap.diversity.within
+file1@Pi
+
+file2<-readData("FastaSeqsPau",include.unknown=T)
+# diversity stats
+diversity.stats(file2,pi=TRUE)->file2
+file2@hap.diversity.within
+file2@Pi #also says is Nei's pi
+
+
+```
 
 
 ```{r simulating diversity indexes with PopGenome}
@@ -133,6 +150,7 @@ numhaps
 # to get Pi in another way
 diversity.stats(file,pi=TRUE)->file
 file@Pi #also says is Nei's pi
+file@hap.diversity.within
 
 # we call Hudson program, thetaID needs to be defined for any module----
 ms.file <- MS(file, niter=20,thetaID="Tajima", neutrality=TRUE)
@@ -166,24 +184,46 @@ ms.file@obs.val[1]
     # ----seeds----specify 3 random number seeds. a vector of length 3 with positive integer values is expected.IS NOT WORKING, ERROR MESSAGE
     #parDefined@seeds<-c(1,2,3)
 
-#to run simulations and get stats
-    set.seed(123)
-    ms.file1<- MS(file,niter=100, thetaID="user", params=parDefined,neutrality=TRUE)
-    set.seed(123)
-    ms.file2<- MS(file, niter=100, thetaID="user", params=parDefined,F_ST=TRUE)
-    MS_getStats(ms.file1)->sumFile1
-    MS_getStats(ms.file2)->sumFile2
-    
+#to run simulations and get stats, be aware that simulations for the F_ST module take a longer time to run
+  set.seed(123)
+  ms.fileNeu<- MS(file,niter=100, thetaID="user", params=parDefined,neutrality=TRUE)
+  set.seed(123)
+  ms.fileDiv<- MS(file, niter=100, thetaID="user", params=parDefined,F_ST=TRUE)
+ # when we apply the MS_getStats function we only get 1 of the fasta files that we put, but in the ms.file we have the information of the simulations for ALL of our files, the information is in the slot "locus", in form of a list with length equal to the number of files.
+ms.fileNeu@locus->locusNeu
+unlist(locusNeu[[1]]@stats[[1]])->pico10
+unlist(locusNeu[[2]]@stats[[1]])->pico100
+unlist(locusNeu[[3]]@stats[[1]])->pico20
+unlist(locusNeu[[4]]@stats[[1]])->pico40
+unlist(locusNeu[[5]]@stats[[1]])->pico5
+unlist(locusNeu[[6]]@stats[[1]])->pico80
+unlist(locusNeu[[7]]@stats[[1]])->picoAll
 
-#to run simulations and get stats
+ms.fileDiv@locus->locusDiv
+unlist(locusDiv[[1]]@stats[[1]])->pico10
+unlist(locusDiv[[2]]@stats[[1]])->pico100
+unlist(locusDiv[[3]]@stats[[1]])->pico20
+unlist(locusDiv[[4]]@stats[[1]])->pico40
+unlist(locusDiv[[5]]@stats[[1]])->pico5
+unlist(locusDiv[[6]]@stats[[1]])->pico80
+unlist(locusDiv[[7]]@stats[[1]])->picoAll
+
+# F_ST module
+mean(pico10[,"hap.diversity.within"],na.rm=T)->Hpico10; Hpico10
+mean(pico100[,"hap.diversity.within"],na.rm=T)->Hpico100; Hpico100
+mean(pico20[,"hap.diversity.within"],na.rm=T)->Hpico20; Hpico20
+mean(pico40[,"hap.diversity.within"],na.rm=T)->Hpico40; Hpico40
+mean(pico5[,"hap.diversity.within"],na.rm=T)->Hpico5; Hpico5
+mean(pico80[,"hap.diversity.within"],na.rm=T)->Hpico80; Hpico80
+mean(picoAll[,"hap.diversity.within"],na.rm=T)->HpicoAll; HpicoAll
+
+#to run simulations and get stats QUICK AND REGULAR
 set.seed(123);  ms.file1<- MS(file,niter=100, thetaID="Tajima", neutrality=TRUE)
 set.seed(123);   ms.file2<- MS(file, niter=100, thetaID="Tajima", F_ST=TRUE)
 MS_getStats(ms.file1)->sumFile1
 MS_getStats(ms.file2)->sumFile2
-ms.file1@prob.less[1]
-ms.file2@prob.less[1]
 
-# small piece of code to try to back calculate number of haplotypes...I don't think it really works
+# small piece of code to try to back calculate number of haplotypes...I don't think it really works----
 theta= 4.763545
 n.samples=105
 a=NULL
@@ -192,20 +232,21 @@ for (i in 1:210){
   }
 sum(a)
 
-# to average estimators accross all the simulated populations
+# to average estimators accross all the simulated populations----
 # neutrality module
 mean(sumFile1[,"Tajima.D"])
-variance(sumFile[,"Tajima.D"])
+var(sumFile1[,"Tajima.D"])
 mean(sumFile1[,"n.segregating.sites"])
-variance(sumFile[,"n.segregating.sites"])
+var(sumFile1[,"n.segregating.sites"])
 mean(sumFile1[,"theta_Tajima"])
 var(sumFile1[,"theta_Tajima"])
 mean(sumFile1[,"theta_Watterson"])
 var(sumFile1[,"theta_Watterson"])
 
-# F_ST module
-mean(sumFile2[,"hap.diversity.within"])
-mean(sumFile2[,"Pi"])
+
+# Now to do it in the different locus/fastaFiles
+ms.file1@locus[[1]]@stats->list1 #is a list, I need to figure it out how to extract the stats to estimate mean
+
 
 #MSMS allows for simulation with selection, we need the folder with the program and executable files to run it
 http://www.mabs.at/ewing/msms/quickStart.shtml

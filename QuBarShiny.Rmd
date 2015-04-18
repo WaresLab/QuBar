@@ -266,6 +266,7 @@ for (n in 2:maxn) {
 #
 
 <div class="centered">
+<img height="100" width="40">
 ![wipeboard](images/spaceman.jpg)
 </div>
 

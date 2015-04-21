@@ -237,28 +237,36 @@ library(PopGenome)
 
 # now we READ THE MS OUTPUT and work with that
 
-# PopGenome (DOESN'T WORK, READS SOMETHING OLD AND DOESN'T REALIZE THAT THE FILE IS DIFFERENT, WEIRD....)
-readMS("msNew.out")->msPop 
+# PopGenome (DOESN'T WORK, READS SOMETHING OLD AND DOESN'T REALIZE THAT THE FILE IS DIFFERENT, WEIRD....)----
+readMS("msNew.out")->msPopGen 
 #class(msPop) #this is a class genome object
-get.sum.data(msPop)
-msPop@region.stats
+get.sum.data(msPopGen)
+msPopGen@region.stats
+msPopGen@region.stats@haplotype.diversity
 
-# gap
+# gap----
 read.ms.output("msNew.out")->msGap
 #class(msGap) #this is a list with the results
 str(msGap)
 
-# the "haplotypes" are in gametes
-msGap$gametes[[1]]
+# the "haplotypes" are in gametes, the haplotype number can be extracted by doing unique() of the haplotype number matrix and then counting rows. Now we need a loop to extract the haplotype number for all simulations.
 
-# to get number of haplotypes...we just need a little clever script...working on it
+# haplotype number
+haplotypes<-rep(NA,msGap$nreps)
+
+for( i in 1:msGap$nreps){
+msGap$gametes[[i]]->mat
+nrow(unique(mat))->hapN
+hapN->haplotypes[i]
+}
+
+# haplotype diversity
+
+
 
 
 
 ```
-
-
-
 
 
 We simulated sequences data for 200 individuals using the combined approach ms [@Hudson2002] plus seq-gen [@Rambaut1997] implemented in the *phyclust* package [@Chen2011] of the R program [@RCoreTeam2013]. The ms() function is used to simulate trees in a population that evolves under a Wrigth-Fisher model, and the seqgen() function is used to generate the nucleotide sequences according to those/the tree/s. We simulated sequences for different levels of mutation rate ($\theta$) and saved the  sequences in fasta files representing our "original" populations. 

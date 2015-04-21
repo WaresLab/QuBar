@@ -3,8 +3,8 @@
 # know the real number of samples
 # and have haplotype diversity from the original field population
 
-numhaps<-c(1,2,3,4,5,6,7,8)
-numSamp<-c(3,6,9,10,12,16,18,19)
+numhaps<-c(1,2,3,4,5,6,7,8) # I will have this vector for real
+numSamp<-c(3,6,9,10,12,16,18,19) #niter in MS
 Hapdiv=0.7 #minvalue 0.001 if no information; this is PRIOR information
 
 # set plot space depending number of datasets

@@ -5,6 +5,7 @@ date: "Friday, April 10, 2015"
 output: pdf_document
 ---
 
+# Simulating data
 
 ```{r testing how to simulate data, eval=FALSE}
 # Here we have the detailed explanation of how to simulate data, I wrote a little bit of how to do it in PopGenome but I'm using here the approach in the phyloclust package that allows to work in windows too.
@@ -61,41 +62,6 @@ write.fasta(data.seqs.easy$org,"simSequences.fas")
 
 ```
 
-```{r creating datasets of different size from picoroco file}
-library(ape)
-library(muscle)
-library(seqinr)
-
-austroGB <- read.delim("picoroco27Mar2015_allBarnacles.txt",header=TRUE) 
-
-# subset things we need later and are useful in the text (like min and max lat)
-austroGBlat<-austroGB[complete.cases(austroGB$Latitude),]
-
-# subsetting just Austromegabalanus psittacus
-picoroco<-subset(austroGB, grepl("psit",austroGB$Species))
-fabio <- which(austroGB$Origen=='museum')
-picoroco[-fabio,]->picoroco
-taltal<-which(picoroco$SiteName=='Taltal') # there is only one sample
-picoroco[-taltal,]->picoroco
-droplevels(picoroco)->pico
-
-# We need to convert the "Sequence" column to characters
-# to check all the samples
-pico$SequenceNew<-as.character(pico$Sequence)
-picoSeq <- strsplit(pico$SequenceNew, "")
-names(picoSeq)<-pico$Label
-
-# to transform to a FASTA file and use it with the "muscle" package
-seqinr::write.fasta(picoSeq, names=pico$Label,file.out = "pico.fasta")
-
-
-
-# now we can align the sequences with the function muscle of the muscle package, if out=NULL it returns a muscle object, but if it is not NULL, it returns a FASTA file in the folder indicated
-# this one is to use later
-muscle::muscle("pico.fasta",out="C:/Users/Paula/Dropbox/Picoroco MS/alignout/picoroco.fasta")
-
-```
-
 ```{r testing pi values with different modules}
 library(PopGenome)
 
@@ -114,6 +80,7 @@ file2@Pi #also says is Nei's pi
 
 ```
 
+Here we are running MS simulations in R using PopGenome
 
 ```{r simulating diversity indexes with PopGenome}
 library(PopGenome)
@@ -160,6 +127,10 @@ ms.file
 
 ms.file <- MS(file, niter=100,thetaID="Tajima", F_ST=TRUE)
 ms.file
+
+
+# reading the output of ms
+readMS(ms.out)
 
 # we can extract the simulated Tajima's D (and other stats as well) in form of a matrix
 MS_getStats(ms.file) #stats change depending what module we choose
@@ -253,6 +224,41 @@ ms.file1@locus[[1]]@stats->list1 #is a list, I need to figure it out how to extr
 #MSMS allows for simulation with selection, we need the folder with the program and executable files to run it
 http://www.mabs.at/ewing/msms/quickStart.shtml
 ```
+
+# Reading *ms* output
+
+Here we open the ms output with PopGenome or gap, trying to see what works
+
+```{r reading MS output}
+library(gap)
+library(PopGenome)
+
+# the MS file has to be created directly using MS Hudson's putting > ms.out to save the results in the call. NOTE: the nsamp will determined the sequence length.
+
+# now we READ THE MS OUTPUT and work with that
+
+# PopGenome (DOESN'T WORK, READS SOMETHING OLD AND DOESN'T REALIZE THAT THE FILE IS DIFFERENT, WEIRD....)
+readMS("msNew.out")->msPop 
+#class(msPop) #this is a class genome object
+get.sum.data(msPop)
+msPop@region.stats
+
+# gap
+read.ms.output("msNew.out")->msGap
+#class(msGap) #this is a list with the results
+str(msGap)
+
+# the "haplotypes" are in gametes
+msGap$gametes[[1]]
+
+# to get number of haplotypes...we just need a little clever script...working on it
+
+
+
+```
+
+
+
 
 
 We simulated sequences data for 200 individuals using the combined approach ms [@Hudson2002] plus seq-gen [@Rambaut1997] implemented in the *phyclust* package [@Chen2011] of the R program [@RCoreTeam2013]. The ms() function is used to simulate trees in a population that evolves under a Wrigth-Fisher model, and the seqgen() function is used to generate the nucleotide sequences according to those/the tree/s. We simulated sequences for different levels of mutation rate ($\theta$) and saved the  sequences in fasta files representing our "original" populations. 

@@ -126,6 +126,8 @@ file<-readData("FastaSeqsPau",include.unknown=T)
 
 # useful stuff
 get.sum.data(file)->summary
+summary
+
 nrow(summary)->fileNumber
 # the slot "region.data" contains more detailed information 
 file@region.data
@@ -134,7 +136,7 @@ file@region.data
 file<-neutrality.stats(file)
 
 # or the F_ST stats if we want haplotype diversity
-file<-F_ST.stats(file)
+file<-F_ST.stats(file,only.haplotype.counts=T)
 
 file@Pi #Nei's diversity (within population)
 file@region.stats@haplotype.counts->haplotypecounts
@@ -156,7 +158,7 @@ file@hap.diversity.within
 ms.file <- MS(file, niter=20,thetaID="Tajima", neutrality=TRUE)
 ms.file
 
-ms.file <- MS(file, niter=20,thetaID="Tajima", F_ST=TRUE)
+ms.file <- MS(file, niter=100,thetaID="Tajima", F_ST=TRUE)
 ms.file
 
 # we can extract the simulated Tajima's D (and other stats as well) in form of a matrix

@@ -233,21 +233,18 @@ Here we open the ms output with PopGenome or gap, trying to see what works
 library(gap)
 library(PopGenome)
 
-# the MS file has to be created directly using MS Hudson's putting > ms.out to save the results in the call. NOTE: the nsamp will determined the sequence length.
+# -----gap----
+# we can call ms from R without having to use the console and read the object directly with the gap function
 
-# now we READ THE MS OUTPUT and work with that
+msout <- system("ms 10 20 -t 5", intern=TRUE)
+msGap <- read.ms.output(msout,FALSE)
 
-# PopGenome (DOESN'T WORK, READS SOMETHING OLD AND DOESN'T REALIZE THAT THE FILE IS DIFFERENT, WEIRD....)----
-readMS("msNew.out")->msPopGen 
-#class(msPop) #this is a class genome object
-get.sum.data(msPopGen)
-msPopGen@region.stats
-msPopGen@region.stats@haplotype.diversity
+# also, by saving it we are going to be able to open this with PopGenome
+write(msout,"ms.out")
 
-# gap----
-read.ms.output("msNew.out")->msGap
+#read.ms.output("ms.out")->msGap #reads from a file in the current folder
 #class(msGap) #this is a list with the results
-str(msGap)
+#str(msGap)
 
 # the "haplotypes" are in gametes, the haplotype number can be extracted by doing unique() of the haplotype number matrix and then counting rows. Now we need a loop to extract the haplotype number for all simulations.
 
@@ -255,15 +252,30 @@ str(msGap)
 haplotypes<-rep(NA,msGap$nreps)
 
 for( i in 1:msGap$nreps){
-msGap$gametes[[i]]->mat
-nrow(unique(mat))->hapN
-hapN->haplotypes[i]
-}
+  msGap$gametes[[i]]->mat
+  t(mat)->matHap
+  nrow(unique(matHap))->hapN
+  hapN->haplotypes[i]
+  }
+haplotypes
 
-# haplotype diversity
+# -----PopGenome ----
+readMS("ms.out")->msPopGen #gives a "genome" object
 
+# run F_ST stats and check haplotype diversity
+F_ST.stats(msPopGen)->msPopGen
+msPopGen@region.stats@haplotype.diversity->hapDiv
+unlist(hapDiv)->Hresults
+Hresults
 
+# run neutrality.stats to check that Tajima's D is negative and looks real
+msPopGen<-neutrality.stats(msPopGen)
+Tajout<-msPopGen@Tajima.D
+Tajout
 
+# to check that PopGenome and gap read the same, we can see the number of segregating sites
+msGap$segsites
+get.sum.data(msPopGen)
 
 
 ```
@@ -364,7 +376,7 @@ library(phyclust)
 
 # trying to think because is still making similar sequences!
 set.seed(123)
-tree<-ms(nsam=20, nreps=1, opts= "-T -t 1 -G 10")
+tree<-ms(nsam=20, nreps=1, opts= "-t 1 -G 10 >msnew.out")
 simtree<-read.tree(text=tree[3])
 set.seed(123)
 

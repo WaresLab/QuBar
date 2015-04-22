@@ -1,0 +1,102 @@
+---
+title: "Doing Simulations"
+author: "Paula Pappalardo"
+date: "Wednesday, April 22, 2015"
+output: pdf_document
+---
+
+# Running simulations
+
+After the first trials, I realized the best method is to call "ms" from R, read that from *gap* and save the file to read it also with *PopGenome*. With *gap* we are able to estimate number of haplotypes. With *PopGenome* we are able to estimate haplotype diversity and also Tajima's D for the cases that we want to simulate "real" populations.
+
+We are going to simulate four populations of 1000 individuals, with the following parameters:
+
+1) theta=2, growth rate to have "good" Tajima's D
+2) theta=10, growth rate to have "good" Tajima's D
+3) theta=2, no growth
+4) theta=10, no growth.
+
+For these four populations we are going to calculate the haplotype diversity and the Tajima's D (to check).
+
+From each of the four populations we are going to sample without replacement "field samples" of 2,4,8,16,32,64 and 128 individuals. That way we know the real n. Using the number of haplotypes and the number of segregating sites of the "field samples" we are going to do our best to back calculate the number of individuals in that sample, using as prior information the haplotype diversity of the original population (n=1000).
+
+The only thing that we need to keep from each "field sample" is the number of haplotypes and number of segregating sites. So to save memory I may try to clean the files we are not using if things get problematic...
+
+NOTE: one thing to have in mind is that we are not controlling for sequence length since there are no sequences in the ms output and we are just seing the segregating sites. That's why the sequence length that is usually visibly with the summary stats in PopGenome is zero when we are reading the ms output file. It shouldn't matter for the things we discussed.
+
+Let's do it! :)
+
+```{r simulating source populations}
+library(gap)
+library(PopGenome)
+
+# -----gap----
+# we can call ms from R without having to use the console and read the object directly with the gap function
+
+# with -G x we set a population growth, a negative value of x means that the population was larger in the past that at present. 
+
+# Simulating our source populations
+theta2Growth <- system("ms 1000 1 -t 2 -G 10", intern=TRUE)
+theta2NoGrowth <- system("ms 1000 1 -t 2", intern=TRUE)
+theta10Growth <- system("ms 1000 1 -t 10 -G 10", intern=TRUE)
+theta10NoGrowth <- system("ms 1000 1 -t 10", intern=TRUE)
+
+# we need to write the outputs so we can read them using PopGenome
+write(theta2Growth,"theta2Growth.out")
+write(theta2NoGrowth,"theta2NoGrowth.out")
+write(theta10Growth,"theta10Growth.out")
+write(theta10NoGrowth,"theta10NoGrowth.out")
+
+# calculating H and Tajima's D for each of the four populations
+readMS("theta2Growth.out")->popgen.t2g #gives a "genome" object
+readMS("theta2NoGrowth.out")->popgen.t2ng
+readMS("theta10Growth.out")->popgen.t10g
+readMS("theta10NoGrowth.out")->popgen.t10ng
+
+# run F_ST stats and check haplotype diversity
+F_ST.stats(popgen.t2g)->popgen.t2g
+F_ST.stats(popgen.t2ng)->popgen.t2ng
+F_ST.stats(popgen.t10g)->popgen.t10g
+F_ST.stats(popgen.t10ng)->popgen.t10ng
+
+# get haplotype diversity for each source population
+unlist(popgen.t2g@region.stats@haplotype.diversity)->hapDiv.t2g
+unlist(popgen.t2ng@region.stats@haplotype.diversity)->hapDiv.t2ng
+unlist(popgen.t10g@region.stats@haplotype.diversity)->hapDiv.t10g
+unlist(popgen.t10ng@region.stats@haplotype.diversity)->hapDiv.t10ng
+
+hapDiv<-c(hapDiv.t2g,hapDiv.t2ng,hapDiv.t10g,hapDiv.t10ng)
+hapDiv
+
+
+# -------------to be continued tomorrow
+# run neutrality.stats to check that Tajima's D is negative and looks real
+msPopGen<-neutrality.stats(msPopGen)
+Tajout<-msPopGen@Tajima.D
+Tajout
+
+
+msTheta2G <- read.ms.output(theta2Growth,FALSE)
+
+
+
+# the "haplotypes" are in gametes, the haplotype number can be extracted by doing unique() of the haplotype number matrix and then counting rows. Now we need a loop to extract the haplotype number for all simulations.
+
+# haplotype number
+haplotypes<-rep(NA,msGap$nreps)
+
+for( i in 1:msGap$nreps){
+  msGap$gametes[[i]]->mat
+  t(mat)->matHap
+  nrow(unique(matHap))->hapN
+  hapN->haplotypes[i]
+  }
+haplotypes
+
+
+
+# to check that PopGenome and gap read the same, we can see the number of segregating sites
+msGap$segsites
+get.sum.data(msPopGen)
+```
+

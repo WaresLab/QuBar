@@ -3,12 +3,12 @@
 # know the real number of samples
 # and have haplotype diversity from the original field population
 
-numhaps<-c(1,2,3,4,5,6,7,8) # I will have this vector for real
-numSamp<-c(3,6,9,10,12,16,18,19) #niter in MS
-Hapdiv=0.7 #minvalue 0.001 if no information; this is PRIOR information
+numhaps<-c(7,8,6,8,8,13,12,6,12,9) # I will have this vector for real
+numsamp<-rep(18,10) #niter in MS
+hapdiv<-c(0.71,0.76,0.58,0.74,0.80,0.84,0.84,0.61,0.84,0.72) #minvalue 0.001 if no information; this is PRIOR information
 
 # set plot space depending number of datasets
-par(mfrow=c(2,4))
+par(mfrow=c(2,5))
 
 # loop through all the haplotypes and generate plots
 for(i in 1:length(numhaps)){
@@ -21,7 +21,7 @@ while (cdf<0.99) {
   #  cdf<-pgamma(x,1,Hapdiv) 
   #  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
   #  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
-  cdf<-pgamma(x,numhaps[i],Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+  cdf<-pgamma(x,numhaps[i],hapdiv[i]) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
   indprob<-cdf-cdfprev
     
   happrob<-numhaps[i]+(x-1)

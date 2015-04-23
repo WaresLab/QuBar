@@ -47,7 +47,7 @@ write(theta2NoGrowth,"theta2NoGrowth.out")
 write(theta10Growth,"theta10Growth.out")
 write(theta10NoGrowth,"theta10NoGrowth.out")
 
-# calculating H and Tajima's D for each of the four populations
+# reading with PopGenome to calculate H and Tajima's D for each of the four populations
 readMS("theta2Growth.out")->popgen.t2g #gives a "genome" object
 readMS("theta2NoGrowth.out")->popgen.t2ng
 readMS("theta10Growth.out")->popgen.t10g
@@ -68,35 +68,82 @@ unlist(popgen.t10ng@region.stats@haplotype.diversity)->hapDiv.t10ng
 hapDiv<-c(hapDiv.t2g,hapDiv.t2ng,hapDiv.t10g,hapDiv.t10ng)
 hapDiv
 
-
-# -------------to be continued tomorrow
 # run neutrality.stats to check that Tajima's D is negative and looks real
-msPopGen<-neutrality.stats(msPopGen)
-Tajout<-msPopGen@Tajima.D
-Tajout
+neutrality.stats(popgen.t2g)->popgen.t2g
+neutrality.stats(popgen.t2ng)->popgen.t2ng
+neutrality.stats(popgen.t10g)->popgen.t10g
+neutrality.stats(popgen.t10ng)->popgen.t10ng
 
+Taj.t2g<-popgen.t10g@Tajima.D
+Taj.t2ng<-popgen.t10ng@Tajima.D
+Taj.t10g<-popgen.t10g@Tajima.D
+Taj.t10ng<-popgen.t10ng@Tajima.D
 
-msTheta2G <- read.ms.output(theta2Growth,FALSE)
+tajima<-c(Taj.t2g,Taj.t2ng,Taj.t10g,Taj.t10ng)
+tajima
+```
 
+Now that we have our 4 populations and we have H and Tajima's D for those, we need to take our "field samples". For that, we are going to use the same pop generated above and read those with gap. Then, using the matrix of the variables sites for the 1000 individuals we are going to take random samples. We are going to use sample sizes from 2 to 128 in a log2 scale.
 
+```{r taking field samples}
+library(gap)
+library(PopGenome)
 
-# the "haplotypes" are in gametes, the haplotype number can be extracted by doing unique() of the haplotype number matrix and then counting rows. Now we need a loop to extract the haplotype number for all simulations.
+# reading the ms output generated in the previous chunk with gap
+read.ms.output(theta2Growth,FALSE)->pop1
+read.ms.output(theta2NoGrowth,FALSE)->pop2
+read.ms.output(theta10Growth,FALSE)->pop3
+read.ms.output(theta10NoGrowth,FALSE)->pop4
 
-# haplotype number
-haplotypes<-rep(NA,msGap$nreps)
+# --------sampling from each population---------
+# vector with all the populations for loops or easy coding
+pop<-list(pop1,pop2,pop3,pop4)
 
-for( i in 1:msGap$nreps){
-  msGap$gametes[[i]]->mat
-  t(mat)->matHap
-  nrow(unique(matHap))->hapN
-  hapN->haplotypes[i]
-  }
-haplotypes
+# vector with the sizes we want to sample
+popsizes<-c(2,4,8,16,32,64,128)
 
+# we extract the gametes matrix for each population, from there we take the samples, we put the matrix obtained in each "sample" in a list called "samples", and the result for each population in a list called "populations"
 
+populations<-list()
 
-# to check that PopGenome and gap read the same, we can see the number of segregating sites
-msGap$segsites
-get.sum.data(msPopGen)
+for(i in 1:length(pop)){
+  pop[[i]]->ourpop
+  namepop<-paste("popOrigen",i,sep="")
+  t(ourpop$gametes[[1]])->mat
+  samples<-list()  
+    for(j in popsizes){
+        name<-paste("sampleSize",j,sep="")
+        mat[sample(nrow(mat),size=j,replace=FALSE),]->sampMat
+        sampMat->samples[[name]]
+      }
+  samples->populations[[namepop]]
+}  
+
+# now in each of the 4 component of the list "populations", we have the 7 list with the samples corresponding to each of the sampling sizes 
+```
+
+Now we are going to calculate number of  haplotypes and number of segregating sites for each of the samples in each of the 4 populations.
+
+```{r calculating haplotypes and segsites for samples}
+# Now for each sample we need to calculate the segregating sites and number of haplotypes
+
+# the haplotype number can be extracted by doing unique() of the matrix
+hapResults<-list()
+for(i in 1:length(pop)){
+  populations[[i]]->popnow
+  namepop<-paste("popOrigen",i,sep="")
+  sapply(popnow,function(x) nrow(unique(x)))->haplotypes
+  haplotypes->hapResults[[namepop]]
+} # now hapResults is a list of vectors with the haplotypes number for each population, in each sample size
+
+# to get segsites for each population, we can count the number of segregating sites by counting the colummns of our sampled matrix
+segsitesResults<-list()
+for(i in 1:length(pop)){
+  populations[[i]]->popnow
+  namepop<-paste("popOrigen",i,sep="")
+  sapply(popnow,function(x) ncol((x)))->segsites
+  segsites->segsitesResults[[namepop]]
+}
+
 ```
 

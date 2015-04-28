@@ -1,5 +1,6 @@
 # load libraries
 library(lattice)
+library(vioplot)
 
 # set parameters to plot, we should have the number of haplotypes
 # know the real number of samples
@@ -31,6 +32,8 @@ names(toFill)<-namesCols
 
 # set plot space depending number of datasets, for each theta we have 7 plots
 par(mfrow=c(2,4),oma=c(0,0,2,0)) #oma is to set space for the main tittle
+
+# Loop in all populations to get the estimates----
 
 # Loop population 1
 for(i in 1:length(numhapsPop1)){
@@ -175,8 +178,18 @@ for(i in 1:length(numhapsPop4)){
   dev.off()
 }
 
+# save result so we don't need to rerun----
+write.csv(toFill,"dataGammaSim.csv")
+
 # now we have the dataframe "toFill" with all the values we need to plot
+toFill<-read.csv("dataGammaSim.csv",header=T)
+
+par(mfrow=c(1,1))
+plot(Pred.value~Obs.n,data=toFill)
+vioplot(toFill$Pred.value,add=T,horizontal=T,lty=2)
+
 xyplot(Pred.value~Obs.n|theta*growth,data=toFill)
 xyplot(Pred.value~Obs.n|theta*growth,data=toFill,panel=function(x,y,...){
   panel.xyplot(x,y,...)
   panel.lines(x,x)})
+

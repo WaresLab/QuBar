@@ -42,10 +42,10 @@ theta10Growth <- system("ms 1000 1 -t 10 -G 10", intern=TRUE)
 theta10NoGrowth <- system("ms 1000 1 -t 10", intern=TRUE)
 
 # we need to write the outputs so we can read them using PopGenome
-write(theta2Growth,"theta2Growth.out")
-write(theta2NoGrowth,"theta2NoGrowth.out")
-write(theta10Growth,"theta10Growth.out")
-write(theta10NoGrowth,"theta10NoGrowth.out")
+#write(theta2Growth,"theta2Growth.out")
+#write(theta2NoGrowth,"theta2NoGrowth.out")
+#write(theta10Growth,"theta10Growth.out")
+#write(theta10NoGrowth,"theta10NoGrowth.out")
 
 # reading with PopGenome to calculate H and Tajima's D for each of the four populations
 readMS("theta2Growth.out")->popgen.t2g #gives a "genome" object
@@ -92,10 +92,17 @@ library(gap)
 library(PopGenome)
 
 # reading the ms output generated in the previous chunk with gap
-read.ms.output(theta2Growth,FALSE)->pop1
-read.ms.output(theta2NoGrowth,FALSE)->pop2
-read.ms.output(theta10Growth,FALSE)->pop3
-read.ms.output(theta10NoGrowth,FALSE)->pop4
+# this way works for reading the object from R, but it is not useful if we want to maintain the origina same populations, because I was not able to make the "seeds" work
+#read.ms.output(theta2Growth,FALSE)->pop1
+#read.ms.output(theta2NoGrowth,FALSE)->pop2
+#read.ms.output(theta10Growth,FALSE)->pop3
+#read.ms.output(theta10NoGrowth,FALSE)->pop4
+
+# this way, we read the same files that were simulated only once, and the same that we read with PopGenome
+read.ms.output("theta2Growth.out",is.file=T)->pop1
+read.ms.output("theta2NoGrowth.out",is.file=T)->pop2
+read.ms.output("theta10Growth.out",is.file=T)->pop3
+read.ms.output("theta10NoGrowth.out",is.file=T)->pop4
 
 # --------sampling from each population---------
 # vector with all the populations for loops or easy coding
@@ -121,7 +128,7 @@ for(i in 1:length(pop)){
   samples->populations[[namepop]]
 }  
 
-# now in each of the 4 component of the list "populations", we have the 7 list with the samples corresponding to each of the sampling sizes 
+# now in each of the 4 component of the list "populations", we have the 7 lists with the samples corresponding to each of the sampling sizes 
 ```
 
 Now we are going to calculate number of  haplotypes and number of segregating sites for each of the samples in each of the 4 populations.
@@ -138,15 +145,31 @@ for(i in 1:length(pop)){
   haplotypes->hapResults[[namepop]]
 } # now hapResults is a list of vectors with the haplotypes number for each population, in each sample size
 
-# to get segsites for each population, we can count the number of segregating sites by counting the colummns of our sampled matrix
+# to get segsites for each population, we can count the number of segregating sites by counting the colummns of our sampled matrix (but first we need to do "unique")
 segsitesResults<-list()
 for(i in 1:length(pop)){
   populations[[i]]->popnow
   namepop<-paste("popOrigen",i,sep="")
-  sapply(popnow,function(x) ncol((x)))->segsites
+  sapply(popnow,function(x) ncol(unique(x)))->segsites
   segsites->segsitesResults[[namepop]]
 }
 
+## Segregating sites
+estimate.segSites <- function(myMatrix){
+  answers<-rep(NA,(nrow(myMatrix)-1))
+  sites<-rep(NA,ncol(myMatrix))
+    for (j in 1:ncol(myMatrix)){
+      for (i in 1:(nrow(myMatrix)-1)){
+        (myMatrix[i+1,j]==myMatrix[1,j])->answers[i]
+      }
+      if (all(answers)==TRUE) {0->sites[j]}
+      else {1->sites[j]}
+      }
+    sum(sites,na.rm=T)->segSites
+    return(segSites)
+  }
+  
+estimate.segSites(a)  
 ```
 
 # Using theta and number of segregating sites

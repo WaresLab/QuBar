@@ -126,35 +126,58 @@ for(i in 1:length(pop)){
         sampMat->samples[[name]]
       }
   samples->populations[[namepop]]
-}  
+}  # now in each of the 4 component of the list "populations", we have the 7 lists with the samples corresponding to each of the sampling sizes 
 
-# now in each of the 4 component of the list "populations", we have the 7 lists with the samples corresponding to each of the sampling sizes 
+# to sample 100 replicates within each sample size
+populations<-list()
+for(i in 1:length(pop)){
+  pop[[i]]->ourpop
+  namepop<-paste("popOrigen",i,sep="")
+  t(ourpop$gametes[[1]])->mat
+  samples<-list()  
+    for(j in popsizes){
+        name<-paste("sampleSize",j,sep="")
+        replicates<-list()
+        for (k in 1:100){
+        namerep<-paste("replicate",k,sep="")  
+        mat[sample(nrow(mat),size=j,replace=FALSE),]->rep
+        rep->replicates[[namerep]]
+        }
+        replicates->samples[[name]]
+      }
+  samples->populations[[namepop]]
+} # now in each of the 4 components of the list "populations", we have 7 list with each component corresponding to each sample size, and within each of this list we have 100 components corresponding to each replicate of the sampled matrix.
 ```
 
-Now we are going to calculate number of  haplotypes and number of segregating sites for each of the samples in each of the 4 populations.
+Now we are going to calculate number of  haplotypes and number of segregating sites for each of the replicates in each of the samples in each of the 4 populations.
 
-```{r calculating haplotypes and segsites for samples}
+```{r calculating haplotypes}
 # Now for each sample we need to calculate the segregating sites and number of haplotypes
-
 # the haplotype number can be extracted by doing unique() of the matrix
 hapResults<-list()
 for(i in 1:length(pop)){
   populations[[i]]->popnow
   namepop<-paste("popOrigen",i,sep="")
-  sapply(popnow,function(x) nrow(unique(x)))->haplotypes
-  haplotypes->hapResults[[namepop]]
+  samples<-list()
+  for (j in 1:length(popsizes)){
+    namesample<-paste("sampleSize",j,sep="")  
+    popnow[[j]]->samplenow
+    for (k in 1:100){
+      sapply(samplenow,function(x) nrow(unique(x)))->result
+      unlist(result)->replicates
+      }
+    replicates->samples[[namesample]]
+    }
+  samples->hapResults[[namepop]]
 } # now hapResults is a list of vectors with the haplotypes number for each population, in each sample size
+hapResults[[1]]->pop1haps
+hapResults[[2]]->pop2haps
+hapResults[[3]]->pop3haps
+hapResults[[4]]->pop4haps
+```
 
-# to get segsites for each population, we can count the number of segregating sites by counting the colummns of our sampled matrix (but first we need to do "unique")
-segsitesResults<-list()
-for(i in 1:length(pop)){
-  populations[[i]]->popnow
-  namepop<-paste("popOrigen",i,sep="")
-  sapply(popnow,function(x) ncol(unique(x)))->segsites
-  segsites->segsitesResults[[namepop]]
-}
-
-## Segregating sites
+```{r calculating segregating sites}
+# load function to estimate segregating sites
 estimate.segSites <- function(myMatrix){
   answers<-rep(NA,(nrow(myMatrix)-1))
   sites<-rep(NA,ncol(myMatrix))
@@ -168,9 +191,105 @@ estimate.segSites <- function(myMatrix){
     sum(sites,na.rm=T)->segSites
     return(segSites)
   }
+
+# to get segsites for each population, we use our custome made function
+segResults<-list()
+for(i in 1:length(pop)){
+  populations[[i]]->popnow
+  namepop<-paste("popOrigen",i,sep="")
+  sapply(popnow,estimate.segSites)->segsites
+  segsites->segResults[[namepop]]
+} # now segResults is a list of vectors with the number of segregating sites for each population, in each sample size
+segResults
+
   
 estimate.segSites(a)  
 ```
+
+# Using the gamma approach
+
+Now we have 100 replicates of each sample size, for each population, and we want to run the gamma stats to make violin plots for each sample size.
+
+```{r gamma distribution}
+# load libraries
+library(lattice)
+library(vioplot)
+
+# Number of samples, from a log2 distribution, it is the same for all populations
+numsamp<-c(2,4,8,16,32,64,128) 
+
+# Haplotype diversity for each of the four simulated populations of 1000 individuals
+hapdiv<-c(0.5504204, 0.3377538, 0.8915536, 0.9258679)
+
+# Number of haplotypes for each replicates are in a list within a list
+# pop1haps (list of 7 sampling sizes, that includes the list with 100 replicates)
+# pop2haps
+# pop3haps
+# pop4haps
+
+# We can make this more efficient, but for now, let's keep a loop for each population:
+
+# set dataframe to fill with the predicted and observed values,for each population
+population<-rep(NA,700)
+Pred.value<-rep(NA,700)
+data.frame(population,Pred.value)->toFill
+
+# set plot space depending number of datasets, for each theta we have 7 plots
+par(mfrow=c(2,4),oma=c(0,0,2,0)) #oma is to set space for the main tittle
+
+# Loop in all populations to get the estimates----
+
+# Loop population 1
+count<-0
+for (j in 1:7){
+  pop1haps[[j]]->ourSize
+  names(ourSize)<-NULL
+    for(i in 1:100){
+      x=1
+      cdf=0
+      indprob=0
+      array<-NULL
+    while (cdf<0.99) {
+      cdfprev<-cdf
+      cdf<-pgamma(x,ourSize[i],hapdiv[1]) 
+      indprob<-cdf-cdfprev
+      happrob<-ourSize[i]+(x-1)
+      array<-c(array,happrob)
+      array<-c(array,cdf)
+      array<-c(array,indprob)
+      x=x+1
+      }
+  probs<-t(matrix(array,nrow=3))
+  probs
+  max<-max(probs[,3])
+  maxPred<-probs[which(probs[,3]==max),1]
+  toFill$Pred.value[i+count]<-maxPred
+  toFill$Obs.n[i+count]<-numsamp[j]
+  toFill$Population[i+count]<-"Pop1"
+  }
+  count+100->count
+ }
+
+# With this I can do a summary table of the frequency of predicted haplotypes for each observed value
+table(toFill$Pred.value,toFill$Obs.n)
+
+# save result so we don't need to rerun----
+write.csv(toFill,"dataGammaSim.csv")
+
+# now we have the dataframe "toFill" with all the values we need to plot
+toFill<-read.csv("dataGammaSim.csv",header=T)
+
+par(mfrow=c(1,1))
+plot(Pred.value~Obs.n,data=toFill)
+vioplot(toFill$Pred.value,add=T,horizontal=F,lty=2)
+
+xyplot(Pred.value~Obs.n|theta*growth,data=toFill)
+xyplot(Pred.value~Obs.n|theta*growth,data=toFill,panel=function(x,y,...){
+  panel.xyplot(x,y,...)
+  panel.lines(x,x)})
+
+```
+
 
 # Using theta and number of segregating sites
 

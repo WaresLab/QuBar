@@ -112,22 +112,6 @@ pop<-list(pop1,pop2,pop3,pop4)
 popsizes<-c(2,4,8,16,32,64,128)
 
 # we extract the gametes matrix for each population, from there we take the samples, we put the matrix obtained in each "sample" in a list called "samples", and the result for each population in a list called "populations"
-
-populations<-list()
-
-for(i in 1:length(pop)){
-  pop[[i]]->ourpop
-  namepop<-paste("popOrigen",i,sep="")
-  t(ourpop$gametes[[1]])->mat
-  samples<-list()  
-    for(j in popsizes){
-        name<-paste("sampleSize",j,sep="")
-        mat[sample(nrow(mat),size=j,replace=FALSE),]->sampMat
-        sampMat->samples[[name]]
-      }
-  samples->populations[[namepop]]
-}  # now in each of the 4 component of the list "populations", we have the 7 lists with the samples corresponding to each of the sampling sizes 
-
 # to sample 100 replicates within each sample size
 populations<-list()
 for(i in 1:length(pop)){
@@ -140,6 +124,7 @@ for(i in 1:length(pop)){
         replicates<-list()
         for (k in 1:100){
         namerep<-paste("replicate",k,sep="")  
+        set.seed(123)
         mat[sample(nrow(mat),size=j,replace=FALSE),]->rep
         rep->replicates[[namerep]]
         }
@@ -149,6 +134,7 @@ for(i in 1:length(pop)){
 } # now in each of the 4 components of the list "populations", we have 7 list with each component corresponding to each sample size, and within each of this list we have 100 components corresponding to each replicate of the sampled matrix.
 ```
 
+The object **populations** has 4 components (one for each population), each one include 7 lists (one for each sampling size), and within each of the sampling sizes we have a list with the 100 matrix sampled.
 Now we are going to calculate number of  haplotypes and number of segregating sites for each of the replicates in each of the samples in each of the 4 populations. The loops takes a while to be able to do it for all the replicates.
 
 ```{r calculating haplotypes}
@@ -175,6 +161,7 @@ hapResults[[2]]->pop2haps
 hapResults[[3]]->pop3haps
 hapResults[[4]]->pop4haps
 ```
+We are going to do a similar procedure to estimate the number of segregating sites. We first created a function to estimate the number of segregating sites from the gametes matrix provided by the MS simulation. And the we apply that looping over our samples.
 
 ```{r calculating segregating sites}
 # load function to estimate segregating sites, it works taking a matrix of gametes and returning a numeric value, the number of segregating sites.
@@ -211,6 +198,120 @@ segResults[[1]]->pop1segsites
 segResults[[2]]->pop2segsites
 segResults[[3]]->pop3segsites
 segResults[[4]]->pop4segsites
+```
+
+Since these calculations take quite a while (at least the haplotypes), we are going to save our results in a dataframe, the number of haplotypes and the number of segreating sites for each population.
+
+```{r making dataframe with haplotypes and segSites}
+# probably not efficient at all, but it works
+# number of haplotypes----
+Population<-rep(NA,700)
+Haplotypes<-rep(NA,700)
+data.frame(Population,Haplotypes)->toFillhap
+toFillhap->toFillhap2
+toFillhap->toFillhap3
+toFillhap->toFillhap4
+
+count<-0
+for (j in 1:7){
+  pop1haps[[j]]->oursize
+  names(oursize)<-NULL
+  for (i in 1:100){
+  toFillhap$Haplotypes[i+count]<-oursize[i]
+  toFillhap$Population[i+count]<-"Pop1"
+  }
+  count+100->count
+ }
+count<-0
+for (j in 1:7){
+  pop2haps[[j]]->oursize
+  names(oursize)<-NULL
+  for (i in 1:100){
+  toFillhap2$Haplotypes[i+count]<-oursize[i]
+  toFillhap2$Population[i+count]<-"Pop2"
+  }
+  count+100->count
+ }
+count<-0
+for (j in 1:7){
+  pop3haps[[j]]->oursize
+  names(oursize)<-NULL
+  for (i in 1:100){
+  toFillhap3$Haplotypes[i+count]<-oursize[i]
+  toFillhap3$Population[i+count]<-"Pop3"
+  }
+  count+100->count
+ }
+count<-0
+for (j in 1:7){
+  pop4haps[[j]]->oursize
+  names(oursize)<-NULL
+  for (i in 1:100){
+  toFillhap4$Haplotypes[i+count]<-oursize[i]
+  toFillhap4$Population[i+count]<-"Pop4"
+  }
+  count+100->count
+ }
+
+# putting populations together
+rbind(toFillhap,toFillhap2,toFillhap3,toFillhap4)->hapData
+
+# number of segregating sites----
+Population<-rep(NA,700)
+segSites<-rep(NA,700)
+data.frame(Population,segSites)->toFillseg
+toFillseg->toFillseg2
+toFillseg->toFillseg3
+toFillseg->toFillseg4
+
+count<-0
+for (j in 1:7){
+  pop1segsites[[j]]->oursize
+  names(oursize)<-NULL
+  for (i in 1:100){
+  toFillseg$segSites[i+count]<-oursize[i]
+  toFillseg$Population[i+count]<-"Pop1"
+  }
+  count+100->count
+ }
+count<-0
+for (j in 1:7){
+  pop2segsites[[j]]->oursize
+  names(oursize)<-NULL
+  for (i in 1:100){
+  toFillseg2$segSites[i+count]<-oursize[i]
+  toFillseg2$Population[i+count]<-"Pop2"
+  }
+  count+100->count
+ }
+count<-0
+for (j in 1:7){
+  pop3segsites[[j]]->oursize
+  names(oursize)<-NULL
+  for (i in 1:100){
+  toFillseg3$segSites[i+count]<-oursize[i]
+  toFillseg3$Population[i+count]<-"Pop3"
+  }
+  count+100->count
+ }
+count<-0
+for (j in 1:7){
+  pop4segsites[[j]]->oursize
+  names(oursize)<-NULL
+  for (i in 1:100){
+  toFillseg4$segSites[i+count]<-oursize[i]
+  toFillseg4$Population[i+count]<-"Pop4"
+  }
+  count+100->count
+ }
+
+# putting things together----
+rbind(toFillseg,toFillseg2,toFillseg3,toFillseg4)->segData
+c(rep(2,100),rep(4,100),rep(8,100),rep(16,100),rep(32,100),rep(64,100),rep(128,100))->sampleSize
+cbind(hapData,segData$segSites,rep(sampleSize,4))->hapsegData
+names(hapsegData)<-c("Populations","Haplotypes","segSites","sampleSize")
+# save result so we don't need to rerun----
+write.csv(hapsegData,"hapsegData.csv")
 ```
 
 # Using the gamma approach
@@ -396,7 +497,6 @@ qplot(Obs.n,Max.Pred.value,data=gammaData,color=Pop,fill=Pop,geom=c("point","smo
 bp+scale_fill_discrete(name="Populations",breaks=c("Pop1","Pop2","Pop3","Pop4"),labels=c("Theta=2g", "Theta=2ng","Theta=10g", "Theta=10ng"))
 ```
 
-
 # Using theta and number of segregating sites
 
 John's code, starting to dig in this part...
@@ -445,63 +545,42 @@ QW <- varsite/harm
 ```{r WakeleyCh4, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 library(plot3D)
 
-# vector with the sizes we sampled
-popsizes<-c(2,4,8,16,32,64,128)
+#load data with observed segregating sites in the samples
+data<-read.csv("hapsegData.csv",header=T)
+segdata<-unique(data[,c("Populations","segSites","sampleSize")])
+zero<-which(segdata$segSites==0)
+segdata[-zero,]->segdata
 
-# Now we have the results of segregating sites in 
-# pop1segsites
-# pop2segsites
-# pop3segsites
-# pop4segsites
-
-# And we can calculate the max to set our axes
-sapply(pop1segsites,function (x) max(x))->maxpop1
-max1<-max(maxpop1)
-sapply(pop2segsites,function (x) max(x))->maxpop2
-max2<-max(maxpop2)
-sapply(pop3segsites,function (x) max(x))->maxpop3
-max3<-max(maxpop3)
-sapply(pop4segsites,function (x) max(x))->maxpop4
-max4<-max(maxpop4)
-
-maxn=128
-maxk=max(c(max1,max2,max3,max4))
+# we need to define a maximum n, above 70 this behaves funny???? 
+maxn=200
+maxk<-max(segdata$segSites)
 
 # theta values in our four populations, our "known" value of the "real" population (n=1000 simulated populations in this round)
 theta<-c(2,2,10,10)
-
 Q = 2 #theta 
 
-#maxn = min(4*Q,50) #above 70 this behaves funny???? OR IT MAY BE SOME MULTIPLE OF Q*maxn that is problem?
-
-obsvdk = 13
-maxk = 2*obsvdk #must be greater than obsvdk
-
-a <- c(1:maxn)
-b <- c(1:maxk)
-PSKv <- numeric(maxn*maxk)
-PSKv <- matrix(PSKv,ncol=maxn)
-colnames(PSKv)<-a
-rownames(PSKv)<-b
-
-for (n in 2:maxn) {
-#  print ("n")
-#  print (n)
-  for (k in 0:maxk) {
-#    print (k)
-    PSK=0
-    for (i in 2:n) {
-#      print (i)
-      PSK<-PSK + ((-1)^i)*(choose((n-1),(i-1)))*((i-1)/(Q+i-1))*(Q/(Q+i-1))^k
-      
-    }
-#    print (PSK)
-    PSKv[k,n]<-PSKv[k,n]+PSK
-    obsvd<-PSKv[obsvdk,]
-
-  }
+ndist<-list()
+for (z in 1:nrow(segdata)){
+  name<-paste("seg",z,sep="")
+  obsvdk<-segdata$segSites[z]
+  a <- c(1:maxn)
+  b <- c(1:maxk)
+  PSKv <- numeric(maxn*maxk)
+  PSKv <- matrix(PSKv,ncol=maxn)
+  colnames(PSKv)<-a
+  rownames(PSKv)<-b
   
-}
+  for (n in 2:maxn) {
+        PSK=0
+        for (i in 2:n) {
+             PSK<-PSK + ((-1)^i)*(choose((n-1),(i-1)))*((i-1)/(Q+i-1))*(Q/(Q+i-1))^obsvdk
+        }
+        PSKv[obsvdk,n]<-PSKv[obsvdk,n]+PSK
+      obsvd<-PSKv[obsvdk,]
+      obsvd->ndist[[name]]
+      }
+    }
+  
 
 hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=30,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35,main=paste((expression(theta))," = ",Q))
 

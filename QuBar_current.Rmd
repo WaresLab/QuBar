@@ -272,6 +272,8 @@ Talk a bit about how barcode frequency information maybe isn't as far off when d
 
 In the end, Discussion :: though there are concerns about read frequency...at a minimum haplotpye number bounds the minimum. In this way we feel better about order of magnitude results, and less need for prior information from a population. This has been less evaluated in microbial/viral samples as "population" is perhaps less defined in those communi9ties than in eukaryote or metazoan communiteis, e.g. through gene flow. But as a complementary recognition that the number of haplotypes tells us some information for sure, and prior information about that population may also provide additional information, we may start to improve on our ability to recover actual ecology from actual molecules.
 
+5-3-15 we are now pretty sure that the S=k method is too insensitive (as often the case iwth coalescent, and we see that above samples of 10 the values are relatively insensitive, see Vince Buffalo's "dancing genealogies" for illustration of why even if peaks look sharper for theta 10 the possibilities are massive for the empirical stuff that fits....). So this is concerning for even being able to tell orders of magnitude apart, e.g. 10 of species A and 100 of species B probably won't happen. 
+
 # Acknowledgments
 
 Idea brought about by extended problem-solving session with J. Drake, helped greatly by C. Ewers-Saucedo and K. Bockrath. Work supported by funding from NSF-OCE-Chile, OVPR, and UGA Department of Genetics.

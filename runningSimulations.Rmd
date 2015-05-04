@@ -314,6 +314,8 @@ names(hapsegData)<-c("Populations","Haplotypes","segSites","sampleSize")
 write.csv(hapsegData,"hapsegData.csv")
 ```
 
+Now we have the dataframe "hapsegData" with the number of haplotypes and segregating sites for each replicate, for each population, and we don't need to run the chunk everytime.
+
 # Using the gamma approach
 
 Now we have 100 replicates of each sample size, for each population, and we want to run the gamma stats for each replicate in each sampling size. To save the results I created a dataframe "toFill", and since the haplotype calculation takes its time, I will save that dataframe so we don't have to calculate the haplotypes each time.
@@ -483,6 +485,10 @@ write.csv(gammaData,"gammaData.csv")
 ```
 
 ```{r gamma distribution plot}
+library(lattice)
+library(ggplot2)
+library(vioplot)
+
 # now we have the dataframe "gammaData" with all the values we need to plot
 gammaData<-read.csv("gammaData.csv",header=T)
 
@@ -545,24 +551,34 @@ QW <- varsite/harm
 ```{r WakeleyCh4, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 library(plot3D)
 
-#load data with observed segregating sites in the samples
+# load data with observed segregating sites in the samples
 data<-read.csv("hapsegData.csv",header=T)
+
+# getting the unique combinations of segregating sites per population/theta to enter in the Wakeley formula
 segdata<-unique(data[,c("Populations","segSites","sampleSize")])
+
+# taking out the values of zero segregating sites
 zero<-which(segdata$segSites==0)
 segdata[-zero,]->segdata
 
-# we need to define a maximum n, above 70 this behaves funny???? 
-maxn=200
+# we need to define a maximum n, John identified that above 70 this behaves funny 
+maxn=60
 maxk<-max(segdata$segSites)
 
 # theta values in our four populations, our "known" value of the "real" population (n=1000 simulated populations in this round)
 theta<-c(2,2,10,10)
-Q = 2 #theta 
 
-ndist<-list()
-for (z in 1:nrow(segdata)){
+# -----theta=2-----------
+Q = 2 #theta 
+segdata2<-subset(segdata,Populations=="Pop1"|Populations=="Pop2")
+
+# creating empty list to put the results
+ndistT2<-list()
+
+# looping in segdata and running Wakeley formula
+for (z in 1:nrow(segdata2)){
   name<-paste("seg",z,sep="")
-  obsvdk<-segdata$segSites[z]
+  obsvdk<-segdata2$segSites[z]
   a <- c(1:maxn)
   b <- c(1:maxk)
   PSKv <- numeric(maxn*maxk)
@@ -577,10 +593,47 @@ for (z in 1:nrow(segdata)){
         }
         PSKv[obsvdk,n]<-PSKv[obsvdk,n]+PSK
       obsvd<-PSKv[obsvdk,]
-      obsvd->ndist[[name]]
+      obsvd->ndistT2[[name]]
       }
     }
   
+# The result of the loop is a list "ndistT2", with each component being one observed segregating site value, and within that a vector with length maxn, and components theh probability values for that segsite according to Wakeley.
+
+# -----theta=10-----------
+Q = 10 #theta 
+segdata10<-subset(segdata,Populations=="Pop3"|Populations=="Pop4")
+
+# creating empty list to put the results
+ndistT10<-list()
+
+# looping in segdata and running Wakeley formula
+for (z in 1:nrow(segdata10)){
+  name<-paste("seg",z,sep="")
+  obsvdk<-segdata2$segSites[z]
+  a <- c(1:maxn)
+  b <- c(1:maxk)
+  PSKv <- numeric(maxn*maxk)
+  PSKv <- matrix(PSKv,ncol=maxn)
+  colnames(PSKv)<-a
+  rownames(PSKv)<-b
+  
+  for (n in 2:maxn) {
+        PSK=0
+        for (i in 2:n) {
+             PSK<-PSK + ((-1)^i)*(choose((n-1),(i-1)))*((i-1)/(Q+i-1))*(Q/(Q+i-1))^obsvdk
+        }
+        PSKv[obsvdk,n]<-PSKv[obsvdk,n]+PSK
+      obsvd<-PSKv[obsvdk,]
+      obsvd->ndistT10[[name]]
+      }
+    }
+  
+# The result of the loop is a list "ndistT10", with each component being one observed segregating site value, and within that a vector with length maxn, and components theh probability values for that segsite according to Wakeley.
+
+
+
+
+
 
 hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=30,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35,main=paste((expression(theta))," = ",Q))
 

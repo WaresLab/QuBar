@@ -112,19 +112,21 @@ pop<-list(pop1,pop2,pop3,pop4)
 popsizes<-c(2,4,8,16,32,64,128)
 
 # we extract the gametes matrix for each population, from there we take the samples, we put the matrix obtained in each "sample" in a list called "samples", and the result for each population in a list called "populations"
-# to sample 100 replicates within each sample size
-populations<-list()
+
+populations<-list() #empty list to put results
+set.seed(123) #set seed for random sampling
+
+# loop in each population to take the field samples, 100 replicates for each sampling size
 for(i in 1:length(pop)){
-  pop[[i]]->ourpop
+  pop[[i]]->ourpop #pick a population
   namepop<-paste("popOrigen",i,sep="")
-  t(ourpop$gametes[[1]])->mat
-  samples<-list()  
+  t(ourpop$gametes[[1]])->mat #transpose matrix to have individuals as rows
+  samples<-list() #empty list to put the sampling of each sample size
     for(j in popsizes){
         name<-paste("sampleSize",j,sep="")
-        replicates<-list()
+        replicates<-list() #empty list to put each replicate (n=100)
         for (k in 1:100){
         namerep<-paste("replicate",k,sep="")  
-        set.seed(123)
         mat[sample(nrow(mat),size=j,replace=FALSE),]->rep
         rep->replicates[[namerep]]
         }
@@ -200,7 +202,7 @@ segResults[[3]]->pop3segsites
 segResults[[4]]->pop4segsites
 ```
 
-Since these calculations take quite a while (at least the haplotypes), we are going to save our results in a dataframe, the number of haplotypes and the number of segreating sites for each population.
+Since these calculations take quite a while (at least the haplotypes), we are going to save our results in a dataframe, the number of haplotypes and the number of segreating sites for each population. The following chunk may not be very efficient but it works fine.
 
 ```{r making dataframe with haplotypes and segSites}
 # probably not efficient at all, but it works
@@ -491,6 +493,8 @@ library(vioplot)
 
 # now we have the dataframe "gammaData" with all the values we need to plot
 gammaData<-read.csv("gammaData.csv",header=T)
+table(gammaData$Population,gammaData$Obs.n)
+
 
 par(mfrow=c(1,1))
 plot(Pred.value~Obs.n,data=toFill)
@@ -502,6 +506,32 @@ vioplot(toFill$Pred.value,add=T,horizontal=F,lty=2)
 qplot(Obs.n,Max.Pred.value,data=gammaData,color=Pop,fill=Pop,geom=c("point","smooth"),method="loess")->bp
 bp+scale_fill_discrete(name="Populations",breaks=c("Pop1","Pop2","Pop3","Pop4"),labels=c("Theta=2g", "Theta=2ng","Theta=10g", "Theta=10ng"))
 ```
+
+```{r gamma summarizing plots}
+library(lattice)
+
+# load data with observed haplotypesin the samples
+data<-read.csv("hapsegData.csv",header=T)
+factor(data$sampleSize)->data$sampleSizeF
+data<-data[with(data,order(Haplotypes)),]
+databp<-data[with(data,order(Populations)),]
+
+# plotting multiples boxplot with lattice
+with(data,bwplot(Haplotypes~sampleSizeF|Populations,layout=c(2,2)))
+
+pop1<-data[which(data$Populations=='Pop1'),]
+pop2<-data[which(data$Populations=='Pop2'),]
+pop3<-data[which(data$Populations=='Pop3'),]
+pop4<-data[which(data$Populations=='Pop4'),]
+
+# to plot multiples histogram with lattice
+with(pop2,histogram(~Haplotypes|sampleSizeF,layout=c(2,4)))
+
+plot(data$Haplotypes,col=data$sampleSize)
+plot(data$Haplotypes,col=data$Population)
+```
+
+
 
 # Using theta and number of segregating sites
 

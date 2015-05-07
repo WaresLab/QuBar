@@ -503,26 +503,53 @@ vioplot(toFill$Pred.value,add=T,horizontal=F,lty=2)
 # plotting with ggplot, need to fix legends
 #http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
 
-qplot(Obs.n,Max.Pred.value,data=gammaData,color=Pop,fill=Pop,geom=c("point","smooth"),method="loess")->bp
+qplot(Obs.n,Max.Pred.value,data=gammaData,color=Population,fill=Population,geom=c("point","smooth"),method="loess")->bp
 bp+scale_fill_discrete(name="Populations",breaks=c("Pop1","Pop2","Pop3","Pop4"),labels=c("Theta=2g", "Theta=2ng","Theta=10g", "Theta=10ng"))
 ```
 
 ```{r gamma summarizing plots}
 library(lattice)
+library(evmix) #it includes gamma kernels
 
 # load data with observed haplotypesin the samples
 data<-read.csv("hapsegData.csv",header=T)
 factor(data$sampleSize)->data$sampleSizeF
 data<-data[with(data,order(Haplotypes)),]
-databp<-data[with(data,order(Populations)),]
+databp<-data[with(data,order(Populations,sampleSizeF)),]
+
+# plotting density kernels
+plot(density(pop3$Haplotypes[401:500],bw=0.89))
 
 # plotting multiples boxplot with lattice
 with(data,bwplot(Haplotypes~sampleSizeF|Populations,layout=c(2,2)))
 
-pop1<-data[which(data$Populations=='Pop1'),]
-pop2<-data[which(data$Populations=='Pop2'),]
-pop3<-data[which(data$Populations=='Pop3'),]
-pop4<-data[which(data$Populations=='Pop4'),]
+pop1<-databp[which(databp$Populations=='Pop1'),]
+pop2<-databp[which(databp$Populations=='Pop2'),]
+pop3<-databp[which(databp$Populations=='Pop3'),]
+uni3<-unique(pop3$Haplotypes)
+pop4<-databp[which(databp$Populations=='Pop4'),]
+
+par(mfrow=c(1,2))
+vio2<-pop1$Haplotypes[pop1$sampleSize==2]
+vio4<-pop1$Haplotypes[pop1$sampleSize==4]
+vio8<-pop1$Haplotypes[pop1$sampleSize==8]
+vio16<-pop1$Haplotypes[pop1$sampleSize==16]
+vio32<-pop1$Haplotypes[pop1$sampleSize==32]
+vio64<-pop1$Haplotypes[pop1$sampleSize==64]
+vio128<-pop1$Haplotypes[pop1$sampleSize==128]
+vioplot(vio2,vio4,vio8,vio16,vio32,vio64,vio128,col="aquamarine",names=c("n2","n4","n8","n16","n32","n64","n128"),horizontal=T)
+title("Population 1-theta 2")
+
+vio2<-pop3$Haplotypes[pop3$sampleSize==2]
+vio4<-pop3$Haplotypes[pop3$sampleSize==4]
+vio8<-pop3$Haplotypes[pop3$sampleSize==8]
+vio16<-pop3$Haplotypes[pop3$sampleSize==16]
+vio32<-pop3$Haplotypes[pop3$sampleSize==32]
+vio64<-pop3$Haplotypes[pop3$sampleSize==64]
+vio128<-pop3$Haplotypes[pop3$sampleSize==128]
+vioplot(vio2,vio4,vio8,vio16,vio32,vio64,vio128,col="darkcyan",names=c("n2","n4","n8","n16","n32","n64","n128"),horizontal=T)
+title("Population 3-theta 10")
+
 
 # to plot multiples histogram with lattice
 with(pop2,histogram(~Haplotypes|sampleSizeF,layout=c(2,4)))

@@ -558,11 +558,56 @@ plot(data$Haplotypes,col=data$sampleSize)
 plot(data$Haplotypes,col=data$Population)
 ```
 
+# Using the sampling theory of selectively neutral alleles
+
+For what I read, this uses the number of haplotypes, theta and the sampling n. I think we can use this to backcalculate n.
+
+```{r using sampling theory Ewens 1972}
+
+# calculate all the different k haplotypes given different values of n
+theta=10 #define theta
+maxn=128 #define max n
+
+# this loop fills a vector with the expected k for a given theta an differents n
+meank<-rep(NA,maxn)
+for(n in 2:maxn){
+  n-1->endpoint
+  res<-rep(NA,endpoint)
+  for (i in 1:endpoint){
+  theta/(theta+i)->res[i]
+  }
+  1+sum(res)->meank[n]
+}
+
+# this loop fills a vector with the variance of k for a given theta an differents n
+vark<-rep(NA,maxn)
+for(n in 2:maxn){
+  n-1->endpoint
+  res<-rep(NA,endpoint)
+  for (i in 1:endpoint){
+  (theta^2)/((theta+i)^2)->res[i]
+  }
+  meank[n]-sum(res)->vark[n]
+}
+
+# now we put together a dataframe with the n,k,and var(k), run it twice changing theta to make dataframe
+meank->meank2; vark->vark2
+meank->meank10; vark->vark10
+data<-as.data.frame(cbind(c(1:maxn),meank2,vark2,meank10,vark10))
+names(data)<-c("n","expHap.t2","varHap.t2","expHap.t10","varHap.t10")
+
+# plot variance
+with(data,plot(n,varHap.t10,col="red"))
+with(data,points(n,varHap.t2,col="blue"))
+legend("topleft", inset=.05, c("theta=2","theta=10"), fill=c("blue","red"), horiz=TRUE)
+
+# save data file
+write.csv(data,"dataSamplingTheory.csv")
+
+```
 
 
 # Using theta and number of segregating sites
-
-John's code, starting to dig in this part...
 
 ```{r prior info}
 # rough estimates from Zakas Q is 10, hapdiv is 0.7

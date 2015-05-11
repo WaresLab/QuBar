@@ -237,7 +237,194 @@ par(mfrow=c(1,1))
 
 ```
 
-Given these approaches, we then assess through simulation:
+We propose two/three methods that could help to estimate the relative number of individuals in a barcoding sample: 1) gamma distribution, 2) theta and segregating sites, 3) sampling theory?. To evaluate the usefulness of each method, we used a simulation approach. We simulated populations with Hudson's MS program [@Hudson 2002] using the *gap* package in R [@RCoreTeam2013]. We simulated four populations, using two different mutation rates (theta= 2 and theta=10), and also considering populations with or without growth. The growth rate was defined to achieve the Tajima's D value that better approximates the values observed in nature for marine invertebrates. Detailed information on simulations and R code is presented in the supplementary material.
+
+```{r simulating source populations, results='asis',echo=FALSE}
+library(gap)
+library(PopGenome)
+library(knitr)
+
+# -----gap----
+# we can call ms from R without having to use the console and read the object directly with the gap function
+
+# with -G x we set a population growth, a negative value of x means that the population was larger in the past that at present. 
+
+# Simulating our source populations
+theta2Growth <- system("ms 1000 1 -t 2 -G 10", intern=TRUE)
+theta2NoGrowth <- system("ms 1000 1 -t 2", intern=TRUE)
+theta10Growth <- system("ms 1000 1 -t 10 -G 10", intern=TRUE)
+theta10NoGrowth <- system("ms 1000 1 -t 10", intern=TRUE)
+
+# we need to write the outputs so we can read them using PopGenome
+#write(theta2Growth,"theta2Growth.out")
+#write(theta2NoGrowth,"theta2NoGrowth.out")
+#write(theta10Growth,"theta10Growth.out")
+#write(theta10NoGrowth,"theta10NoGrowth.out")
+
+# reading with PopGenome to calculate H and Tajima's D for each of the four populations
+readMS("theta2Growth.out")->popgen.t2g #gives a "genome" object
+readMS("theta2NoGrowth.out")->popgen.t2ng
+readMS("theta10Growth.out")->popgen.t10g
+readMS("theta10NoGrowth.out")->popgen.t10ng
+
+# run F_ST stats and check haplotype diversity
+F_ST.stats(popgen.t2g)->popgen.t2g
+F_ST.stats(popgen.t2ng)->popgen.t2ng
+F_ST.stats(popgen.t10g)->popgen.t10g
+F_ST.stats(popgen.t10ng)->popgen.t10ng
+
+# get haplotype diversity for each source population
+unlist(popgen.t2g@region.stats@haplotype.diversity)->hapDiv.t2g
+unlist(popgen.t2ng@region.stats@haplotype.diversity)->hapDiv.t2ng
+unlist(popgen.t10g@region.stats@haplotype.diversity)->hapDiv.t10g
+unlist(popgen.t10ng@region.stats@haplotype.diversity)->hapDiv.t10ng
+
+hapDiv<-c(hapDiv.t2g,hapDiv.t2ng,hapDiv.t10g,hapDiv.t10ng)
+hapDiv
+
+# run neutrality.stats to check that Tajima's D is negative and looks real
+neutrality.stats(popgen.t2g)->popgen.t2g
+neutrality.stats(popgen.t2ng)->popgen.t2ng
+neutrality.stats(popgen.t10g)->popgen.t10g
+neutrality.stats(popgen.t10ng)->popgen.t10ng
+
+Taj.t2g<-popgen.t10g@Tajima.D
+Taj.t2ng<-popgen.t10ng@Tajima.D
+Taj.t10g<-popgen.t10g@Tajima.D
+Taj.t10ng<-popgen.t10ng@Tajima.D
+
+tajima<-c(Taj.t2g,Taj.t2ng,Taj.t10g,Taj.t10ng)
+tajima
+
+# summary table
+thetas<-c(2,2,10,10)
+pops<-c("Population 1", "Population 2", "Population 3", "Population 4")
+growth<-c("yes","no","yes","no")
+newhap<-round(hapDiv,2)
+newtaj<-round(tajima,2)
+sumTable<-cbind(pops,thetas,growth,newhap,newtaj)
+colnames(sumTable)<-c("Population","Theta","Growth","Haplotype diversity","Tajima's D")
+kable(sumTable)
+```
+
+From these four populations, we took "field samples" of different sizes (n), sampling without replacement. We replicate the sampling experiment 100 times, to be able to assess variation of sampling. For each replicate, we calculate the number of haplotypes and the number of segregating sites, which represent our observed values in our simulated samples. The sampling size, that it is known to us from this design, is what we are going to try to predict using the back calculations described above. All the analysis of the simulated populations was done in R [@RCoreTeam2013].
+
+```{r taking field samples}
+library(gap)
+library(PopGenome)
+
+# reading the ms output generated in the previous chunk with gap
+# this way works for reading the object from R, but it is not useful if we want to maintain the origina same populations, because I was not able to make the "seeds" work
+#read.ms.output(theta2Growth,FALSE)->pop1
+#read.ms.output(theta2NoGrowth,FALSE)->pop2
+#read.ms.output(theta10Growth,FALSE)->pop3
+#read.ms.output(theta10NoGrowth,FALSE)->pop4
+
+# this way, we read the same files that were simulated only once, and the same that we read with PopGenome
+read.ms.output("theta2Growth.out",is.file=T)->pop1
+read.ms.output("theta2NoGrowth.out",is.file=T)->pop2
+read.ms.output("theta10Growth.out",is.file=T)->pop3
+read.ms.output("theta10NoGrowth.out",is.file=T)->pop4
+
+# --------sampling from each population---------
+# vector with all the populations for loops or easy coding
+pop<-list(pop1,pop2,pop3,pop4)
+
+# vector with the sizes we want to sample
+#popsizes<-c(2,4,8,16,32,64,128)
+#popsizes<-seq(1:128)
+
+# we extract the gametes matrix for each population, from there we take the samples, we put the matrix obtained in each "sample" in a list called "samples", and the result for each population in a list called "populations"
+
+set.seed(123) #set seed for random sampling
+
+# loop in each population to take the field samples, 100 replicates for each sampling size
+populations<-list() #empty list to put results
+for(i in 1:length(pop)){
+  pop[[i]]->ourpop #pick a population
+  namepop<-paste("popOrigen",i,sep="")
+  t(ourpop$gametes[[1]])->mat #transpose matrix to have individuals as rows
+  samples<-list() #empty list to put the sampling of each sample size
+    for(j in popsizes){
+        name<-paste("sampleSize",j,sep="")
+        replicates<-list() #empty list to put each replicate (n=100)
+        for (k in 1:100){
+        namerep<-paste("replicate",k,sep="")  
+        mat[sample(nrow(mat),size=j,replace=FALSE),]->rep
+        rep->replicates[[namerep]]
+        }
+        replicates->samples[[name]]
+      }
+  samples->populations[[namepop]]
+} # now in each of the 4 components of the list "populations", we have 7 list with each component corresponding to each sample size, and within each of this list we have 100 components corresponding to each replicate of the sampled matrix.
+```
+
+```{r calculating haplotypes}
+# Now for each sample we need to calculate the segregating sites and number of haplotypes
+# the haplotype number can be extracted by doing unique() of the matrix
+hapResults<-list() #create list to save the results
+for(i in 1:length(pop)){
+  populations[[i]]->popnow #choose population to work
+  namepop<-paste("popOrigen",i,sep="")
+  samples<-list() #create list to put each sampling size
+  for (j in 1:length(popsizes)){
+    namesample<-paste("sampleSize",j,sep="")  
+    popnow[[j]]->samplenow #choose sampling size to work with
+    print(paste("working in:",namepop,namesample))
+    for (k in 1:100){
+      sapply(samplenow,function(x) nrow(unique(x)))->result
+      unlist(result)->replicates
+      }
+    replicates->samples[[namesample]]
+    }
+  samples->hapResults[[namepop]]
+} # now hapResults is a list of vectors with the haplotypes number for each population, in each sample size
+hapResults[[1]]->pop1haps
+hapResults[[2]]->pop2haps
+hapResults[[3]]->pop3haps
+hapResults[[4]]->pop4haps
+```
+We are going to do a similar procedure to estimate the number of segregating sites. We first created a function to estimate the number of segregating sites from the gametes matrix provided by the MS simulation. And the we apply that looping over our samples.
+
+```{r calculating segregating sites}
+# load function to estimate segregating sites, it works taking a matrix of gametes and returning a numeric value, the number of segregating sites.
+estimate.segSites <- function(myMatrix){
+  answers<-rep(NA,(nrow(myMatrix)-1))
+  sites<-rep(NA,ncol(myMatrix))
+    for (j in 1:ncol(myMatrix)){
+      for (i in 1:(nrow(myMatrix)-1)){
+        (myMatrix[i+1,j]==myMatrix[1,j])->answers[i]
+      }
+      if (all(answers)==TRUE) {0->sites[j]}
+      else {1->sites[j]}
+      }
+    sum(sites,na.rm=T)->segSites
+    return(segSites)
+  }
+
+# to get segsites for each population we need to use our custome function in a loop
+segResults<-list()
+for(i in 1:length(pop)){
+  populations[[i]]->popnow
+  namepop<-paste("popOrigen",i,sep="")
+  samples<-list()
+  for (j in 1:length(popsizes)){
+    namesample<-paste("sampleSize",j,sep="")
+    popnow[[j]]->samplenow
+    sapply(samplenow,function(x) estimate.segSites(x))->result
+    result->samples[[namesample]]
+    }
+  samples->segResults[[namepop]]
+}  # now segResults is a list of 4 lists (one for each population), within each of those list compose of a list of 7 vectors, one for each sample size, and with a length of 100, where each component is the segregating sites for the 100 replicates. 
+segResults
+segResults[[1]]->pop1segsites
+segResults[[2]]->pop2segsites
+segResults[[3]]->pop3segsites
+segResults[[4]]->pop4segsites
+```
+
+Since these calculations take quite a while (at least the haplotypes), we are going to save our results in a dataframe, the number of haplotypes and the number of segreating sites for each population. The following chunk may not be very efficient but it works fine.
+
 
 5-3-15 we are now pretty sure that the S=k method is too insensitive (as often the case iwth coalescent, and we see that above samples of 10 the values are relatively insensitive, see Vince Buffalo's "dancing genealogies" for illustration of why even if peaks look sharper for theta 10 the possibilities are massive for the empirical stuff that fits....). So this is concerning for even being able to tell orders of magnitude apart, e.g. 10 of species A and 100 of species B probably won't happen. 
 
@@ -248,6 +435,9 @@ And then part B of Results would be that we show empirical values of #haplotypes
 
 
 # Results 
+
+General information of the simulated populations is presented in Table 1. 
+
 ```{r nextfig, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 #  print(obsvd) #now would be easy to print 95% HPD of obsvd, so for given theta and k this is the distribution of n
   plot(obsvd,xlab="n",ylab="P(n|k)",ylim=c(0,0.15),main=paste("for K =",obsvdk, "and theta =",Q,"in black; for hapdiv in red"))

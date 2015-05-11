@@ -26,9 +26,10 @@ NOTE: one thing to have in mind is that we are not controlling for sequence leng
 
 Let's do it! :)
 
-```{r simulating source populations}
+```{r simulating source populations, results='asis',echo=FALSE}
 library(gap)
 library(PopGenome)
+library(knitr)
 
 # -----gap----
 # we can call ms from R without having to use the console and read the object directly with the gap function
@@ -81,6 +82,16 @@ Taj.t10ng<-popgen.t10ng@Tajima.D
 
 tajima<-c(Taj.t2g,Taj.t2ng,Taj.t10g,Taj.t10ng)
 tajima
+
+# summary table
+thetas<-c(2,2,10,10)
+pops<-c("Population 1", "Population 2", "Population 3", "Population 4")
+growth<-c("yes","no","yes","no")
+newhap<-round(hapDiv,2)
+newtaj<-round(tajima,2)
+sumTable<-cbind(pops,thetas,growth,newhap,newtaj)
+colnames(sumTable)<-c("Population","Theta","Growth","Haplotype diversity","Tajima's D")
+kable(sumTable)
 ```
 
 Now that we have our 4 populations and we have H and Tajima's D for those, we need to take our "field samples". For that, we are going to use the same pop generated above and read those with gap. Then, using the matrix of the variables sites for the 1000 individuals we are going to take random samples. We are going to use sample sizes from 2 to 128 in a log2 scale.
@@ -564,8 +575,22 @@ For what I read, this uses the number of haplotypes, theta and the sampling n. I
 
 ```{r using sampling theory Ewens 1972}
 
+# load data with observed haplotypesin the samples
+data<-read.csv("hapsegData.csv",header=T)
+data$segSites<-NULL
+data$X<-NULL
+factor(data$sampleSize)->data$sampleSize
+databp<-data[with(data,order(Populations,sampleSize,Haplotypes)),]
+row.names(databp)<-NULL
+
+# subsetting populations
+pop1<-databp[which(databp$Populations=='Pop1'),]
+pop2<-databp[which(databp$Populations=='Pop2'),]
+pop3<-databp[which(databp$Populations=='Pop3'),]
+pop4<-databp[which(databp$Populations=='Pop4'),]
+
 # calculate all the different k haplotypes given different values of n
-theta=10 #define theta
+theta=2 #define theta
 maxn=128 #define max n
 
 # this loop fills a vector with the expected k for a given theta an differents n
@@ -593,16 +618,16 @@ for(n in 2:maxn){
 # now we put together a dataframe with the n,k,and var(k), run it twice changing theta to make dataframe
 meank->meank2; vark->vark2
 meank->meank10; vark->vark10
-data<-as.data.frame(cbind(c(1:maxn),meank2,vark2,meank10,vark10))
-names(data)<-c("n","expHap.t2","varHap.t2","expHap.t10","varHap.t10")
+dataSampling<-as.data.frame(cbind(c(1:maxn),meank2,vark2,meank10,vark10))
+names(dataSampling)<-c("n","expHap.t2","varHap.t2","expHap.t10","varHap.t10")
 
 # plot variance
-with(data,plot(n,varHap.t10,col="red"))
-with(data,points(n,varHap.t2,col="blue"))
+with(dataSampling,plot(n,varHap.t10,col="red"))
+with(dataSampling,points(n,varHap.t2,col="blue"))
 legend("topleft", inset=.05, c("theta=2","theta=10"), fill=c("blue","red"), horiz=TRUE)
 
 # save data file
-write.csv(data,"dataSamplingTheory.csv")
+write.csv(dataSampling,"dataSamplingTheory.csv")
 
 ```
 

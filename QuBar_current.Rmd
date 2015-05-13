@@ -464,6 +464,8 @@ In the end, Discussion :: though there are concerns about read frequency...at a 
 
 5-3-15 we are now pretty sure that the S=k method is too insensitive (as often the case iwth coalescent, and we see that above samples of 10 the values are relatively insensitive, see Vince Buffalo's "dancing genealogies" for illustration of why even if peaks look sharper for theta 10 the possibilities are massive for the empirical stuff that fits....). So this is concerning for even being able to tell orders of magnitude apart, e.g. 10 of species A and 100 of species B probably won't happen. 
 
+another thing to consider with prior knowledge: presumably different species amplify with different efficiency, but WITHIN a population - well, perhaps you can evaluate (a) the frequency of haplotypes, and thus (b) the site frequency spectrum - in other words, you could calculate haplotype diversity as well and see how well it matches prior estimates, and also you could then assume that things like Taj D could be calculated? Could that perform any better at getting you back to actual-n? Probably not.
+
 # Acknowledgments
 
 Idea brought about by extended problem-solving session with J. Drake, helped greatly by C. Ewers-Saucedo and K. Bockrath. Work supported by funding from NSF-OCE-Chile, OVPR, and UGA Department of Genetics.

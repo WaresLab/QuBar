@@ -83,8 +83,8 @@ Nsite #number of seg sites taht are biallelic, for now assume ISM
 ```{r hapdiv, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 
 ####################################
-#numhaps=9
-#hapdiv=0.7 #minvalue 0.001 if no information; this is PRIOR information
+numhaps=9
+hapdiv=0.7 #minvalue 0.001 if no information; this is PRIOR information
 ####################################
 
 x=1
@@ -96,7 +96,7 @@ while (cdf<0.99) {
 #  cdf<-pgamma(x,1,Hapdiv) 
 #  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
 #  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
-  cdf<-pgamma(x,numhaps,Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+  cdf<-pgamma(x,numhaps,hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
   indprob<-cdf-cdfprev
   
   

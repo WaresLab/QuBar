@@ -2,6 +2,9 @@
 library(lattice)
 library(vioplot)
 
+#maybe useful maybe confusing
+#http://www.boost.org/doc/libs/1_36_0/libs/math/doc/sf_and_dist/html/math_toolkit/dist/dist_ref/dists/gamma_dist.html
+
 # set parameters to plot, we should have the number of haplotypes
 # know the real number of samples
 # and have haplotype diversity from the original field population

@@ -7,13 +7,9 @@ output: pdf_document
 
 # Using the gamma approach
 
-Now we have 100 replicates of each sample size, for each population, and we want to run the gamma stats for each replicate in each sampling size. To save the results I created a dataframe "toFill", and since the haplotype calculation takes its time, I will save that dataframe so we don't have to calculate the haplotypes each time.
+Now we have 100 replicates of each sample size, for each population, and we want to run the gamma stats for each replicate in each sampling size. The number of haplotypes are in the file "hapsegData.csv", so we are going to use that file, add the haplotype diversity for each population, and with that calculate the gamma distribution for each row. For now, we are keeping the max.predicted value as to plot against our known sample size.
 
-```{r gamma distribution code,eval=F}
-# load libraries
-library(lattice)
-library(ggplot2)
-library(vioplot)
+```{r getting gamma distribution data,eval=F}
 
 # Number of samples, from a log2 distribution, it is the same for all populations
 numsamp<-c(2,4,8,16,32,64,128) 
@@ -33,22 +29,15 @@ hapnum$hap.diversity[hapnum$Populations=='Pop2']<-hapdiv[2]
 hapnum$hap.diversity[hapnum$Populations=='Pop3']<-hapdiv[3] 
 hapnum$hap.diversity[hapnum$Populations=='Pop4']<-hapdiv[4] 
 
-
-
-# set dataframe to fill with the predicted and observed values,for each population, we need 
-Population<-rep(NA,700)
-Max.Pred.value<-rep(NA,700)
-data.frame(Population,Max.Pred.value)->toFill
-
-# Loop in all populations to get the estimates----
-    for(i in length(numhap)){
+# Loop to fill the gamma expectation in the hapnum dataframe----
+for(i in 1:nrow(hapnum)){
       x=1
       cdf=0
       indprob=0
       array<-NULL
     while (cdf<0.99) {
       cdfprev<-cdf
-      cdf<-pgamma(x,hapnum$Haplotypes[i],hapnum$hap.diversity[i]) 
+      cdf<-pgamma(x,scale=hapnum$Haplotypes[i],shape=hapnum$hap.diversity[i]) 
       indprob<-cdf-cdfprev
       happrob<-hapnum$Haplotypes[i]+(x-1)
       array<-c(array,happrob)
@@ -57,44 +46,23 @@ data.frame(Population,Max.Pred.value)->toFill
       x=x+1
       }
   probs<-t(matrix(array,nrow=3))
-  probs
   max<-max(probs[,3])
   maxPred<-probs[which(probs[,3]==max),1]
-  toFill$Max.Pred.value[i+count]<-maxPred
-  toFill$Obs.n[i+count]<-numsamp[j]
+  hapnum$Max.Gamma.value[i]<-maxPred
   }
-  
- }
-
-
 
 # With this I can do a summary table of the frequency of predicted haplotypes for each observed value
-table(toFill$Pred.value,toFill$Obs.n)
+table(hapnum$Max.Gamma.value,hapnum$sampleSize,hapnum$Populations)
+hapnum[hapnum$Populations=='Pop1',]->pop1
+table(pop1$Max.Gamma.value,pop1$sampleSize)
 
 # save result so we don't need to rerun----
-write.csv(gammaData,"gammaData.csv")
+write.csv(hapnum,"gammaData.csv")
 ```
 
-```{r gamma distribution plot}
-library(lattice)
-library(ggplot2)
-library(vioplot)
+All the gamma data was saved in the "gammaData.csv" file, and now we can directly call that file from our QuBar ms file to do the plots.
 
-# now we have the dataframe "gammaData" with all the values we need to plot
-gammaData<-read.csv("gammaData.csv",header=T)
-table(gammaData$Population,gammaData$Obs.n)
-
-
-par(mfrow=c(1,1))
-plot(Pred.value~Obs.n,data=toFill)
-vioplot(toFill$Pred.value,add=T,horizontal=F,lty=2)
-
-# plotting with ggplot, need to fix legends
-#http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
-
-qplot(Obs.n,Max.Pred.value,data=gammaData,color=Population,fill=Population,geom=c("point","smooth"),method="loess")->bp
-bp+scale_fill_discrete(name="Populations",breaks=c("Pop1","Pop2","Pop3","Pop4"),labels=c("Theta=2g", "Theta=2ng","Theta=10g", "Theta=10ng"))
-```
+----------------until here revised------------------------------------
 
 ```{r gamma summarizing plots}
 library(lattice)

@@ -3,7 +3,7 @@ title: "Quantitative Metazoan Metabarcoding"
 author: "John Wares and Paula Pappalardo"
 date: '`r format(Sys.time(), "%d %B, %Y")`'
 output: pdf_document
-bibliography: QuBar.bib
+bibliography: QuBar_References.bib
 ---
 
 <!-- Paula: this manuscript is where I want to start clean from my prelim work to develop short paper together. -->
@@ -89,6 +89,8 @@ plot(probs[,1],probs[,3],col='red',pch=19,xlab="Number of individuals (n)",ylab=
 ```
 
 So, observing `r numhaps` haplotypes for this taxon, we might feel comfortable believing there are between 16 and 31 actual individuals that were sampled. The problem lies in the willful abuse of the Gamma distribution without a better understanding of how haplotype diversity *H* and the sample size *N* are related through the frequency of haplotypes - remember, at this point we do not trust the proportion/frequency representation of an allele in our sample.
+
+We are going to estimate the gamma probability for each of the simulated samples, using the number of haplotypes observed in the sample as the __shape/scale__ parameter and the haplotype diversity of the population where the sample comes from as the __shape/scale__ parameter. *John, we need to talk about this, weird things going on...*
 
 ## True diversity indices
 
@@ -250,6 +252,8 @@ par(mfrow=c(1,1))
 
 ```
 
+## Testing the methods
+
 We propose two/three methods that could help to estimate the relative number of individuals in a barcoding sample: 1) gamma distribution, 2) theta and segregating sites, 3) sampling theory?. To evaluate the usefulness of each method, we used a simulation approach. We simulated populations with Hudson's MS program [@Hudson 2002] using the *gap* package in R [@RCoreTeam2013]. We simulated four populations, using two different mutation rates (theta= 2 and theta=10), and also considering populations with or without growth. The growth rate was modified in order to achieve a Tajima's D value that better approximates the values observed in nature for marine invertebrates. 
 
 From these four populations, we took "field samples" of different sizes (n), sampling without replacement. We replicate the sampling experiment 100 times, to be able to assess variation of sampling. For each replicate, we calculate the number of haplotypes and the number of segregating sites, which represent our observed values in the simulated samples. The sampling size, that it is known to us from this design, is what we are going to try to predict using the back calculations described above. All the analysis of the simulated populations was done in R [@RCoreTeam2013]. Detailed information on simulations and R code is presented in the supplementary material (for now in file "runningSimulations".
@@ -349,6 +353,36 @@ legend("bottomright",levels(hapMin$Populations),fill=c("black","red","green","bl
 
 ## Gamma approach
 
+We found that the gamma approach better approximates the simulated sampling sizes in low sampling sizes (lower than 16-32 depending the population), when theta is larger (theta=10, Figure X2a) and within each theta, for the populations without growth (populations 2 and 4, Figure X2a). This method really underestimates the simulated n for larger sample sizes (Figure X2b). The probability distributions for the four populations and the 7 sampling sizes considered (2,4,8,16,32,64 and 128) are presented in the Supplementary material.
+
+
+```{r Figure X2 gamma distribution plot}
+library(ggplot2)
+
+# now we have the dataframe "gammaData" with all the values we need to plot
+gammaData<-read.csv("gammaData.csv",header=T)
+minigamma<-gammaData[gammaData$sampleSize<33,]
+factor(gammaData$Populations)->gammaData$pops
+factor(minigamma$Populations)->minigamma$minipops
+factor(minigamma$sampleSize)->minigamma$sampleSizeF
+
+par(mfrow=c(1,2))
+
+# plotting with ggplot, need to fix legends
+#http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
+# Fig X2a
+# thinking how to plot the subset of samples sizes where gamma works a little bit better....
+ggplot(minigamma, aes(x = sampleSizeF,y=Max.Gamma.value,fill=minipops,color=minipops)) + geom_boxplot(aes(fill=minipops))+ylim(0,20)
+
+# Fig X2b
+ggplot(gammaData, aes(x = sampleSize,y=Max.Gamma.value,fill=pops,color=pops)) + geom_point()+stat_smooth(method="loess")+geom_abline()+scale_fill_discrete(name="Populations",breaks=c("Pop1","Pop2","Pop3","Pop4"),labels=c("Theta=2g", "Theta=2ng","Theta=10g", "Theta=10ng"))
+
+```
+
+
+## Theta and segregating sites approach
+
+
 
 John's part below:
 
@@ -378,11 +412,12 @@ In the end, Discussion :: though there are concerns about read frequency...at a 
 
 5-3-15 we are now pretty sure that the S=k method is too insensitive (as often the case iwth coalescent, and we see that above samples of 10 the values are relatively insensitive, see Vince Buffalo's "dancing genealogies" for illustration of why even if peaks look sharper for theta 10 the possibilities are massive for the empirical stuff that fits....). So this is concerning for even being able to tell orders of magnitude apart, e.g. 10 of species A and 100 of species B probably won't happen. 
 
-<<<<<<< HEAD
+
 An important note is that we need to be confident that our data from the field population (the haplotype diversity or theta) is representing a "true" population, and it is not including different populations 
-=======
+
+
 another thing to consider with prior knowledge: presumably different species amplify with different efficiency, but WITHIN a population - well, perhaps you can evaluate (a) the frequency of haplotypes, and thus (b) the site frequency spectrum - in other words, you could calculate haplotype diversity as well and see how well it matches prior estimates, and also you could then assume that things like Taj D could be calculated? Could that perform any better at getting you back to actual-n? Probably not.
->>>>>>> origin/master
+
 
 # Acknowledgments
 

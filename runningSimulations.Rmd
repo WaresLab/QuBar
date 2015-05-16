@@ -41,32 +41,43 @@ theta2Growth <- system("ms 1000 1 -t 2 -G 10", intern=TRUE)
 theta2NoGrowth <- system("ms 1000 1 -t 2", intern=TRUE)
 theta10Growth <- system("ms 1000 1 -t 10 -G 10", intern=TRUE)
 theta10NoGrowth <- system("ms 1000 1 -t 10", intern=TRUE)
+theta20Growth <- system("ms 1000 1 -t 10 -G 20", intern=TRUE)
+theta20NoGrowth <- system("ms 1000 1 -t 20", intern=TRUE)
 
 # we need to write the outputs so we can read them using PopGenome
 #write(theta2Growth,"theta2Growth.out")
 #write(theta2NoGrowth,"theta2NoGrowth.out")
 #write(theta10Growth,"theta10Growth.out")
 #write(theta10NoGrowth,"theta10NoGrowth.out")
+#write(theta20Growth,"theta20Growth.out")
+#write(theta20NoGrowth,"theta20NoGrowth.out")
+
 
 # reading with PopGenome to calculate H and Tajima's D for each of the four populations
 readMS("theta2Growth.out")->popgen.t2g #gives a "genome" object
 readMS("theta2NoGrowth.out")->popgen.t2ng
 readMS("theta10Growth.out")->popgen.t10g
 readMS("theta10NoGrowth.out")->popgen.t10ng
+readMS("theta20Growth.out")->popgen.t20g
+readMS("theta20NoGrowth.out")->popgen.t20ng
 
 # run F_ST stats and check haplotype diversity
 F_ST.stats(popgen.t2g)->popgen.t2g
 F_ST.stats(popgen.t2ng)->popgen.t2ng
 F_ST.stats(popgen.t10g)->popgen.t10g
 F_ST.stats(popgen.t10ng)->popgen.t10ng
+F_ST.stats(popgen.t20g)->popgen.t20g
+F_ST.stats(popgen.t20ng)->popgen.t20ng
 
 # get haplotype diversity for each source population
 unlist(popgen.t2g@region.stats@haplotype.diversity)->hapDiv.t2g
 unlist(popgen.t2ng@region.stats@haplotype.diversity)->hapDiv.t2ng
 unlist(popgen.t10g@region.stats@haplotype.diversity)->hapDiv.t10g
 unlist(popgen.t10ng@region.stats@haplotype.diversity)->hapDiv.t10ng
+unlist(popgen.t20g@region.stats@haplotype.diversity)->hapDiv.t20g
+unlist(popgen.t20ng@region.stats@haplotype.diversity)->hapDiv.t20ng
 
-hapDiv<-c(hapDiv.t2g,hapDiv.t2ng,hapDiv.t10g,hapDiv.t10ng)
+hapDiv<-c(hapDiv.t2g,hapDiv.t2ng,hapDiv.t10g,hapDiv.t10ng,hapDiv.t20g,hapDiv.t20ng)
 hapDiv
 
 # run neutrality.stats to check that Tajima's D is negative and looks real
@@ -74,19 +85,24 @@ neutrality.stats(popgen.t2g)->popgen.t2g
 neutrality.stats(popgen.t2ng)->popgen.t2ng
 neutrality.stats(popgen.t10g)->popgen.t10g
 neutrality.stats(popgen.t10ng)->popgen.t10ng
+neutrality.stats(popgen.t20g)->popgen.t20g
+neutrality.stats(popgen.t20ng)->popgen.t20ng
+
 
 Taj.t2g<-popgen.t10g@Tajima.D
 Taj.t2ng<-popgen.t10ng@Tajima.D
 Taj.t10g<-popgen.t10g@Tajima.D
 Taj.t10ng<-popgen.t10ng@Tajima.D
+Taj.t20g<-popgen.t20g@Tajima.D
+Taj.t20ng<-popgen.t20ng@Tajima.D
 
-tajima<-c(Taj.t2g,Taj.t2ng,Taj.t10g,Taj.t10ng)
+tajima<-c(Taj.t2g,Taj.t2ng,Taj.t10g,Taj.t10ng,Taj.t20g,Taj.t20ng)
 tajima
 
 # summary table
-thetas<-c(2,2,10,10)
-pops<-c("Population 1", "Population 2", "Population 3", "Population 4")
-growth<-c("yes","no","yes","no")
+thetas<-c(2,2,10,10,20,20)
+pops<-c("Population 1", "Population 2", "Population 3", "Population 4","Population 5","Population 6")
+growth<-c("yes","no","yes","no","yes","no")
 newhap<-round(hapDiv,2)
 newtaj<-round(tajima,2)
 sumTable<-cbind(pops,thetas,growth,newhap,newtaj)
@@ -114,10 +130,12 @@ read.ms.output("theta2Growth.out",is.file=T)->pop1
 read.ms.output("theta2NoGrowth.out",is.file=T)->pop2
 read.ms.output("theta10Growth.out",is.file=T)->pop3
 read.ms.output("theta10NoGrowth.out",is.file=T)->pop4
+read.ms.output("theta20Growth.out",is.file=T)->pop5
+read.ms.output("theta20NoGrowth.out",is.file=T)->pop6
 
 # --------sampling from each population---------
 # vector with all the populations for loops or easy coding
-pop<-list(pop1,pop2,pop3,pop4)
+pop<-list(pop1,pop2,pop3,pop4,pop5,pop6)
 
 # vector with the sizes we want to sample
 popsizes<-c(2,4,8,16,32,64,128)
@@ -147,11 +165,11 @@ for(i in 1:length(pop)){
 } # now in each of the 4 components of the list "populations", we have 7 list with each component corresponding to each sample size, and within each of this list we have 100 components corresponding to each replicate of the sampled matrix.
 ```
 
-The object **populations** has 4 components (one for each population), each one include 7 lists (one for each sampling size), and within each of the sampling sizes we have a list with the 100 matrix sampled.
+The object **populations** has 6 components (one for each population), each one include 7 lists (one for each sampling size), and within each of the sampling sizes we have a list with the 100 matrix sampled.
 
 # Calculating haplotypes and segregating sites
 
-Now we are going to calculate number of  haplotypes and number of segregating sites for each of the replicates in each of the samples in each of the 4 populations. The loops takes a while to be able to do it for all the replicates.
+Now we are going to calculate number of  haplotypes and number of segregating sites for each of the replicates in each of the samples in each of the 6 populations. The loops takes a while to be able to do it for all the replicates.
 
 ```{r calculating haplotypes}
 # Now for each sample we need to calculate the segregating sites and number of haplotypes
@@ -176,6 +194,16 @@ hapResults[[1]]->pop1haps
 hapResults[[2]]->pop2haps
 hapResults[[3]]->pop3haps
 hapResults[[4]]->pop4haps
+hapResults[[5]]->pop5haps
+hapResults[[6]]->pop6haps
+
+# put data in a dataframe to handle it more easy
+hapspop1 <-data.frame(do.call(rbind, pop1haps))
+as.data.frame(hapspop1)->datahap1
+datahap1$Theta<-"two"
+datahap1$growth<-"yes"
+datahap1$sampleSize<-c(2,4,8,16,32,64,128)
+row.names(data10)<-NULL
 ```
 
 We are going to do a similar procedure to estimate the number of segregating sites. We first created a function to estimate the number of segregating sites from the gametes matrix provided by the MS simulation. And the we apply that looping over our samples.
@@ -210,11 +238,16 @@ for(i in 1:length(pop)){
     }
   samples->segResults[[namepop]]
 }  # now segResults is a list of 4 lists (one for each population), within each of those list compose of a list of 7 vectors, one for each sample size, and with a length of 100, where each component is the segregating sites for the 100 replicates. 
-segResults
+
 segResults[[1]]->pop1segsites
 segResults[[2]]->pop2segsites
 segResults[[3]]->pop3segsites
 segResults[[4]]->pop4segsites
+segResults[[5]]->pop5segsites
+segResults[[6]]->pop6segsites
+
+
+
 ```
 
 Since these calculations take quite a while (at least the haplotypes), we are going to save our results in a dataframe, the number of haplotypes and the number of segreating sites for each population. The following chunk may not be very efficient but it works fine.
@@ -228,6 +261,8 @@ data.frame(Population,Haplotypes)->toFillhap
 toFillhap->toFillhap2
 toFillhap->toFillhap3
 toFillhap->toFillhap4
+toFillhap->toFillhap5
+toFillhap->toFillhap6
 
 count<-0
 for (j in 1:7){
@@ -269,6 +304,25 @@ for (j in 1:7){
   }
   count+100->count
  }
+for (j in 1:7){
+  pop5haps[[j]]->oursize
+  names(oursize)<-NULL
+  for (i in 1:100){
+  toFillhap5$Haplotypes[i+count]<-oursize[i]
+  toFillhap5$Population[i+count]<-"Pop5"
+  }
+  count+100->count
+ }
+for (j in 1:7){
+  pop6haps[[j]]->oursize
+  names(oursize)<-NULL
+  for (i in 1:100){
+  toFillhap6$Haplotypes[i+count]<-oursize[i]
+  toFillhap6$Population[i+count]<-"Pop6"
+  }
+  count+100->count
+ }
+
 
 # putting populations together
 rbind(toFillhap,toFillhap2,toFillhap3,toFillhap4)->hapData

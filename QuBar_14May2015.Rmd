@@ -283,50 +283,64 @@ readMS("theta2Growth.out")->popgen.t2g #gives a "genome" object
 readMS("theta2NoGrowth.out")->popgen.t2ng
 readMS("theta10Growth.out")->popgen.t10g
 readMS("theta10NoGrowth.out")->popgen.t10ng
+readMS("theta20Growth.out")->popgen.t20g
+readMS("theta20NoGrowth.out")->popgen.t20ng
 
 # number of segregating sites----
 varsites.t2g<-popgen.t2g@n.biallelic.sites
 varsites.t2ng<-popgen.t2ng@n.biallelic.sites
 varsites.t10g<-popgen.t10g@n.biallelic.sites
 varsites.t10ng<-popgen.t10ng@n.biallelic.sites
-varsites<-c(varsites.t2g,varsites.t2ng,varsites.t10g,varsites.t10ng)
+varsites.t20g<-popgen.t20g@n.biallelic.sites
+varsites.t20ng<-popgen.t20ng@n.biallelic.sites
+varsites<-c(varsites.t2g,varsites.t2ng,varsites.t10g,varsites.t10ng,varsites.t20g,varsites.t20ng)
 
 # run F_ST stats and check haplotype diversity
 F_ST.stats(popgen.t2g)->popgen.t2g
 F_ST.stats(popgen.t2ng)->popgen.t2ng
 F_ST.stats(popgen.t10g)->popgen.t10g
 F_ST.stats(popgen.t10ng)->popgen.t10ng
+F_ST.stats(popgen.t20g)->popgen.t20g
+F_ST.stats(popgen.t20ng)->popgen.t20ng
 
 # get haplotype diversity for each source population----
 unlist(popgen.t2g@region.stats@haplotype.diversity)->hapDiv.t2g
 unlist(popgen.t2ng@region.stats@haplotype.diversity)->hapDiv.t2ng
 unlist(popgen.t10g@region.stats@haplotype.diversity)->hapDiv.t10g
 unlist(popgen.t10ng@region.stats@haplotype.diversity)->hapDiv.t10ng
-hapDiv<-c(hapDiv.t2g,hapDiv.t2ng,hapDiv.t10g,hapDiv.t10ng)
+unlist(popgen.t20g@region.stats@haplotype.diversity)->hapDiv.t20g
+unlist(popgen.t20ng@region.stats@haplotype.diversity)->hapDiv.t20ng
+hapDiv<-c(hapDiv.t2g,hapDiv.t2ng,hapDiv.t10g,hapDiv.t10ng,hapDiv.t20g,hapDiv.t20ng)
 
 # get haplotype counts----
 length(unlist(popgen.t2g@region.stats@haplotype.counts)/1000)->hapCount.t2g
 length(unlist(popgen.t2ng@region.stats@haplotype.counts)/1000)->hapCount.t2ng
 length(unlist(popgen.t10g@region.stats@haplotype.counts)/1000)->hapCount.t10g
 length(unlist(popgen.t10ng@region.stats@haplotype.counts)/1000)->hapCount.t10ng
-hapcounts<-c(hapCount.t2g,hapCount.t2ng,hapCount.t10g,hapCount.t10ng)
+length(unlist(popgen.t20g@region.stats@haplotype.counts)/1000)->hapCount.t20g
+length(unlist(popgen.t20ng@region.stats@haplotype.counts)/1000)->hapCount.t20ng
+hapcounts<-c(hapCount.t2g,hapCount.t2ng,hapCount.t10g,hapCount.t10ng,hapCount.t20g,hapCount.t20ng)
 
 # run neutrality.stats to check that Tajima's D is negative and looks real----
 neutrality.stats(popgen.t2g)->popgen.t2g
 neutrality.stats(popgen.t2ng)->popgen.t2ng
 neutrality.stats(popgen.t10g)->popgen.t10g
 neutrality.stats(popgen.t10ng)->popgen.t10ng
+neutrality.stats(popgen.t20g)->popgen.t20g
+neutrality.stats(popgen.t20ng)->popgen.t20ng
 
 Taj.t2g<-popgen.t10g@Tajima.D
 Taj.t2ng<-popgen.t10ng@Tajima.D
 Taj.t10g<-popgen.t10g@Tajima.D
 Taj.t10ng<-popgen.t10ng@Tajima.D
-tajima<-c(Taj.t2g,Taj.t2ng,Taj.t10g,Taj.t10ng)
+Taj.t20g<-popgen.t20g@Tajima.D
+Taj.t20ng<-popgen.t20ng@Tajima.D
+tajima<-c(Taj.t2g,Taj.t2ng,Taj.t10g,Taj.t10ng,Taj.t20g,Taj.t20ng)
 
 # summary table
-thetas<-c(2,2,10,10)
-pops<-c("Population 1", "Population 2", "Population 3", "Population 4")
-growth<-c("yes","no","yes","no")
+thetas<-c(2,2,10,10,20,20)
+pops<-c("Population 1", "Population 2", "Population 3", "Population 4","Population 5","Population 6")
+growth<-c("yes","no","yes","no","yes","no")
 newhap<-round(hapDiv,2)
 newtaj<-round(tajima,2)
 sumTable<-cbind(pops,thetas,growth,newhap,newtaj,hapcounts,varsites)
@@ -380,6 +394,8 @@ ggplot(minigamma, aes(x = sampleSizeF,y=Max.Gamma.value,fill=minipops,color=mini
 
 
 ```
+
+Paula's note: something weird is happening here when we defined shape=H and scale=number of haplotypes, the distribution of expected nubers using the gamma es identical to the empirical distribution of number of haplotypes in the simulated samples. Is the "happrob" object representing the "expected n"? the name is confusing.
 
 ## Theta and segregating sites approach
 

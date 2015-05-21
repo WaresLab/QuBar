@@ -9,16 +9,11 @@ output: pdf_document
 
 After the first trials, I realized the best method is to call "ms" from R, read that from *gap* and save the file to read it also with *PopGenome*. With *gap* we are able to estimate number of haplotypes. With *PopGenome* we are able to estimate haplotype diversity and also Tajima's D for the cases that we want to simulate "real" populations.
 
-We are going to simulate four populations of 1000 individuals, with the following parameters:
+We are going to simulate four populations of 1000 individuals, with theta equal to 2,10 and 20, and growth rate to have have one population with "good" Tajima's D.
 
-1) theta=2, growth rate to have "good" Tajima's D
-2) theta=10, growth rate to have "good" Tajima's D
-3) theta=2, no growth
-4) theta=10, no growth.
+For these six populations we are going to calculate the haplotype diversity and the Tajima's D (to check).
 
-For these four populations we are going to calculate the haplotype diversity and the Tajima's D (to check).
-
-From each of the four populations we are going to sample without replacement "field samples" of 2,4,8,16,32,64 and 128 individuals. That way we know the real n. Using the number of haplotypes and the number of segregating sites of the "field samples" we are going to do our best to back calculate the number of individuals in that sample, using as prior information the haplotype diversity of the original population (n=1000).
+From each of the populations we are going to sample without replacement "field samples" of 2,4,8,16,32,64 and 128 individuals. That way we know the real n. Using the number of haplotypes and the number of segregating sites of the "field samples" we are going to do our best to back calculate the number of individuals in that sample, using as prior information the haplotype diversity of the original population (n=1000).
 
 The only thing that we need to keep from each "field sample" is the number of haplotypes and number of segregating sites. We are going to save that in a dataframe so we don't need to run the code each time.
 
@@ -167,7 +162,7 @@ for(i in 1:length(pop)){
 
 The object **populations** has 6 components (one for each population), each one include 7 lists (one for each sampling size), and within each of the sampling sizes we have a list with the 100 matrix sampled.
 
-# Calculating haplotypes and segregating sites
+# Calculating haplotypes 
 
 Now we are going to calculate number of  haplotypes and number of segregating sites for each of the replicates in each of the samples in each of the 6 populations. The loops takes a while to be able to do it for all the replicates.
 
@@ -190,21 +185,45 @@ for(i in 1:length(pop)){
     }
   samples->hapResults[[namepop]]
 } # now hapResults is a list of vectors with the haplotypes number for each population, in each sample size
-hapResults[[1]]->pop1haps
-hapResults[[2]]->pop2haps
-hapResults[[3]]->pop3haps
-hapResults[[4]]->pop4haps
-hapResults[[5]]->pop5haps
-hapResults[[6]]->pop6haps
-
-# put data in a dataframe to handle it more easy
-hapspop1 <-data.frame(do.call(rbind, pop1haps))
-as.data.frame(hapspop1)->datahap1
-datahap1$Theta<-"two"
-datahap1$growth<-"yes"
-datahap1$sampleSize<-c(2,4,8,16,32,64,128)
-row.names(data10)<-NULL
 ```
+
+Since this process is really time consuming, we want to save our results in a dataframe.
+
+```{r making haplotypes dataframe}
+# we want to loop in "hapresults" and for each population extract the number of haplotypes and put all in the same dataframe
+
+library(reshape)
+
+# create dataframe to hold the data
+zerodata<-data.frame(Pop=NA,Theta=NA,growth=NA,variable=NA,value=NA)
+thetas<-c("two","two","ten","ten","twenty","twenty")
+growths<-c("yes","no","yes","no","yes","no")
+
+# loop through populations and rbind data
+for (i in 1:length(pop)){
+  hapResults[[i]]->pophaps
+  haps <-data.frame(do.call(rbind, pophaps))
+  as.data.frame(t(haps))->datahaps
+  datahaps$Theta<-thetas[i]
+  datahaps$growth<-growths[i]
+  datahaps$Pop<-i
+  newdata<-melt(datahaps,id=c("Pop","Theta","growth"))
+  rbind(zerodata,newdata)->zerodata
+}
+
+# organize and save data
+zerodata[complete.cases(zerodata$Pop),]->numHaps
+as.factor(numHaps$variable)->numHaps$variable
+names(numHaps)<-c("Pop","Theta","Growth","samplingSize","n.haplotypes")
+levels(numHaps$samplingSize)<-c("2","4","8","16","32","64","128")
+
+# run only once
+#write.csv(numHaps,"numberHaplotypes.csv")
+```
+
+Now we have the dataframe "numberHaplotypes" with the number of haplotypes for each replicate, for each population, and we don't need to run the chunk everytime.
+
+# Calculating segregating sites
 
 We are going to do a similar procedure to estimate the number of segregating sites. We first created a function to estimate the number of segregating sites from the gametes matrix provided by the MS simulation. And the we apply that looping over our samples.
 
@@ -238,152 +257,40 @@ for(i in 1:length(pop)){
     }
   samples->segResults[[namepop]]
 }  # now segResults is a list of 4 lists (one for each population), within each of those list compose of a list of 7 vectors, one for each sample size, and with a length of 100, where each component is the segregating sites for the 100 replicates. 
-
-segResults[[1]]->pop1segsites
-segResults[[2]]->pop2segsites
-segResults[[3]]->pop3segsites
-segResults[[4]]->pop4segsites
-segResults[[5]]->pop5segsites
-segResults[[6]]->pop6segsites
-
-
-
 ```
 
-Since these calculations take quite a while (at least the haplotypes), we are going to save our results in a dataframe, the number of haplotypes and the number of segreating sites for each population. The following chunk may not be very efficient but it works fine.
+To save our results in a dataframe:
 
-```{r making dataframe with haplotypes and segSites}
-# probably not efficient at all, but it works
-# number of haplotypes----
-Population<-rep(NA,700)
-Haplotypes<-rep(NA,700)
-data.frame(Population,Haplotypes)->toFillhap
-toFillhap->toFillhap2
-toFillhap->toFillhap3
-toFillhap->toFillhap4
-toFillhap->toFillhap5
-toFillhap->toFillhap6
+```{r making segSites dataframe}
+# we want to loop in "segResults" and for each population extract the number of segregating sites and put all in the same dataframe
+library(reshape)
 
-count<-0
-for (j in 1:7){
-  pop1haps[[j]]->oursize
-  names(oursize)<-NULL
-  for (i in 1:100){
-  toFillhap$Haplotypes[i+count]<-oursize[i]
-  toFillhap$Population[i+count]<-"Pop1"
-  }
-  count+100->count
- }
-count<-0
-for (j in 1:7){
-  pop2haps[[j]]->oursize
-  names(oursize)<-NULL
-  for (i in 1:100){
-  toFillhap2$Haplotypes[i+count]<-oursize[i]
-  toFillhap2$Population[i+count]<-"Pop2"
-  }
-  count+100->count
- }
-count<-0
-for (j in 1:7){
-  pop3haps[[j]]->oursize
-  names(oursize)<-NULL
-  for (i in 1:100){
-  toFillhap3$Haplotypes[i+count]<-oursize[i]
-  toFillhap3$Population[i+count]<-"Pop3"
-  }
-  count+100->count
- }
-count<-0
-for (j in 1:7){
-  pop4haps[[j]]->oursize
-  names(oursize)<-NULL
-  for (i in 1:100){
-  toFillhap4$Haplotypes[i+count]<-oursize[i]
-  toFillhap4$Population[i+count]<-"Pop4"
-  }
-  count+100->count
- }
-for (j in 1:7){
-  pop5haps[[j]]->oursize
-  names(oursize)<-NULL
-  for (i in 1:100){
-  toFillhap5$Haplotypes[i+count]<-oursize[i]
-  toFillhap5$Population[i+count]<-"Pop5"
-  }
-  count+100->count
- }
-for (j in 1:7){
-  pop6haps[[j]]->oursize
-  names(oursize)<-NULL
-  for (i in 1:100){
-  toFillhap6$Haplotypes[i+count]<-oursize[i]
-  toFillhap6$Population[i+count]<-"Pop6"
-  }
-  count+100->count
- }
+# create dataframe to hold the data
+zerodata<-data.frame(Pop=NA,Theta=NA,growth=NA,variable=NA,value=NA)
+thetas<-c("two","two","ten","ten","twenty","twenty")
+growths<-c("yes","no","yes","no","yes","no")
 
+# loop through populations and rbind data
+for (i in 1:length(pop)){
+  segResults[[i]]->popsegs
+  segs <-data.frame(do.call(rbind, popsegs))
+  as.data.frame(t(segs))->dataseg
+  dataseg$Theta<-thetas[i]
+  dataseg$growth<-growths[i]
+  dataseg$Pop<-i
+  newdata<-melt(dataseg,id=c("Pop","Theta","growth"))
+  rbind(zerodata,newdata)->zerodata
+}
 
-# putting populations together
-rbind(toFillhap,toFillhap2,toFillhap3,toFillhap4)->hapData
+# organize and save data
+zerodata[complete.cases(zerodata$Pop),]->numSegSites
+as.factor(numSegSites$variable)->numSegSites$variable
+names(numSegSites)<-c("Pop","Theta","Growth","samplingSize","n.seg.sites")
+levels(numSegSites$samplingSize)<-c("2","4","8","16","32","64","128")
 
-# number of segregating sites----
-Population<-rep(NA,700)
-segSites<-rep(NA,700)
-data.frame(Population,segSites)->toFillseg
-toFillseg->toFillseg2
-toFillseg->toFillseg3
-toFillseg->toFillseg4
-
-count<-0
-for (j in 1:7){
-  pop1segsites[[j]]->oursize
-  names(oursize)<-NULL
-  for (i in 1:100){
-  toFillseg$segSites[i+count]<-oursize[i]
-  toFillseg$Population[i+count]<-"Pop1"
-  }
-  count+100->count
- }
-count<-0
-for (j in 1:7){
-  pop2segsites[[j]]->oursize
-  names(oursize)<-NULL
-  for (i in 1:100){
-  toFillseg2$segSites[i+count]<-oursize[i]
-  toFillseg2$Population[i+count]<-"Pop2"
-  }
-  count+100->count
- }
-count<-0
-for (j in 1:7){
-  pop3segsites[[j]]->oursize
-  names(oursize)<-NULL
-  for (i in 1:100){
-  toFillseg3$segSites[i+count]<-oursize[i]
-  toFillseg3$Population[i+count]<-"Pop3"
-  }
-  count+100->count
- }
-count<-0
-for (j in 1:7){
-  pop4segsites[[j]]->oursize
-  names(oursize)<-NULL
-  for (i in 1:100){
-  toFillseg4$segSites[i+count]<-oursize[i]
-  toFillseg4$Population[i+count]<-"Pop4"
-  }
-  count+100->count
- }
-
-# putting things together----
-rbind(toFillseg,toFillseg2,toFillseg3,toFillseg4)->segData
-c(rep(2,100),rep(4,100),rep(8,100),rep(16,100),rep(32,100),rep(64,100),rep(128,100))->sampleSize
-cbind(hapData,segData$segSites,rep(sampleSize,4))->hapsegData
-names(hapsegData)<-c("Populations","Haplotypes","segSites","sampleSize")
-# save result so we don't need to rerun----
-write.csv(hapsegData,"hapsegData.csv")
+# run only once
+#write.csv(numSegSites,"numberSegSites.csv")
 ```
 
-Now we have the dataframe "hapsegData" with the number of haplotypes and segregating sites for each replicate, for each population, and we don't need to run the chunk everytime.
+Now we have the dataframe "numberSegSites" with the number of segregating sites for each replicate, for each population, and we don't need to run the chunk everytime.
 

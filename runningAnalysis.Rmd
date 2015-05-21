@@ -7,7 +7,7 @@ output: pdf_document
 
 # Using the gamma approach
 
-Now we have 100 replicates of each sample size, for each population, and we want to run the gamma stats for each replicate in each sampling size. The number of haplotypes are in the file "hapsegData.csv", so we are going to use that file, add the haplotype diversity for each population, and with that calculate the gamma distribution for each row. For now, we are keeping the max.predicted value as to plot against our known sample size.
+Now we have 100 replicates of each sample size, for each population, and we want to run the gamma stats for each replicate in each sampling size. The number of haplotypes are in the file "numberHaplotypes.csv", so we are going to use that file, add the haplotype diversity for each population, and with that calculate the gamma distribution for each row. For now, we are keeping the max.predicted value as to plot against our known sample size.
 
 ```{r getting gamma distribution data,eval=F}
 
@@ -15,19 +15,16 @@ Now we have 100 replicates of each sample size, for each population, and we want
 numsamp<-c(2,4,8,16,32,64,128) 
 
 # Haplotype diversity for each of the four simulated populations of 1000 individuals
-hapdiv<-c(0.5504204, 0.3377538, 0.8915536, 0.9258679)
+hapdiv<-c(0.5504204, 0.3377538, 0.8915536, 0.9258679,0.7627047, 0.9565626)
 
 # The number of haplotypes for each replicate is now in a dataframe
-hapnum<-read.csv("hapsegData.csv",header=T)
+hapnum<-read.csv("numberHaplotypes.csv",header=T)
+hapnum$X<-NULL
 
-# clean for this analyis
-hapnum$X<-NULL; hapnum$segSites<-NULL
-
-# add haplotype diversity for each population
-hapnum$hap.diversity[hapnum$Populations=='Pop1']<-hapdiv[1] 
-hapnum$hap.diversity[hapnum$Populations=='Pop2']<-hapdiv[2] 
-hapnum$hap.diversity[hapnum$Populations=='Pop3']<-hapdiv[3] 
-hapnum$hap.diversity[hapnum$Populations=='Pop4']<-hapdiv[4] 
+# add the column of haplotype diversity for each population
+for(i in 1:6){
+hapnum$hap.diversity[hapnum$Pop==i]<-hapdiv[i] 
+}
 
 # Loop to fill the gamma expectation in the hapnum dataframe----
 for(i in 1:nrow(hapnum)){
@@ -37,9 +34,9 @@ for(i in 1:nrow(hapnum)){
       array<-NULL
     while (cdf<0.99) {
       cdfprev<-cdf
-      cdf<-pgamma(x,scale=hapnum$Haplotypes[i],shape=hapnum$hap.diversity[i]) 
+      cdf<-pgamma(x,scale=hapnum$hap.diversity[i],shape=hapnum$n.haplotypes[i]) 
       indprob<-cdf-cdfprev
-      happrob<-hapnum$Haplotypes[i]+(x-1)
+      happrob<-hapnum$n.haplotypes[i]+(x-1)
       array<-c(array,happrob)
       array<-c(array,cdf)
       array<-c(array,indprob)
@@ -51,13 +48,9 @@ for(i in 1:nrow(hapnum)){
   hapnum$Max.Gamma.value[i]<-maxPred
   }
 
-# With this I can do a summary table of the frequency of predicted haplotypes for each observed value
-table(hapnum$Max.Gamma.value,hapnum$sampleSize,hapnum$Populations)
-hapnum[hapnum$Populations=='Pop1',]->pop1
-table(pop1$Max.Gamma.value,pop1$sampleSize)
-
 # save result so we don't need to rerun----
-write.csv(hapnum,"gammaData.csv")
+hapnum$X<-NULL
+#write.csv(hapnum,"gammaData.csv")
 ```
 
 All the gamma data was saved in the "gammaData.csv" file, and now we can directly call that file from our QuBar ms file to do the plots.
@@ -66,27 +59,22 @@ All the gamma data was saved in the "gammaData.csv" file, and now we can directl
 
 There are specific probability distributions associated with a sample of sequences, the number of segregating sites *S*, and a prior assumption of $\theta$ [@Wakeley08].
 
-Below we use our observed frequency of segregating sites to estimated the sampling size according to Wakeley's formulat, for each observed theta in the natural (simulated) population of the species.
+Below we calculated the distribution of sampling size according to Wakeley's formula, for each observed theta in the natural (simulated) population of the species and for 1 to max number of segregating sites. We only estimated n from 1 to 50 because larger than that it behaves funny.
 
 ```{r theta and segregating sites, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
-library(plot3D)
+library(reshape)
 
 # load data with observed segregating sites in the samples
-data<-read.csv("hapsegData.csv",header=T)
+data<-read.csv("numberSegSites.csv",header=T)
 
 # we need to define a maximum n, John identified that above 70 this behaves funny, actually for 60 too, so I put 50
 maxn=50
-maxk<-max(data$segSites)
-
-# theta values in our four populations, our "known" value of the "real" population (n=1000 simulated populations in this round)
-theta<-c(2,2,10,10)
+maxk<-max(data$n.seg.sites,na.rm=T)
 
 # -----theta=2-----------
 Q = 2 #theta 
-
 # creating empty list to put the results
-ndistT2<-list()
-
+theta2<-list()
 # looping from 1 to maxk and running Wakeley formula
 for (j in 1:maxk){
   name<-paste("seg",j,sep="")
@@ -104,23 +92,23 @@ for (j in 1:maxk){
         }
         PSKv[obsvdk,n]<-PSKv[obsvdk,n]+PSK
       obsvd<-PSKv[obsvdk,]
-      obsvd->ndistT2[[name]]
+      obsvd->theta2[[name]]
       }
     }
-# The result of the loop is a list "ndistT2", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
+
+# The result of the loop is a list "theta2", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
 
 # put data in a dataframe to handle it more easy
-theta2 <-t(data.frame(do.call(rbind, ndistT2))) 
-as.data.frame(theta2)->data2
+theta.2 <-t(data.frame(do.call(rbind, theta2))) 
+as.data.frame(theta.2)->data2
 data2$Theta<-"two"
 data2$n<-seq(1,50,1)
-row.names(data10)<-NULL
+row.names(data2)<-NULL
 
 # -----theta=10-----------
 Q = 10 #theta 
-
 # creating empty list to put the results
-ndistT10<-list()
+theta10<-list()
 
 # looping in segdata and running Wakeley formula
 for (j in 1:maxk){
@@ -139,22 +127,62 @@ for (j in 1:maxk){
         }
         PSKv[obsvdk,n]<-PSKv[obsvdk,n]+PSK
       obsvd<-PSKv[obsvdk,]
-      obsvd->ndistT10[[name]]
+      obsvd->theta10[[name]]
       }
     }
 
-# The result of the loop is a list "ndistT10", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
+# The result of the loop is a list "theta10", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
 
 # put data in a dataframe to handle it more easy
-theta10 <-t(data.frame(do.call(rbind, ndistT10)))  
-as.data.frame(theta10)->data10
+theta.10 <-t(data.frame(do.call(rbind, theta10)))  
+as.data.frame(theta.10)->data10
 data10$Theta<-"ten"
 data10$n<-seq(1,50,1)
 row.names(data10)<-NULL
 
-# join dataframes and save file
-rbind(data2,data10)->WakeleyData
-write.csv(WakeleyData,"WakeleyData.csv")
+# -----theta=20-----------
+Q = 20 #theta 
+# creating empty list to put the results
+theta20<-list()
+
+# looping in segdata and running Wakeley formula
+for (j in 1:maxk){
+  name<-paste("seg",j,sep="")
+  obsvdk<-j
+  a <- c(1:maxn)
+  b <- c(1:maxk)
+  PSKv <- numeric(maxn*maxk)
+  PSKv <- matrix(PSKv,ncol=maxn)
+  colnames(PSKv)<-a
+  rownames(PSKv)<-b
+  for (n in 2:maxn) {
+        PSK=0
+        for (i in 2:n) {
+             PSK<-PSK + ((-1)^i)*(choose((n-1),(i-1)))*((i-1)/(Q+i-1))*(Q/(Q+i-1))^obsvdk
+        }
+        PSKv[obsvdk,n]<-PSKv[obsvdk,n]+PSK
+      obsvd<-PSKv[obsvdk,]
+      obsvd->theta20[[name]]
+      }
+    }
+
+# The result of the loop is a list "theta20", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
+
+# put data in a dataframe to handle it more easy
+theta.20 <-t(data.frame(do.call(rbind, theta20)))  
+as.data.frame(theta.20)->data20
+data20$Theta<-"twenty"
+data20$n<-seq(1,50,1)
+row.names(data20)<-NULL
+
+# join dataframes and save file----
+rbind(data2,data10,data20)->WakeleyData
+# reorder the data
+all<-melt(WakeleyData,id=c("Theta","n"))
+levels(all$variable)<-seq(1:135)
+names(all)<-c("Theta","n","segSites","prob")
+# save 
+#write.csv(all,"WakeleyData.csv")
 
 #hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=2,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35,main=paste((expression(theta))," = ",Q))
 
@@ -162,7 +190,7 @@ write.csv(WakeleyData,"WakeleyData.csv")
 # plot(obsvd,xlab="n",ylab="P(n|k)",ylim=c(0,0.15),main=paste("for K =",obsvdk, "and theta =",Q,"in black; for hapdiv in red"))
 ```
 
-The result of the loop is two list, one for each theta, "ndistT2" and "ndistT10", with each component being one the observed segregating site values and quantiles, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley. 
+As a result, we have a dataframe "WakeleyData" with all the estimates.
 
 Now in our "QuBar_current" we can plot for each sampling size the expected value according Wakeley, and mark the abline with the observed value. And then do that for both theta. 
 
@@ -170,10 +198,9 @@ Now in our "QuBar_current" we can plot for each sampling size the expected value
 library(lattice)
 
 #load Wakeley data and observed segregating sites
-data<-read.csv("hapsegData.csv",header=T)
+data<-read.csv("numberSegSites.csv",header=T)
 wakdata<-read.csv("WakeleyData.csv",header=T)
-miniwak<-wakdata[which(wakdata$n==c(2,4,8,16,32),]
-
+miniwak<-wakdata[which(wakdata$n<33),]
 
 # Summarize info on observed segregating sites for each population
 subset(data,Populations=="Pop1")->pop1

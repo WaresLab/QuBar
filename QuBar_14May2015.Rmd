@@ -354,15 +354,15 @@ Using information from the samples of the 4 simulated populations, We first corr
 library(plyr)
 
 # load data with observed haplotypes in the samples
-hapsegdata<-read.csv("hapsegData.csv",header=T)
+hapdata<-read.csv("numberHaplotypes.csv",header=T)
 
-hapMin<-ddply(hapsegdata, c("sampleSize","Populations"), summarise, MinHap = min(Haplotypes,na.rm=T))
-data<-hapMin[order(hapMin$Populations),]
+hapMin<-ddply(hapdata, c("samplingSize","Pop"), summarise, MinHap = min(n.haplotypes,na.rm=T))
+data<-hapMin[order(hapMin$Pop),]
 
-plot(hapMin$MinHap,hapMin$sampleSize,col=hapMin$Populations,pch=19,xlab="Minimum number of haplotypes observed",ylab="Sample size (n)")
+palette(rainbow(6)) 
+plot(data$MinHap,data$samplingSize,col=data$Pop,pch=19,xlab="Minimum number of haplotypes observed",ylab="Sample size (n)")
 abline(0,1)
-legend("bottomright",levels(hapMin$Populations),fill=c("black","red","green","blue"),bg="white")
-
+legend("bottomright",levels(as.factor(data$Pop)),fill=c("red","yellow","green","cyan","blue","magenta"),bg="white",horiz=T)
 ```
 
 ## Gamma approach
@@ -376,23 +376,21 @@ library(ggplot2)
 gammaData<-read.csv("gammaData.csv",header=T)
 
 # subsetting small sampling sizes to see better what happen there
-minigamma<-gammaData[gammaData$sampleSize<33,]
+minigamma<-gammaData[gammaData$samplingSize<33,]
 
 # making factors for the ggplot2 pltos
-factor(gammaData$Populations)->gammaData$pops
-factor(minigamma$Populations)->minigamma$minipops
-factor(minigamma$sampleSize)->minigamma$sampleSizeF
+factor(gammaData$Pop)->gammaData$pops
+factor(minigamma$Pop)->minigamma$minipops
+factor(minigamma$samplingSize)->minigamma$samplingSizeF
 
 # plotting with ggplot, need to fix legends
 #http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
 # Fig X2a
-ggplot(gammaData, aes(x = sampleSize,y=Max.Gamma.value,fill=pops,color=pops)) + geom_point()+stat_smooth(method="loess")+geom_abline()+scale_fill_discrete(name="Populations",breaks=c("Pop1","Pop2","Pop3","Pop4"),labels=c("Theta=2g", "Theta=2ng","Theta=10g", "Theta=10ng"))
+ggplot(gammaData, aes(x = samplingSize,y=Max.Gamma.value,fill=pops,color=pops)) + geom_point()+stat_smooth(method="loess")+geom_abline()+scale_fill_discrete(name="Populations",breaks=c("Pop1","Pop2","Pop3","Pop4"),labels=c("Theta=2g", "Theta=2ng","Theta=10g", "Theta=10ng"))
 
 # Fig X2b
 # thinking how to plot the subset of samples sizes where gamma works a little bit better....
-ggplot(minigamma, aes(x = sampleSizeF,y=Max.Gamma.value,fill=minipops,color=minipops)) + geom_boxplot(aes(fill=minipops))+ylim(0,20)
-
-
+ggplot(minigamma, aes(x = samplingSizeF,y=Max.Gamma.value,fill=minipops,color=minipops)) + geom_boxplot(aes(fill=minipops))+ylim(0,20)+geom_abline()
 ```
 
 Paula's note: something weird is happening here when we defined shape=H and scale=number of haplotypes, the distribution of expected nubers using the gamma es identical to the empirical distribution of number of haplotypes in the simulated samples. Is the "happrob" object representing the "expected n"? the name is confusing.
@@ -440,6 +438,10 @@ another thing to consider with prior knowledge: presumably different species amp
 # Acknowledgments
 
 Idea brought about by extended problem-solving session with J. Drake, helped greatly by C. Ewers-Saucedo and K. Bockrath. Work supported by funding from NSF-OCE-Chile, OVPR, and UGA Department of Genetics.
+
+# Figure captions
+
+
 
 # Literature Cited
 

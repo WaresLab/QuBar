@@ -254,7 +254,7 @@ par(mfrow=c(1,1))
 
 ## Testing the methods
 
-We propose two/three methods that could help to estimate the relative number of individuals in a barcoding sample: 1) gamma distribution, 2) theta and segregating sites, 3) sampling theory?. To evaluate the usefulness of each method, we used a simulation approach. We simulated populations with Hudson's MS program [@Hudson 2002] using the *gap* package in R [@RCoreTeam2013]. We simulated four populations, using two different mutation rates (theta= 2 and theta=10), and also considering populations with or without growth. The growth rate was modified in order to achieve a Tajima's D value that better approximates the values observed in nature for marine invertebrates. 
+We propose two/three methods that could help to estimate the relative number of individuals in a barcoding sample: 1) gamma distribution, 2) theta and segregating sites, 3) sampling theory?. To evaluate the usefulness of each method, we used a simulation approach. We simulated populations with Hudson's MS program [@Hudson 2002] using the *gap* package in R [@RCoreTeam2013]. We simulated four populations, using two/three? different mutation rates (theta= 2 and theta=10), and also considering populations with or without growth. The growth rate was modified in order to achieve a Tajima's D value that better approximates the values observed in nature for marine invertebrates. 
 
 From these four populations, we took "field samples" of different sizes (n), sampling without replacement. We replicate the sampling experiment 100 times, to be able to assess variation of sampling. For each replicate, we calculate the number of haplotypes and the number of segregating sites, which represent our observed values in the simulated samples. The sampling size, that it is known to us from this design, is what we are going to try to predict using the back calculations described above. All the analysis of the simulated populations was done in R [@RCoreTeam2013]. Detailed information on simulations and R code is presented in the supplementary material (for now in file "runningSimulations".
 
@@ -398,6 +398,47 @@ Paula's note: something weird is happening here when we defined shape=H and scal
 ## Theta and segregating sites approach
 
 The implementation of Wakeley's [-@Wakeley08] formula crushed for n larger than 50, so we were only able to test our sampling sizes of 2,4,8,16 and 32 with this method.
+
+```{r plotting Wakeley data}
+library(lattice)
+library(plyr)
+library(vioplot)
+
+# Load Wakeley data and observed segregating sites
+obsdata<-read.csv("numberSegSites.csv",header=T)
+wakdata<-read.csv("WakeleyData.csv",header=T)
+
+# Summarize the info on observed segregating sites
+infoObs<-ddply(obsdata, c("Pop","samplingSize"), summarise, medianOb = median(n.seg.sites,na.rm=T),meanOb = mean(n.seg.sites,na.rm=T),quant.25=quantile(n.seg.sites,0.25),quant.75=quantile(n.seg.sites,0.75))
+# keep only the n<=32
+miniObs<-infoObs[which(infoObs$samplingSize<33),]
+
+# Summarize Wakeley's info 
+miniwak<-wakdata[which(wakdata$n<33),]
+row.names(miniwak)<-NULL
+factor(miniwak$segSites)->miniwak$segSites
+
+# we need to see which n has the maximum probablity for each segregating site
+sumdata<-ddply(miniwak, c("Theta","segSites"), summarise, maxprob = max(prob))
+# add flag
+sumdata$best.n<-"best"
+sumdata$Theta<-NULL; sumdata$segSites<-NULL
+
+# so we merge with Wakeley's data to flag the best n
+merge(miniwak,sumdata,by.x="prob",by.y="maxprob",all.x=T)->newdata
+# keep only the flag
+goodwak<-newdata[complete.cases(newdata),]
+row.names(goodwak)<-NULL
+goodwak$best.n<-NULL
+names(goodwak)<-c("prob","Theta","best.n","segSites")
+
+# Now we want to merge the observed segregatin sites with the segregating sites used to estimate Wakeley's formula, and that will allow us to plot the "real" n vs the best.n according Wakeley.
+bymedian<-merge(miniObs,goodwak,by.x="medianOb",by.y="segSites",all.x=T)
+
+xyplot(best.n~samplingSize|Pop,data=bymedian)
+
+ 
+```
 
 
 John's part below:

@@ -68,23 +68,27 @@ library(reshape)
 data<-read.csv("numberSegSites.csv",header=T)
 
 # we need to define a maximum n, John identified that above 70 this behaves funny, actually for 60 too, so I put 50
-maxn=50
+maxn=33
 maxk<-max(data$n.seg.sites,na.rm=T)
+#maxk=100
+
 
 # -----theta=2-----------
 Q = 2 #theta 
 # creating empty list to put the results
 theta2<-list()
+
+a <- c(1:maxn)
+b <- c(1:maxk)
+PSKv <- numeric(maxn*maxk)
+PSKv <- matrix(PSKv,ncol=maxn)
+colnames(PSKv)<-a
+rownames(PSKv)<-b
+
 # looping from 1 to maxk and running Wakeley formula
-for (j in 1:maxk){
-  name<-paste("seg",j,sep="")
-  obsvdk<-j
-  a <- c(1:maxn)
-  b <- c(1:maxk)
-  PSKv <- numeric(maxn*maxk)
-  PSKv <- matrix(PSKv,ncol=maxn)
-  colnames(PSKv)<-a
-  rownames(PSKv)<-b
+for (k in 0:maxk){
+  name<-paste("seg",k,sep="")
+  obsvdk<-k
   for (n in 2:maxn) {
         PSK=0
         for (i in 2:n) {
@@ -96,30 +100,33 @@ for (j in 1:maxk){
       }
     }
 
+# check that all worked out fine
+#hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=2,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
+
 # The result of the loop is a list "theta2", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
 
 # put data in a dataframe to handle it more easy
 theta.2 <-t(data.frame(do.call(rbind, theta2))) 
 as.data.frame(theta.2)->data2
 data2$Theta<-"two"
-data2$n<-seq(1,50,1)
+data2$n<-seq(1,maxn,1)
 row.names(data2)<-NULL
 
 # -----theta=10-----------
 Q = 10 #theta 
 # creating empty list to put the results
 theta10<-list()
+a <- c(1:maxn)
+b <- c(1:maxk)
+PSKv <- numeric(maxn*maxk)
+PSKv <- matrix(PSKv,ncol=maxn)
+colnames(PSKv)<-a
+rownames(PSKv)<-b
 
 # looping in segdata and running Wakeley formula
-for (j in 1:maxk){
-  name<-paste("seg",j,sep="")
-  obsvdk<-j
-  a <- c(1:maxn)
-  b <- c(1:maxk)
-  PSKv <- numeric(maxn*maxk)
-  PSKv <- matrix(PSKv,ncol=maxn)
-  colnames(PSKv)<-a
-  rownames(PSKv)<-b
+for (k in 0:maxk){
+  name<-paste("seg",k,sep="")
+  obsvdk<-k
   for (n in 2:maxn) {
         PSK=0
         for (i in 2:n) {
@@ -130,14 +137,15 @@ for (j in 1:maxk){
       obsvd->theta10[[name]]
       }
     }
-
+# check that all worked out fine
+#hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=2,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
 # The result of the loop is a list "theta10", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
 
 # put data in a dataframe to handle it more easy
 theta.10 <-t(data.frame(do.call(rbind, theta10)))  
 as.data.frame(theta.10)->data10
 data10$Theta<-"ten"
-data10$n<-seq(1,50,1)
+data10$n<-seq(1,maxn,1)
 row.names(data10)<-NULL
 
 # -----theta=20-----------
@@ -145,16 +153,18 @@ Q = 20 #theta
 # creating empty list to put the results
 theta20<-list()
 
-# looping in segdata and running Wakeley formula
-for (j in 1:maxk){
-  name<-paste("seg",j,sep="")
-  obsvdk<-j
   a <- c(1:maxn)
   b <- c(1:maxk)
   PSKv <- numeric(maxn*maxk)
   PSKv <- matrix(PSKv,ncol=maxn)
   colnames(PSKv)<-a
   rownames(PSKv)<-b
+
+# looping in segdata and running Wakeley formula
+for (k in 0:maxk){
+  name<-paste("seg",k,sep="")
+  obsvdk<-k
+  
   for (n in 2:maxn) {
         PSK=0
         for (i in 2:n) {
@@ -165,14 +175,15 @@ for (j in 1:maxk){
       obsvd->theta20[[name]]
       }
     }
-
+# check that all worked out fine
+#hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=2,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
 # The result of the loop is a list "theta20", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
 
 # put data in a dataframe to handle it more easy
 theta.20 <-t(data.frame(do.call(rbind, theta20)))  
 as.data.frame(theta.20)->data20
 data20$Theta<-"twenty"
-data20$n<-seq(1,50,1)
+data20$n<-seq(1,maxn,1)
 row.names(data20)<-NULL
 
 # join dataframes and save file----
@@ -182,51 +193,12 @@ all<-melt(WakeleyData,id=c("Theta","n"))
 levels(all$variable)<-seq(1:135)
 names(all)<-c("Theta","n","segSites","prob")
 # save 
-#write.csv(all,"WakeleyData.csv")
-
-#hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=2,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35,main=paste((expression(theta))," = ",Q))
-
-#  print(obsvd) #now would be easy to print 95% HPD of obsvd, so for given theta and k this is the distribution of n
-# plot(obsvd,xlab="n",ylab="P(n|k)",ylim=c(0,0.15),main=paste("for K =",obsvdk, "and theta =",Q,"in black; for hapdiv in red"))
+write.csv(all,"WakeleyData.csv")
 ```
 
 As a result, we have a dataframe "WakeleyData" with all the estimates.
 
 Now in our "QuBar_current" we can plot for each sampling size the expected value according Wakeley, and mark the abline with the observed value. And then do that for both theta. 
-
-```{r plotting Wakeley data}
-library(lattice)
-
-#load Wakeley data and observed segregating sites
-data<-read.csv("numberSegSites.csv",header=T)
-wakdata<-read.csv("WakeleyData.csv",header=T)
-miniwak<-wakdata[which(wakdata$n<33),]
-
-# Summarize info on observed segregating sites for each population
-subset(data,Populations=="Pop1")->pop1
-subset(data,Populations=="Pop2")->pop2
-subset(data,Populations=="Pop3")->pop3
-subset(data,Populations=="Pop4")->pop4
-
-# plot histogram to see distribution of segSites
-histogram(~segSites|factor(sampleSize),data=pop1, main="Population 1-t2g")
-histogram(~segSites|factor(sampleSize),data=pop2,main="Population 2-t2ng")
-histogram(~segSites|factor(sampleSize),data=pop3,main="Population 3-t10g")
-histogram(~segSites|factor(sampleSize),data=pop4,main="Population 4-t10ng")
-
-# get summary information to see median and quantiles
-aggregate(pop1$segSites,by=list(pop1$sampleSize),FUN=summary)
-aggregate(pop2$segSites,by=list(pop2$sampleSize),FUN=summary)
-aggregate(pop3$segSites,by=list(pop3$sampleSize),FUN=summary)
-aggregate(pop4$segSites,by=list(pop4$sampleSize),FUN=summary)
-
-# Plotting the data..thinking how is the best way...using the 1 and 3th quantiles plus the median
-plots(ndistT10[[1]])
-points(ndistT10[[2]],col="green")
-abline(v=2)
- 
-```
-
 
 
 ----------------until here revised------------------------------------
@@ -298,7 +270,7 @@ write.csv(dataSampling,"dataSamplingTheory.csv")
 # load libraries
 library(lattice)
 library(ggplot2)
-library(vioplot)
+
 
 # Number of samples, from a log2 distribution, it is the same for all populations
 numsamp<-c(2,4,8,16,32,64,128) 

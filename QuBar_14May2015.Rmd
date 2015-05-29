@@ -252,6 +252,25 @@ par(mfrow=c(1,1))
 
 ```
 
+## Sampling theory 
+*John, I may some extra text here but useful to our thinking for now*
+
+Ewens [-@Ewens1972] developed the sampling theory of selectively neutral alleles, that based in the number of samples and the mutation parameter theta, allows to estimate the expected number of different alleles in a sample. We are going to use his approach but considering number of different haplotypes in the samples, instead of alleles.
+Assuming a sample of n individuals, the mean number of haplotypes in a sample can be approximate by:
+
+$$ E(h) = \frac{\theta}{\theta}+\frac{\theta}{\theta+1}+...+\frac{\theta}{\theta+n-1} $$
+
+where,
+h: number of different haplotypes in the sample
+n: number of individuals in the sample
+$\theta$: 4N~e~u
+
+If $\theta$ is very small, the expected number of haplotypes should approximate 1, on the other hand, if $\theta$ is extremely large, the number of haplotypes should tend to n. Using this equation, we can estimate the distribution of the number of haplotypes for different sampling sizes. And we can also estimate the variance using:
+
+$$ Var(h)= E(h)-[\frac{\theta^2}{\theta^2}+\frac{\theta^2}{(\theta+1)^2}+...+\frac{\theta^2}{(\theta+2n-1)^2}] $$
+
+In general, the variance increases with theta for n of biological interest. Ewens [-@Ewens1972] derivations rely on the assumption that the sampling size is much lower than the population size.
+
 ## Testing the methods
 
 We propose two/three methods that could help to estimate the relative number of individuals in a barcoding sample: 1) gamma distribution, 2) theta and segregating sites, 3) sampling theory?. To evaluate the usefulness of each method, we used a simulation approach. We simulated populations with Hudson's MS program [@Hudson 2002] using the *gap* package in R [@RCoreTeam2013]. We simulated four populations, using two/three? different mutation rates (theta= 2 and theta=10), and also considering populations with or without growth. The growth rate was modified in order to achieve a Tajima's D value that better approximates the values observed in nature for marine invertebrates. 
@@ -390,7 +409,7 @@ ggplot(gammaData, aes(x = samplingSize,y=Max.Gamma.value,fill=pops,color=pops)) 
 
 # Fig X2b
 # thinking how to plot the subset of samples sizes where gamma works a little bit better....
-ggplot(minigamma, aes(x = samplingSizeF,y=Max.Gamma.value,fill=minipops,color=minipops)) + geom_boxplot(aes(fill=minipops))+ylim(0,20)+geom_abline()
+ggplot(minigamma, aes(x = samplingSizeF,y=Max.Gamma.value,fill=minipops,color=minipops)) + geom_boxplot(aes(fill=minipops))+ylim(0,20))
 ```
 
 Paula's note: something weird is happening here when we defined shape=H and scale=number of haplotypes, the distribution of expected nubers using the gamma es identical to the empirical distribution of number of haplotypes in the simulated samples. Is the "happrob" object representing the "expected n"? the name is confusing.
@@ -410,32 +429,37 @@ wakdata<-read.csv("WakeleyData.csv",header=T)
 
 # Summarize the info on observed segregating sites
 infoObs<-ddply(obsdata, c("Pop","samplingSize"), summarise, medianOb = median(n.seg.sites,na.rm=T),meanOb = mean(n.seg.sites,na.rm=T),quant.25=quantile(n.seg.sites,0.25),quant.75=quantile(n.seg.sites,0.75))
+
 # keep only the n<=32
 miniObs<-infoObs[which(infoObs$samplingSize<33),]
 
 # Summarize Wakeley's info 
 miniwak<-wakdata[which(wakdata$n<33),]
-row.names(miniwak)<-NULL
-factor(miniwak$segSites)->miniwak$segSites
 
-# we need to see which n has the maximum probablity for each segregating site
-sumdata<-ddply(miniwak, c("Theta","segSites"), summarise, maxprob = max(prob))
-# add flag
-sumdata$best.n<-"best"
-sumdata$Theta<-NULL; sumdata$segSites<-NULL
+#----make loop to find the best n's-----
+thetas<-c("two","ten","twenty")
+a<-c(rep("two",135),rep("ten",135),rep("twenty",135))
+b<-c(seq(1,135,1),seq(1,135,1),seq(1,135,1))
+goodwak<-as.data.frame(cbind(a,b))
+names(goodwak)<-c("theta","seg.sites")
 
-# so we merge with Wakeley's data to flag the best n
-merge(miniwak,sumdata,by.x="prob",by.y="maxprob",all.x=T)->newdata
-# keep only the flag
-goodwak<-newdata[complete.cases(newdata),]
-row.names(goodwak)<-NULL
-goodwak$best.n<-NULL
-names(goodwak)<-c("prob","Theta","best.n","segSites")
+for(i in thetas){
+  for(j in 1:nrow(mydata)){
+    goodwak$seg.sites[j]->mysegsite
+    mysubset<-subset(miniwak,miniwak$Theta==i & miniwak$segSites==mysegsite)
+    max(mysubset$prob)->maxprob
+    which(mysubset$prob==maxprob)->best
+    mysubset$n[best]->best.n
+    best.n->goodwak$best.n[j]
+    }
+}
+# now "goodwak" has theta,seg.sites and best.n
 
-# Now we want to merge the observed segregatin sites with the segregating sites used to estimate Wakeley's formula, and that will allow us to plot the "real" n vs the best.n according Wakeley.
-bymedian<-merge(miniObs,goodwak,by.x="medianOb",by.y="segSites",all.x=T)
-
-xyplot(best.n~samplingSize|Pop,data=bymedian)
+# Now we want to merge the observed segregating sites with the segregating sites used to estimate Wakeley's formula, and that will allow us to plot the "real" n vs the best.n according Wakeley.
+bymedian<-merge(miniObs,goodwak,by.x="medianOb",by.y="seg.sites",all.x=T)
+bymedian[complete.cases(bymedian$best.n),]->bymedian1
+bymedian1$Pop<-factor(bymedian1$Pop)
+xyplot(best.n~samplingSize|Pop,data=bymedian1)
 
  
 ```

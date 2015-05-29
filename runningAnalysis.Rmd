@@ -59,7 +59,7 @@ All the gamma data was saved in the "gammaData.csv" file, and now we can directl
 
 There are specific probability distributions associated with a sample of sequences, the number of segregating sites *S*, and a prior assumption of $\theta$ [@Wakeley08].
 
-Below we calculated the distribution of sampling size according to Wakeley's formula, for each observed theta in the natural (simulated) population of the species and for 1 to max number of segregating sites. We only estimated n from 1 to 50 because larger than that it behaves funny.
+Below we calculated the distribution of sampling size according to Wakeley's formula, for each observed theta in the natural (simulated) population of the species and for 1 to max number of segregating sites. We only estimated n from 1 to 50 because larger than that it behaves funny. We have 3 loops, one for each theta and then we merge all in the final datasets.
 
 ```{r theta and segregating sites, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 library(reshape)

@@ -1,0 +1,313 @@
+---
+title: "Play with Gamma"
+output: html_document
+---
+
+OK, I figured out some of what was happening for you with the gamma. Even though I was mostly convinced that I had things coded right, what I did was clarify the shape= and scale= in the code, and then played with it both ways. 
+
+
+```{r hapdivORIG, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
+
+####################################
+numhaps=10
+Hapdiv=0.75 #minvalue 0.001 if no information; this is PRIOR information
+####################################
+
+x=1
+cdf=0
+indprob=0
+array<-NULL
+while (cdf<0.99) {
+  cdfprev<-cdf
+#  cdf<-pgamma(x,1,Hapdiv) 
+#  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
+#  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
+#  cdf<-pgamma(x,numhaps,Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+cdf<-pgamma(x,shape=numhaps,scale=Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+#cdf<-pgamma(x,shape=Hapdiv,scale=numhaps) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+  indprob<-cdf-cdfprev
+  
+  
+  happrob<-numhaps+(x-1)
+  array<-c(array,happrob)
+  array<-c(array,cdf)
+  array<-c(array,indprob)
+#  print(happrob)
+#  print(cdf)
+  x=x+1
+}
+
+#par(mfrow=c(3,1))
+
+probs<-t(matrix(array,nrow=3))
+probs
+plot(probs[,1],probs[,3],col='red',pch=19,xlab="Number of individuals (n)",ylab="Probability distribution of n")
+
+```
+
+However when this is reversed you get somthing quite different:
+
+```{r hapdivSWITCH, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
+
+####################################
+numhaps=10
+Hapdiv=0.75 #minvalue 0.001 if no information; this is PRIOR information
+####################################
+
+x=1
+cdf=0
+indprob=0
+array<-NULL
+while (cdf<0.99) {
+  cdfprev<-cdf
+#  cdf<-pgamma(x,1,Hapdiv) 
+#  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
+#  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
+#  cdf<-pgamma(x,numhaps,Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+#cdf<-pgamma(x,shape=numhaps,scale=Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+cdf<-pgamma(x,shape=Hapdiv,scale=numhaps) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+  indprob<-cdf-cdfprev
+  
+  
+  happrob<-numhaps+(x-1)
+  array<-c(array,happrob)
+  array<-c(array,cdf)
+  array<-c(array,indprob)
+#  print(happrob)
+#  print(cdf)
+  x=x+1
+}
+
+#par(mfrow=c(3,1))
+
+probs<-t(matrix(array,nrow=3))
+probs
+plot(probs[,1],probs[,3],col='red',pch=19,xlab="Number of individuals (n)",ylab="Probability distribution of n")
+
+```
+
+At first this is intuitively appealing because hey! The minimum number of individuals is highest probability, diminishing probability as you head to larger sample sizes.
+
+However when haplotype diversity is low - remember this is when we have little information - you obtain something that doesn't intuitively make sense, you get a huge probability for the number of individuals being equal to number of haplotypes and it drops off very quickly.
+
+```{r hapdivSWITCHlow, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
+
+####################################
+numhaps=10
+Hapdiv=0.15 #minvalue 0.001 if no information; this is PRIOR information
+####################################
+
+x=1
+cdf=0
+indprob=0
+array<-NULL
+while (cdf<0.99) {
+  cdfprev<-cdf
+#  cdf<-pgamma(x,1,Hapdiv) 
+#  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
+#  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
+#  cdf<-pgamma(x,numhaps,Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+#cdf<-pgamma(x,shape=numhaps,scale=Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+cdf<-pgamma(x,shape=Hapdiv,scale=numhaps) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+  indprob<-cdf-cdfprev
+  
+  
+  happrob<-numhaps+(x-1)
+  array<-c(array,happrob)
+  array<-c(array,cdf)
+  array<-c(array,indprob)
+#  print(happrob)
+#  print(cdf)
+  x=x+1
+}
+
+#par(mfrow=c(3,1))
+
+probs<-t(matrix(array,nrow=3))
+probs
+plot(probs[,1],probs[,3],col='red',pch=19,xlab="Number of individuals (n)",ylab="Probability distribution of n")
+
+```
+
+and in the extreme we recover the exact match:
+
+```{r hapdivSWITCHlowlow, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
+
+####################################
+numhaps=10
+Hapdiv=0.05 #minvalue 0.001 if no information; this is PRIOR information
+####################################
+
+x=1
+cdf=0
+indprob=0
+array<-NULL
+while (cdf<0.99) {
+  cdfprev<-cdf
+#  cdf<-pgamma(x,1,Hapdiv) 
+#  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
+#  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
+#  cdf<-pgamma(x,numhaps,Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+#cdf<-pgamma(x,shape=numhaps,scale=Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+cdf<-pgamma(x,shape=Hapdiv,scale=numhaps) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+  indprob<-cdf-cdfprev
+  
+  
+  happrob<-numhaps+(x-1)
+  array<-c(array,happrob)
+  array<-c(array,cdf)
+  array<-c(array,indprob)
+#  print(happrob)
+#  print(cdf)
+  x=x+1
+}
+
+#par(mfrow=c(3,1))
+
+probs<-t(matrix(array,nrow=3))
+probs
+plot(probs[,1],probs[,3],col='red',pch=19,xlab="Number of individuals (n)",ylab="Probability distribution of n")
+
+```
+
+Interestingly this is also the problem when we take the origianl formulation with very low haplotype diversity?
+
+```{r hapdivORIGlow, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
+
+####################################
+numhaps=10
+Hapdiv=0.99 #minvalue 0.001 if no information; this is PRIOR information
+####################################
+
+x=1
+cdf=0
+indprob=0
+array<-NULL
+while (cdf<0.99) {
+  cdfprev<-cdf
+#  cdf<-pgamma(x,1,Hapdiv) 
+#  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
+#  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
+#  cdf<-pgamma(x,numhaps,Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+cdf<-pgamma(x,shape=numhaps,scale=Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+#cdf<-pgamma(x,shape=Hapdiv,scale=numhaps) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+  indprob<-cdf-cdfprev
+  
+  
+  happrob<-numhaps+(x-1)
+  array<-c(array,happrob)
+  array<-c(array,cdf)
+  array<-c(array,indprob)
+#  print(happrob)
+#  print(cdf)
+  x=x+1
+}
+
+#par(mfrow=c(3,1))
+
+probs<-t(matrix(array,nrow=3))
+probs
+plot(probs[,1],probs[,3],col='red',pch=19,xlab="Number of individuals (n)",ylab="Probability distribution of n")
+
+```
+
+Now remember so far this is not exactly how I had written it. By omitting shape = and scale=, I think it was mis-parameterizing so far (sad face)??
+
+Because 
+
+```{r hapdivORIGORIG, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
+
+####################################
+numhaps=10
+Hapdiv=0.75 #minvalue 0.001 if no information; this is PRIOR information
+####################################
+
+x=1
+cdf=0
+indprob=0
+array<-NULL
+while (cdf<0.99) {
+  cdfprev<-cdf
+#  cdf<-pgamma(x,1,Hapdiv) 
+#  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
+#  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
+#  cdf<-pgamma(x,numhaps,Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+cdf<-pgamma(x,numhaps,Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+#cdf<-pgamma(x,shape=Hapdiv,scale=numhaps) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+  indprob<-cdf-cdfprev
+  
+  
+  happrob<-numhaps+(x-1)
+  array<-c(array,happrob)
+  array<-c(array,cdf)
+  array<-c(array,indprob)
+#  print(happrob)
+#  print(cdf)
+  x=x+1
+}
+
+#par(mfrow=c(3,1))
+
+probs<-t(matrix(array,nrow=3))
+probs
+plot(probs[,1],probs[,3],col='red',pch=19,xlab="Number of individuals (n)",ylab="Probability distribution of n")
+
+```
+
+and
+```{r hapdivORIGREV, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
+
+####################################
+numhaps=10
+Hapdiv=0.75 #minvalue 0.001 if no information; this is PRIOR information
+####################################
+
+x=1
+cdf=0
+indprob=0
+array<-NULL
+while (cdf<0.99) {
+  cdfprev<-cdf
+#  cdf<-pgamma(x,1,Hapdiv) 
+#  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
+#  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
+#  cdf<-pgamma(x,numhaps,Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+#cdf<-pgamma(x,shape=numhaps,scale=Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+cdf<-pgamma(x,Hapdiv,numhaps) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+
+  indprob<-cdf-cdfprev
+  
+  
+  happrob<-numhaps+(x-1)
+  array<-c(array,happrob)
+  array<-c(array,cdf)
+  array<-c(array,indprob)
+#  print(happrob)
+#  print(cdf)
+  x=x+1
+}
+
+#par(mfrow=c(3,1))
+
+probs<-t(matrix(array,nrow=3))
+probs
+plot(probs[,1],probs[,3],col='red',pch=19,xlab="Number of individuals (n)",ylab="Probability distribution of n")
+
+```
+
+these last 2 plots were what you were puzzling over, when those parameters were reversed. In fact the second one is invariant to what "hapdiv" is, so clearly without stating those scale, shape values it is inserting those numbers into the wrong slots (at least, when reversed).
+
+So what should we be using then?

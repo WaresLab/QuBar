@@ -6,14 +6,13 @@ output: pdf_document
 bibliography: QuBar_References.bib
 ---
 
-<!-- Paula: this manuscript is where I want to start clean from my prelim work to develop short paper together. -->
 # Introduction
 
 We start with what may seem like a trivial question: assume that you have been told that a series of fair coin flips resulted in 60% 'heads', 40% 'tails'. This is the only information given, but you already have made a judgment about how many coin flips occurred, and perhaps have generated a probability distribution in your head where the highest likelihood is for 5 or 10, rather than 50 or 100, events. This is taking advantage of what we know about the probability mass function of a binomial distribution, where the observed number of 'successes' in a series is related to the probability of success (presumably 50%) and the number of trials.  
 
 Here, we argue that the same principle can be used for improving the efficiency of exploring the presence, distribution, and abundance of genetic biodiversity. Documenting the distribution and abundance of biodiversity - in many habitats, at multiple scales - is perhaps more important now than ever as scientists evaluate how populations are responding to environmental change. Though technological advances have rapidly improved some elements of this [@Nagendra01; @Bourlat13], there are still glaring deficiencies in our ability to efficiently catalog diversity, even in small domains or limited taxonomic surveys.
 
-The most apparent advances have been in surveys of microbial and viral diversity. Next-generation sequencing has permitted the now-commonplace exploration of fungal, bacterial, and viral diversity by generating $10^5$ - $10^6$ sequence reads per sample and using barcoding approaches (match of sequence to known taxonomic samples for that genomic region) to identify the taxa present and their relative abundance. While there is no doubt that this has transformed our understanding of functional ecosystem processes at microbial ecology at this scale [@Nguyen14; @Turn09; @Desnues08], there are definite limitations. For example, some taxa (e.g. Archaea) may not be as readily amplified using the same ribosomal 16S "bacteria" primers, and variation in amplification efficiency certainly exists within the Eubacteria [@Acinas05]. Additionally, it is known that some bacterial genomes harbor more than one copy of this canonical locus [@Kembel12], thus muddling the relationship between read frequency and taxon frequency in a community.
+The most apparent advances have been in surveys of microbial and viral diversity. Next-generation sequencing has permitted the now-commonplace exploration of fungal, bacterial, and viral diversity by generating $10^5$ - $10^6$ sequence reads per sample and using barcoding approaches (match of sequence to known taxonomic samples for that genomic region) to identify the taxa present and their relative abundance. While there is no doubt that this has transformed our understanding of functional ecosystem processes and microbial ecology at this scale [@Nguyen14; @Turn09; @Desnues08], there are definite limitations. For example, some taxa (e.g. Archaea) may not be as readily amplified using the same ribosomal 16S "bacteria" primers, and variation in amplification efficiency certainly exists within the Eubacteria [@Acinas05]. Additionally, it is known that some bacterial genomes harbor more than one copy of this canonical locus [@Kembel12], thus muddling the relationship between read frequency and taxon frequency in a community.
 
 The same problems exist - and are exacerbated - when studying multicellular diversity. Most notably, on top of the problems of potential contamination, detecting rare taxa and/or handling singleton evidence for rare taxa, and the potentially large variance in individual sizes of organisms, the relative read abundance in a NGS data set will often wildly vary (by multiple orders of magnitude) from the abundance of actual tissue in the data set [@Nguyen14; @Piñol14; @Bohmann14]. This is caused primarily by shifts in amplification efficiency given mismatches in the primer region, and is often dealt with by analyzing data for simple incidence as well as relative read abundance, to identify patterns robust to either removal of information or inaccurate information [@Nguyen14].
 
@@ -35,7 +34,7 @@ Here we present the mathematical considerations necessary to develop these quant
 maxindivs=200
 ```
 
-The approach here is identifying information that can comfortably be used as prior information to establish the posterior probability of observing polymorphism data from an *unknown* number of input individuals for a taxon. Any type of sampling information may help to set an upper limit: for example, if it is known that only about `r maxindivs` individual specimens were originally used for isolation of DNA, then the maximum number of total individuals recovered from this approach should be about `r maxindivs`. This is perhaps not exciting numerical advance in biology, but limits our prior belief nonetheless.
+The approach here is identifying information that can comfortably be used as prior information to establish the posterior probability of observing polymorphism data from an *unknown* number of input individuals for a taxon. Any type of sampling information may help to set an upper limit: for example, if it is known that only about `r maxindivs` individual specimens were originally used for isolation of DNA, then the maximum number of total individuals inferred from this approach should be about `r maxindivs`. This is perhaps not a groundbreaking numerical advance in biology, but limits our prior belief nonetheless.
 
 ```{r hapdiv, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 
@@ -53,7 +52,7 @@ while (cdf<0.99) {
 #  cdf<-pgamma(x,1,Hapdiv) 
 #  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
 #  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
-  cdf<-pgamma(x,numhaps,Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+  cdf<-pgamma(x,shape=numhaps,scale=Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
   indprob<-cdf-cdfprev
   
   
@@ -74,12 +73,11 @@ probs
 
 ```
 
-There are also clear minimum bounds that can be established for the abundance of a taxon. Considering DNA sequence haplotypes as our most basic information, we ask how many *distinct* haplotypes are recovered in the data that match a particular taxon? For a haploid mitochondrial marker like the oft-used cytochrome oxidase I (COI), this number is the minimum number of individuals present (if the number happens to be 0, it is also likely to be the maximum number of individuals in the sample). 
+There are also clear minimum bounds that can be established for the abundance of a taxon. Considering DNA sequence haplotypes as our most basic information, we ask how many *distinct* haplotypes are recovered in the data that match a particular taxon? For a haploid mitochondrial marker like the oft-applied cytochrome oxidase I (COI), this number is the minimum number of individuals present (if the number happens to be 0, it is also likely to be the maximum number of individuals in the sample). 
 
 ## Gamma approach
 
-This approachs asumes that there is previous information on haplotype diversity (*H*) from the natural population of the species that are present in the barcoding sample. The 
- "haplotype diversity", *H*, defined by Nei and Tajima (1981) as $$ H = \frac{N}{N-1}(1-\sum\limits_{i=1}x_{i}^2) $$ represents the probability that sampling a new individual will result in sample of a new haplotype. N is the number of haplotypes, and *x*~i~ is the sample frequency of the i~th~ haplotype.
+This approachs assumes that there is previous information on haplotype diversity (*H*) from the natural populations of the species that are present in the barcoding sample. The "haplotype diversity", *H*, defined by Nei and Tajima (1981) as $$ H = \frac{N}{N-1}(1-\sum\limits_{i=1}x_{i}^2) $$ represents the probability that sampling a new individual will result in sample of a new haplotype. N is the number of haplotypes, and *x*~i~ is the sample frequency of the i~th~ haplotype.
 
 An example of how *H* could be used is shown below for a sample in which `r numhaps` haplotypes are observed,  and the *prior information about H* for a particular taxon is *H* = `r Hapdiv`. In addition to assuming that prior information about the population is useful, here we assume a minimum of `r numhaps` individuals, and that what we do not know can be modeled by a Gamma distribution with the shape defined by the number of haplotypes and scale defined by our prior knowledge of *H*.
 
@@ -88,9 +86,9 @@ plot(probs[,1],probs[,3],col='red',pch=19,xlab="Number of individuals (n)",ylab=
 
 ```
 
-So, observing `r numhaps` haplotypes for this taxon, we might feel comfortable believing there are between 16 and 31 actual individuals that were sampled. The problem lies in the willful abuse of the Gamma distribution without a better understanding of how haplotype diversity *H* and the sample size *N* are related through the frequency of haplotypes - remember, at this point we do not trust the proportion/frequency representation of an allele in our sample.
+So, observing `r numhaps` haplotypes for this taxon, we might feel comfortable believing there are between 16 and 31 actual individuals that were sampled. The problem lies in a willful abuse of the Gamma distribution without a better understanding of how haplotype diversity *H* and the sample size *N* are related through the frequency of haplotypes - remember, at this point we are assuming we cannot trust the proportion/frequency representation of an allele in our sample.
 
-We are going to estimate the gamma probability for each of the simulated samples, using the number of haplotypes observed in the sample as the __shape/scale__ parameter and the haplotype diversity of the population where the sample comes from as the __shape/scale__ parameter. *John, we need to talk about this, weird things going on...*
+We are going to estimate the gamma probability for each of the simulated samples, using the number of haplotypes observed in the sample as the __shape/scale__ parameter and the haplotype diversity of the population where the sample comes from as the __shape/scale__ parameter. *John, we need to talk about this, weird things going on...* **OK I am on this finally, sorry Paula!!**
 
 ## True diversity indices
 

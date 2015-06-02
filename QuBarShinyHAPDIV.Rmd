@@ -1,0 +1,157 @@
+---
+title: "Quantitative Metazoan MetaBarcoding - playing with hapdiv and gamma"
+author: John Wares, University of Georgia -- Ecology & Genetics
+autosize: true
+runtime: shiny
+output: 
+  ioslides_presentation:
+    fig_width: 7
+    fig_height: 6
+---
+
+
+
+## How to handle haplotype diversity?
+
+Have been experimenting with a gamma distribution but feels very *ad hoc*, e.g. what are parameters for gamma?
+
+
+```{r numhapOG, echo=FALSE}
+#numhaps=5 this should pass from previous chunk
+
+inputPanel(
+  selectInput("numhaps", label = "numhaps/shape param:",
+              choices = c(2, 4, 8, 16, 32), selected = 8),
+  
+  sliderInput("hapdiv", label = "hap diversity/scale param:",
+              min = 0, max = 1, value = 0.8, step = 0.05)
+)
+
+
+renderPlot({
+  
+number<-as.numeric(input$numhaps)  
+diversity<-as.numeric(input$hapdiv)
+x=1
+cdf=0
+
+indprob=0
+array<-NULL
+while (cdf<0.99) {
+  cdfprev<-cdf
+ 
+#  cdf<-pgamma(x,1,Hapdiv) 
+#  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
+#  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
+  cdf<-pgamma(x,shape=number,scale=diversity) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+#  cdf<-pgamma(x,shape=diversity,scale=number)
+
+  indprob<-cdf-cdfprev
+  
+  happrob<-number+(x-1)
+  array<-c(array,happrob)
+  array<-c(array,cdf)
+  array<-c(array,indprob)
+#  print(happrob)
+#  print(cdf)
+  x=x+1
+}
+
+
+probs<-t(matrix(array,nrow=3))
+probs
+plot(probs[,1],probs[,3],col='blue')
+})
+```
+
+## Switch
+
+```{r numhapREV, echo=FALSE}
+#numhaps=5 this should pass from previous chunk
+
+
+
+
+renderPlot({
+  
+number<-as.numeric(input$numhaps)  
+diversity<-as.numeric(input$hapdiv)
+x=1
+cdf=0
+
+indprob=0
+array<-NULL
+while (cdf<0.99) {
+  cdfprev<-cdf
+  
+#  cdf<-pgamma(x,1,Hapdiv) 
+#  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
+#  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
+#  cdf<-pgamma(x,shape=number,scale=diversity) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+  cdf<-pgamma(x,shape=diversity,scale=number)
+
+  indprob<-cdf-cdfprev
+  
+  happrob<-number+(x-1) #AH but now this is out of order as well
+  array<-c(array,happrob)
+  array<-c(array,cdf)
+  array<-c(array,indprob)
+#  print(happrob)
+#  print(cdf)
+  x=x+1
+}
+
+
+probs<-t(matrix(array,nrow=3))
+probs
+plot(probs[,1],probs[,3],col='blue')
+})
+```
+
+##Fullswitch
+
+```{r numhapREVrev, echo=FALSE}
+#numhaps=5 this should pass from previous chunk
+
+
+
+
+renderPlot({
+  
+number<-as.numeric(input$numhaps)  
+diversity<-as.numeric(input$hapdiv)
+x=1
+cdf=0
+
+indprob=0
+array<-NULL
+while (cdf<0.99) {
+  cdfprev<-cdf
+  
+#  cdf<-pgamma(x,1,Hapdiv) 
+#  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
+#  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
+#  cdf<-pgamma(x,shape=number,scale=diversity) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+  cdf<-pgamma(x,shape=diversity,scale=number)
+
+  indprob<-cdf-cdfprev
+  
+  happrob<-diversity+(x-1) #AH but now this is out of order as well
+  array<-c(array,happrob)
+  array<-c(array,cdf)
+  array<-c(array,indprob)
+#  print(happrob)
+#  print(cdf)
+  x=x+1
+}
+
+
+probs<-t(matrix(array,nrow=3))
+probs
+plot(probs[,1],probs[,3],col='blue')
+})
+```
+
+
+
+

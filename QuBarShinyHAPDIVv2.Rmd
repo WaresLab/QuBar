@@ -13,9 +13,6 @@ output:
 
 ## How to handle haplotype diversity?
 
-Have been experimenting with a gamma distribution but feels very *ad hoc*, e.g. what are parameters for gamma?
-
-
 ```{r numhapOG, echo=FALSE}
 #numhaps=5 this should pass from previous chunk
 

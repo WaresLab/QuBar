@@ -18,10 +18,10 @@ output:
 
 inputPanel(
   sliderInput("numhaps", label = "numhaps/shape param:",
-              min = 0.1, max=10, value = 2, step = 0.1),
+              min = 1, max=20, value = 10, step = 1),
   
   sliderInput("hapdiv", label = "hap diversity/scale param:",
-              min = 0.1, max=10, value = 2, step = 0.1)
+              min = 0.05, max=1, value = 0.2, step = 0.05)
 )
 
 
@@ -40,7 +40,7 @@ while (cdf<0.99) {
 #  cdf<-pgamma(x,1,Hapdiv) 
 #  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
 #  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
-  cdf<-pgamma(x,shape=number,scale=diversity) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+  cdf<-pgamma(x,shape=(1/diversity),rate=(1/number)) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
 #  cdf<-pgamma(x,shape=diversity,scale=number)
 
   indprob<-cdf-cdfprev

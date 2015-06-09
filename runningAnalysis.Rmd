@@ -264,6 +264,34 @@ legend("topleft", inset=.05, c("theta=2","theta=10"), fill=c("blue","red"), hori
 write.csv(dataSampling,"dataSamplingTheory.csv")
 ```
 
+# Getting theta from pop gen datasets
+
+```{r theta in natural populations}
+# load libraries
+library(PopGenome) 
+
+# converting FASTA file to GENOME object
+popGen<-readData("C:/Users/Paula/Documents/GitHub/QuBar/popGenData",include.unknown=T)
+popGen@n.sites # gives the number of sites in the alignment
+
+Varsites<-popGen@n.biallelic.sites #number of biallelic sites (SNPs)
+
+# -------aplying the "F_ST stats" methods
+F_ST.stats(popGen)->divResults
+
+# get haplotype diversity for each dataset----
+unlist(divResults@region.stats@haplotype.diversity)->results
+
+# get all diversity results
+get.diversity(divResults)[[1]]
+
+# --------aplying the "neutrality.stats"
+neuResults<-neutrality.stats(popGen)
+
+# get neutrality results
+get.neutrality(neuResults,theta=T)[[1]]
+```
+
 # Old code just in case
 
 ```{r OLD gamma distribution code,eval=F}

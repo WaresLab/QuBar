@@ -10,7 +10,7 @@ bibliography: QuBar_References.bib
 
 We start with what may seem like a trivial question: assume that you have been told that a series of fair coin flips resulted in 60% 'heads', 40% 'tails'. This is the only information given, but you already have made a judgment about how many coin flips occurred, and perhaps have generated a probability distribution in your head where the highest likelihood is for 5 or 10, rather than 50 or 100, events. This is taking advantage of what we know about the probability mass function of a binomial distribution, where the observed number of 'successes' in a series is related to the probability of success (presumably 50%) and the number of trials.  
 
-Here, we argue that the same principle can be used for improving the efficiency of exploring the presence, distribution, and abundance of genetic biodiversity. Documenting the distribution and abundance of biodiversity - in many habitats, at multiple scales - is perhaps more important now than ever as scientists evaluate how populations are responding to environmental change. Though technological advances have rapidly improved some elements of this [@Nagendra01; @Bourlat13], there are still glaring deficiencies in our ability to efficiently catalog diversity, even in small domains or limited taxonomic surveys.
+Here, we consider whether the same principle could be used for improving the efficiency of exploring the presence, distribution, and abundance of genetic biodiversity. Documenting the distribution and abundance of biodiversity - in many habitats, at multiple scales - is perhaps more important now than ever as scientists evaluate how populations are responding to environmental change. Though technological advances have rapidly improved some elements of this [@Nagendra01; @Bourlat13], there are still glaring deficiencies in our ability to efficiently catalog diversity, even in small domains or limited taxonomic surveys.
 
 The most apparent advances have been in surveys of microbial and viral diversity. Next-generation sequencing has permitted the now-commonplace exploration of fungal, bacterial, and viral diversity by generating $10^5$ - $10^6$ sequence reads per sample and using barcoding approaches (match of sequence to known taxonomic samples for that genomic region) to identify the taxa present and their relative abundance. While there is no doubt that this has transformed our understanding of functional ecosystem processes and microbial ecology at this scale [@Nguyen14; @Turn09; @Desnues08], there are definite limitations. For example, some taxa (e.g. Archaea) may not be as readily amplified using the same ribosomal 16S "bacteria" primers, and variation in amplification efficiency certainly exists within the Eubacteria [@Acinas05]. Additionally, it is known that some bacterial genomes harbor more than one copy of this canonical locus [@Kembel12], thus muddling the relationship between read frequency and taxon frequency in a community.
 
@@ -47,7 +47,7 @@ x=1
 cdf=0
 indprob=0
 array<-NULL
-while (cdf<0.99) {
+while (cdf<0.95) {
   cdfprev<-cdf
 #  cdf<-pgamma(x,1,Hapdiv) 
 #  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
@@ -69,7 +69,9 @@ while (cdf<0.99) {
 
 probs<-t(matrix(array,nrow=3))
 probs
-plot(probs[,1],probs[,3],col='red')
+#plot(probs[,1],probs[,3],col='red')
+maxhaps<-max(probs[,1])
+
 
 ```
 
@@ -77,22 +79,19 @@ There are also clear minimum bounds that can be established for the abundance of
 
 ## Gamma approach
 
-This approachs assumes that there is previous information on haplotype diversity (*H*) from the natural populations of the species that are present in the barcoding sample. The "haplotype diversity", *H*, defined by Nei and Tajima (1981) as $$ H = \frac{N}{N-1}(1-\sum\limits_{i=1}x_{i}^2) $$ represents the probability that sampling a new individual will result in sample of a new haplotype. N is the number of haplotypes, and *x*~i~ is the sample frequency of the i~th~ haplotype.
+In addition to the simple number of haplotypes observed at a barcode marker, we may also attempt to estimate the number of individuals that harbored those haplotypes. Here, we assume that there is previous information on haplotype diversity (*H*) from the natural populations of the species (or distinguishable populations) that are present in the barcoding sample. The "haplotype diversity", *H*, defined by Nei and Tajima (1981) as $$ H = \frac{N}{N-1}(1-\sum\limits_{i=1}x_{i}^2) $$ represents the probability that sampling a new individual will result in sample of a new haplotype. N is the number of haplotypes, and *x*~i~ is the sample frequency of the i~th~ haplotype.
 
-An example of how *H* could be used is shown below for a sample in which `r numhaps` haplotypes are observed,  and the *prior information about H* for a particular taxon is *H* = `r Hapdiv`. In addition to assuming that prior information about the population is useful, here we assume a minimum of `r numhaps` individuals, and that what we do not know can be modeled by a Gamma distribution with the shape defined by the number of haplotypes and scale defined by our prior knowledge of *H*.
+An example of how *H* could be used is shown below for a sample in which `r numhaps` haplotypes are observed,  and the *prior information about H* for a particular taxon is *H* = `r Hapdiv`. In addition to assuming that prior information about the population is useful, here we assume a minimum of `r numhaps` individuals, and that what we do not know can be modeled by a Gamma distribution with the shape defined by the reciprocal of haplotype diversity (so that low diversity provides little information, high diversity suggests that the number of individuals is closer to the observed number of haplotypes), and the rate defined by the number of haplotypes.
 
 ```{r fig1, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 plot(probs[,1],probs[,3],col='red',pch=19,xlab="Number of individuals (n)",ylab="Probability distribution of n")
 
 ```
 
-So, observing `r numhaps` haplotypes for this taxon, we might feel comfortable believing there are between 16 and 31 actual individuals that were sampled. The problem lies in a willful abuse of the Gamma distribution without a better understanding of how haplotype diversity *H* and the sample size *N* are related through the frequency of haplotypes - remember, at this point we are assuming we cannot trust the proportion/frequency representation of an allele in our sample.
-
-We are going to estimate the gamma probability for each of the simulated samples, using the number of haplotypes observed in the sample as the __shape/scale__ parameter and the haplotype diversity of the population where the sample comes from as the __shape/scale__ parameter. *John, we need to talk about this, weird things going on...* **OK I am on this finally, sorry Paula!!**
+So, observing `r numhaps` haplotypes for this taxon, and given a relatively haphazard use of the Gamma to obtain a useful probability shape given assumptions about how informative haplotype diversity is, we might feel comfortable believing (with a 95% interval) there are between 
+`r numhaps` and `r maxhaps` actual individuals that were sampled, with a most-probable solution of 14. A problem lies in the willful abuse of the Gamma distribution without a better understanding of how haplotype diversity *H* and the sample size *N* are related through the frequency of haplotypes - remember, at this point we are assuming we cannot trust the proportion/frequency representation of an allele in our sample.
 
 ## True diversity indices
-
-*John, I'm not sure I get this properly, maybe we can discuss this at the next meeting.*
 
 Another way to approach this is through 'true diversity' indices [reviewed in @Sherwin10], as this family of statistics indicates the number of equally abundant types that have an average frequency equal to the observed average of types. This would mean that instead of taking H as a given from a previously-studied taxon or population, the extant data would be used to calculate $$ ^qD = (\sum\limits_{i=1}^{R}p_{i}^q)^{1/(1-q)} $$ where *R* is richness (number of types). As the Simpson (1949) index is used to indicate the probability that two individuals taken at random from the data are of the same (haplo)type, a comparable statistic to *H* is reached by taking the inverse Simpson index, or $^2D$, and then transforming into the Gini-Simpson index as $1-1/^2D$, again the probability that two individuals have distinct haplotypes.
 
@@ -164,7 +163,7 @@ probs
 ```
 
 
-Evaluating a sample of sequences from the barnacle *Notochthamalus scabrosus*, where `r actual` individuals were haphazardly sampled from the data of Laughlin et al. [-@Laugh12], we see that these data would traditionally report haplotype diversity *H* of `r Hapdiv`, from `r numhaps` observed haplotypes (most dominant haplotype at frequency `r max(hapfreq)`), and in this instance the Gini-Simpson index is equal to `r Gini`. Now we have another statistic that can be calculated from previous data on the population, that focuses on the number of dominant haplotypes. Here, the inverse Simpson index $^2D$ is `r Simp`, the effective number of haplotypes in the system. Using the approach detailed above, but given these data and assuming that the number of input sequences is unknown, we could say there are between `r min` and `r max` individuals that went into the sample.
+Evaluating a sample of sequences from the barnacle *Notochthamalus scabrosus*, where `r actual` individuals were haphazardly sampled from the data of Laughlin et al. [-@Laugh12], we see that these data would traditionally report haplotype diversity *H* of `r Hapdiv`, from `r numhaps` observed haplotypes (most dominant haplotype at frequency `r max(hapfreq)`), and in this instance the Gini-Simpson index is equal to `r Gini`. Now we have another statistic that can be calculated from previous data on the population, that focuses on the number of dominant haplotypes. Here, the inverse Simpson index $^2D$ is `r Simp`, the effective number of haplotypes in the system. Using the approach detailed above, but given these data and assuming that the number of input sequences is unknown, we could say there are between `r min` and `r max` individuals that went into the sample. However, the method by which haplotype diversity is calculated does not address the guesswork by which we have so far applied our probability model.
 
 This model is intuitively useful - the number of individuals cannot be less than the number of haplotypes, and is likely more; the number of individuals could be much more than the number of haplotypes if marker diversity is low; and the distribution scales up as the minimum increases - however is mathematically not well-informed. 
 
@@ -251,27 +250,25 @@ par(mfrow=c(1,1))
 ```
 
 ## Sampling theory 
-*John, I may some extra text here but useful to our thinking for now*
 
-Ewens [-@Ewens1972] developed the sampling theory of selectively neutral alleles, that based in the number of samples and the mutation parameter theta, allows to estimate the expected number of different alleles in a sample. We are going to use his approach but considering number of different haplotypes in the samples, instead of alleles.
-Assuming a sample of n individuals, the mean number of haplotypes in a sample can be approximate by:
+Ewens [-@Ewens1972] developed the sampling theory of selectively neutral alleles, that based in the number of samples and the mutation parameter $\theta$, allows one to estimate the expected number of different alleles (here, we address alleles from a haploid genome, i.e. haplotypes) in a sample. Assuming a sample of n individuals, the mean number of haplotypes in a sample can be approximated by:
 
 $$ E(h) = \frac{\theta}{\theta}+\frac{\theta}{\theta+1}+...+\frac{\theta}{\theta+n-1} $$
 
 where,
-h: number of different haplotypes in the sample
-n: number of individuals in the sample
+*h* is the number of different haplotypes in the sample,
+*n* is the number of individuals in the sample, and
 $\theta$: 4N~e~u
 
-If $\theta$ is very small, the expected number of haplotypes should approximate 1, on the other hand, if $\theta$ is extremely large, the number of haplotypes should tend to n. Using this equation, we can estimate the distribution of the number of haplotypes for different sampling sizes. And we can also estimate the variance using:
+If $\theta$ is very small, the expected number of haplotypes should approximate 1, on the other hand, if $\theta$ is extremely large, the number of haplotypes should tend to *n* as noted above. Using this equation, we can estimate the distribution of the number of haplotypes for different sampling sizes, with a variance:
 
 $$ Var(h)= E(h)-[\frac{\theta^2}{\theta^2}+\frac{\theta^2}{(\theta+1)^2}+...+\frac{\theta^2}{(\theta+2n-1)^2}] $$
 
-In general, the variance increases with theta for n of biological interest. Ewens [-@Ewens1972] derivations rely on the assumption that the sampling size is much lower than the population size.
+In general, the variance increases with theta for *n* of biological interest. Ewens [-@Ewens1972] derivations rely on the assumption that the sampling size is much lower than the actual population size.
 
-## Testing the methods
+#Evaluation of Inferences
 
-We propose two/three methods that could help to estimate the relative number of individuals in a barcoding sample: 1) gamma distribution, 2) theta and segregating sites, 3) sampling theory?. To evaluate the usefulness of each method, we used a simulation approach. We simulated populations with Hudson's MS program [@Hudson 2002] using the *gap* package in R [@RCoreTeam2013]. We simulated four populations, using two/three? different mutation rates (theta= 2 and theta=10), and also considering populations with or without growth. The growth rate was modified in order to achieve a Tajima's D value that better approximates the values observed in nature for marine invertebrates. 
+We propose two/three methods that could help to estimate the relative number of individuals in a barcoding sample: 1) gamma distribution, 2) theta and segregating sites, 3) sampling theory?. To evaluate the usefulness of each method, we used a simulation approach. We simulated populations with Hudson's MS program [@Hudson2002] using the *gap* package in R [@RCoreTeam2013]. We simulated four populations, using two/three? different mutation rates (theta= 2 and theta=10), and also considering populations with or without growth. The growth rate was modified in order to achieve a Tajima's D value that better approximates the values observed in nature for marine invertebrates. 
 
 From these four populations, we took "field samples" of different sizes (n), sampling without replacement. We replicate the sampling experiment 100 times, to be able to assess variation of sampling. For each replicate, we calculate the number of haplotypes and the number of segregating sites, which represent our observed values in the simulated samples. The sampling size, that it is known to us from this design, is what we are going to try to predict using the back calculations described above. All the analysis of the simulated populations was done in R [@RCoreTeam2013]. Detailed information on simulations and R code is presented in the supplementary material (for now in file "runningSimulations".
 

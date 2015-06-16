@@ -40,7 +40,7 @@ The approach here is identifying information that can comfortably be used as pri
 
 ####################################
 numhaps=10
-Hapdiv=0.75 #minvalue 0.001 if no information; this is PRIOR information
+Hapdiv=0.7 #minvalue 0.001 if no information; this is PRIOR information
 ####################################
 
 x=1
@@ -52,7 +52,7 @@ while (cdf<0.99) {
 #  cdf<-pgamma(x,1,Hapdiv) 
 #  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
 #  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
-  cdf<-pgamma(x,shape=numhaps,scale=Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+  cdf<-pgamma(x,shape=(1/Hapdiv),rate=(1/numhaps)) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
   indprob<-cdf-cdfprev
   
   
@@ -69,7 +69,7 @@ while (cdf<0.99) {
 
 probs<-t(matrix(array,nrow=3))
 probs
-#plot(probs[,1],probs[,3],col='red')
+plot(probs[,1],probs[,3],col='red')
 
 ```
 
@@ -145,7 +145,7 @@ indprob=0
 array<-NULL
 while (cdf<0.95) {
   cdfprev<-cdf
-  cdf<-pgamma(x,numhaps,Hapdiv) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+  cdf<-pgamma(x,shape=(1/Hapdiv),rate=(1/numhaps)) 
   indprob<-cdf-cdfprev
   
   
@@ -407,7 +407,7 @@ ggplot(gammaData, aes(x = samplingSize,y=Max.Gamma.value,fill=pops,color=pops)) 
 
 # Fig X2b
 # thinking how to plot the subset of samples sizes where gamma works a little bit better....
-ggplot(minigamma, aes(x = samplingSizeF,y=Max.Gamma.value,fill=minipops,color=minipops)) + geom_boxplot(aes(fill=minipops))+ylim(0,20))
+ggplot(minigamma, aes(x = samplingSizeF,y=Max.Gamma.value,fill=minipops,color=minipops)) + geom_boxplot(aes(fill=minipops))+ylim(0,20)
 ```
 
 Paula's note: something weird is happening here when we defined shape=H and scale=number of haplotypes, the distribution of expected nubers using the gamma es identical to the empirical distribution of number of haplotypes in the simulated samples. Is the "happrob" object representing the "expected n"? the name is confusing.
@@ -442,7 +442,7 @@ goodwak<-as.data.frame(cbind(a,b))
 names(goodwak)<-c("theta","seg.sites")
 
 for(i in thetas){
-  for(j in 1:nrow(mydata)){
+  for(j in 1:nrow(mydata)){ #Paula this wasn't working should 'mydata' be 'obsdata'??
     goodwak$seg.sites[j]->mysegsite
     mysubset<-subset(miniwak,miniwak$Theta==i & miniwak$segSites==mysegsite)
     max(mysubset$prob)->maxprob

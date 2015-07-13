@@ -292,6 +292,22 @@ neuResults<-neutrality.stats(popGen)
 get.neutrality(neuResults,theta=T)[[1]]
 ```
 
+# Getting theta from Wares 2010 datasets
+
+```{r data from natural populations}
+library(plyr)
+
+# load summary table from the excel files of Wares2010
+wares<-read.csv("allData_Wares2010.csv",header=T)
+
+# We need to multiply the Waterson's theta obtained by John's sript for the number of sites to get the same theta that we get with PopGenome.
+wares$wat.theta<-wares$nsites*wares$ThetaW
+
+# Summarize data by group
+waresSum<-ddply(wares,~group,summarise,mean.wat.theta=mean(wat.theta,na.rm=T),median.wat.theta=median(wat.theta,na.rm=T),mean.samples=mean(nsam,na.rm=T),median.samples=median(nsam,na.rm=T),mean.seg.sites=mean(S,na.rm=T),median.seg.sites=median(S,na.rm=T))
+
+```
+
 # Old code just in case
 
 ```{r OLD gamma distribution code,eval=F}

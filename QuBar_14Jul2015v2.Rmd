@@ -77,11 +77,11 @@ maxhaps<-max(probs[,1])
 
 There are also clear minimum bounds that can be established for the abundance of a taxon. Considering DNA sequence haplotypes as our most basic information, we ask how many *distinct* haplotypes are recovered in the data that match a particular taxon? For a haploid mitochondrial marker like the oft-applied cytochrome oxidase I (COI), this number is the minimum number of individuals present (if the number happens to be 0, it is also likely to be the maximum number of individuals in the sample). 
 
-## Gamma approach
+## Haplotype Diversity
 
 In addition to the simple number of haplotypes observed at a barcode marker, we may also attempt to estimate the number of individuals that harbored those haplotypes. Here, we assume that there is previous information on haplotype diversity (*H*) from the natural populations of the species (or distinguishable populations) that are present in the barcoding sample. The "haplotype diversity", *H*, defined by Nei and Tajima (1981) as $$ H = \frac{N}{N-1}(1-\sum\limits_{i=1}x_{i}^2) $$ represents the probability that sampling a new individual will result in sample of a new haplotype. N is the number of haplotypes, and *x*~i~ is the sample frequency of the i~th~ haplotype.
 
-An example of how *H* could be used is shown below for a sample in which `r numhaps` haplotypes are observed,  and the *prior information about H* for a particular taxon is *H* = `r Hapdiv`. In addition to assuming that prior information about the population is useful, here we assume a minimum of `r numhaps` individuals, and that what we do not know can be modeled by a Gamma distribution with the shape defined by the reciprocal of haplotype diversity (so that low diversity provides little information, high diversity suggests that the number of individuals is closer to the observed number of haplotypes), and the rate defined by the number of haplotypes.
+An example of how *H* could be used is shown below for a sample in which `r numhaps` haplotypes are observed,  and the *prior information about H* for a particular taxon is *H* = `r Hapdiv`. In addition to assuming that prior information about the population is useful, here we assume a minimum of `r numhaps` individuals, and that what we do not know can be modeled by a Gamma distribution with the shape defined by the reciprocal of haplotype diversity (so that low diversity provides little information, high diversity suggests that the number of individuals is closer to the observed number of haplotypes), and the rate defined by the reciprocal of the number of haplotypes.
 
 ```{r fig1, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 plot(probs[,1],probs[,3],col='red',pch=19,xlab="Number of individuals (n)",ylab="Probability distribution of n")
@@ -161,7 +161,7 @@ probs
 ```
 
 
-## Theta and segregating sites (Wakeley 2008)
+## Segregating Sites
 
 As noted above, there are specific probability distributions associated with a sample of sequences, the number of segregating sites *S*, and a prior assumption of $\theta$ [@Wakeley08].
 
@@ -247,7 +247,7 @@ par(mfrow=c(1,1))
 
 ## Sampling theory 
 
-Ewens [-@Ewens1972] developed the sampling theory of selectively neutral alleles, that based in the number of samples and the mutation parameter $\theta$, allows one to estimate the expected number of different alleles (here, we address alleles from a haploid genome, i.e. haplotypes) in a sample. Assuming a sample of n individuals, the mean number of haplotypes in a sample can be approximated by:
+Ewens [-@Ewens1972] developed a sampling theory of selectively neutral alleles, that based in the number of samples and the mutation parameter $\theta$, allows one to estimate the expected number of different alleles (here, we address alleles from a haploid genome, i.e. haplotypes) in a sample. Assuming a sample of n individuals, the mean number of haplotypes in a sample can be approximated by:
 
 $$ E(h) = \frac{\theta}{\theta}+\frac{\theta}{\theta+1}+...+\frac{\theta}{\theta+n-1} $$
 
@@ -256,15 +256,15 @@ where,
 *n* is the number of individuals in the sample, and
 $\theta$: 4N~e~u
 
-If $\theta$ is very small, the expected number of haplotypes should approximate 1, on the other hand, if $\theta$ is extremely large, the number of haplotypes should tend to *n* as noted above. Using this equation, we can estimate the distribution of the number of haplotypes for different sampling sizes, with a variance:
+If $\theta$ is very small, the expected number of haplotypes should be quite low, approaching 1. On the other hand, if $\theta$ is extremely large, the number of haplotypes should tend to *n* as noted above; of course the relationship between Ewens' sampling theory and our understanding of H is close. Using this equation, we can estimate the distribution of the number of haplotypes for different sampling sizes, with a variance:
 
 $$ Var(h)= E(h)-[\frac{\theta^2}{\theta^2}+\frac{\theta^2}{(\theta+1)^2}+...+\frac{\theta^2}{(\theta+2n-1)^2}] $$
 
-In general, the variance increases with theta for *n* of biological interest. Ewens [-@Ewens1972] derivations rely on the assumption that the sampling size is much lower than the actual population size.
+In general, the variance increases with theta for *n* of biological interest. Ewens' [-@Ewens1972] derivations rely on the assumption that the sample size is much lower than the actual population size.
 
 #Evaluation of Inferences
 
-We propose two/three methods that could help to estimate the relative number of individuals in a barcoding sample: 1) gamma distribution, 2) theta and segregating sites, 3) sampling theory?. To evaluate the usefulness of each method, we used a simulation approach. We simulated populations with Hudson's MS program [@Hudson2002] using the *gap* package in R [@RCoreTeam2013]. We simulated four populations, using two/three? different mutation rates (theta= 2 and theta=10), and also considering populations with or without growth. The growth rate was modified in order to achieve a Tajima's D value that better approximates the values observed in nature for marine invertebrates. 
+We have suggested methods that could help to estimate the relative number of individuals in a metabarcoding sample: 1) an inference on the input sample size based on haplotype diversity, 2) theta and segregating sites, 3) sampling theory?. To evaluate the usefulness of each method, we used a simulation approach. We simulated populations with Hudson's MS program [@Hudson2002] using the *gap* package in R [@RCoreTeam2013]. We simulated four populations, using two/three? different mutation rates (theta= 2 and theta=10), and also considering populations with or without growth. The growth rate was modified in order to achieve a Tajima's D value that better approximates the values observed in nature for marine invertebrates. 
 
 From these four populations, we took "field samples" of different sizes (n), sampling without replacement. We replicate the sampling experiment 100 times, to be able to assess variation of sampling. For each replicate, we calculate the number of haplotypes and the number of segregating sites, which represent our observed values in the simulated samples. The sampling size, that it is known to us from this design, is what we are going to try to predict using the back calculations described above. All the analysis of the simulated populations was done in R [@RCoreTeam2013]. Detailed information on simulations and R code is presented in the supplementary material (for now in file "runningSimulations".
 

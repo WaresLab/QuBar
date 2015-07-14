@@ -397,7 +397,7 @@ We found that the gamma approach better approximates the simulated sampling size
 library(ggplot2)
 
 # now we have the dataframe "gammaData" with all the values we need to plot
-gammaData<-read.csv("gammaData.csv",header=T)
+gammaData<-read.csv("gammaData_13Jul.csv",header=T)
 
 # subsetting small sampling sizes to see better what happen there
 minigamma<-gammaData[gammaData$samplingSize<33,]
@@ -414,10 +414,10 @@ ggplot(gammaData, aes(x = samplingSize,y=Max.Gamma.value,fill=pops,color=pops)) 
 
 # Fig X2b
 # thinking how to plot the subset of samples sizes where gamma works a little bit better....
-ggplot(minigamma, aes(x = samplingSizeF,y=Max.Gamma.value,fill=minipops,color=minipops)) + geom_boxplot(aes(fill=minipops))+ylim(0,20)
+ggplot(minigamma, aes(x = samplingSizeF,y=Max.Gamma.value,fill=minipops,color=minipops)) + geom_boxplot(aes(fill=minipops)+geom_abline(x=2))+ylim(0,20)
 ```
 
-Paula's note: something weird is happening here when we defined shape=H and scale=number of haplotypes, the distribution of expected nubers using the gamma es identical to the empirical distribution of number of haplotypes in the simulated samples. Is the "happrob" object representing the "expected n"? the name is confusing.
+Paula's note: something weird is happening here when we defined shape=H and scale=number of haplotypes, the distribution of expected numbers using the gamma is identical to the empirical distribution of number of haplotypes in the simulated samples. Is the "happrob" object representing the "expected n"? the name is confusing.
 
 ## Theta and segregating sites approach
 

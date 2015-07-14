@@ -34,7 +34,7 @@ for(i in 1:nrow(hapnum)){
       array<-NULL
     while (cdf<0.99) {
       cdfprev<-cdf
-      cdf<-pgamma(x,scale=hapnum$hap.diversity[i],shape=hapnum$n.haplotypes[i]) 
+      cdf<-pgamma(x,shape=(1/hapnum$hap.diversity[i]),rate=(1/hapnum$n.haplotypes[i])) 
       indprob<-cdf-cdfprev
       happrob<-hapnum$n.haplotypes[i]+(x-1)
       array<-c(array,happrob)
@@ -49,8 +49,7 @@ for(i in 1:nrow(hapnum)){
   }
 
 # save result so we don't need to rerun----
-hapnum$X<-NULL
-#write.csv(hapnum,"gammaData.csv")
+write.csv(hapnum,"gammaData_13Jul.csv")
 ```
 
 All the gamma data was saved in the "gammaData.csv" file, and now we can directly call that file from our QuBar ms file to do the plots.
@@ -61,13 +60,14 @@ There are specific probability distributions associated with a sample of sequenc
 
 Below we calculated the distribution of sampling size according to Wakeley's formula, for each observed theta in the natural (simulated) population of the species and for 1 to max number of segregating sites. We only estimated n from 1 to 50 because larger than that it behaves funny. We have 3 loops, one for each theta and then we merge all in the final datasets.
 
-```{r theta and segregating sites, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
+```{r Wakeley: theta and segregating sites, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 library(reshape)
 
 # load data with observed segregating sites in the samples
 data<-read.csv("numberSegSites.csv",header=T)
 
-# we need to define a maximum n, John identified that above 70 this behaves funny, actually for 60 too, so I put 50
+# We need to define a maximum n, John identified that above 70 this behaves funny, actually for 60 too, so we could 50. But as our simulated sampling sizes jump from 32 to 64, we can just set a maxn of 33.
+
 maxn=33
 maxk<-max(data$n.seg.sites,na.rm=T)
 #maxk=100

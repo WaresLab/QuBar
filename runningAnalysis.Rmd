@@ -259,59 +259,114 @@ with(twenty,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
 For what I read, this uses the number of haplotypes, theta and the sampling n. I think we can use this to backcalculate n.
 
 ```{r using sampling theory Ewens 1972}
-
-# load data with observed haplotypesin the samples
-data<-read.csv("numberHaplotypes.csv",header=T)
-factor(data$sampleSize)->data$sampleSize
-databp<-data[with(data,order(Populations,sampleSize,Haplotypes)),]
-row.names(databp)<-NULL
-
-# subsetting populations
-pop1<-databp[which(databp$Populations=='Pop1'),]
-pop2<-databp[which(databp$Populations=='Pop2'),]
-pop3<-databp[which(databp$Populations=='Pop3'),]
-pop4<-databp[which(databp$Populations=='Pop4'),]
-
-# calculate all the different k haplotypes given different values of n
-theta=2 #define theta
+# calculate all the different k haplotypes given different values of n, changes thetas and save the corresponding vectors
+theta=20 #define theta
 maxn=128 #define max n
 
 # this loop fills a vector with the expected k for a given theta an differents n
-meank<-rep(NA,maxn)
+meank <- rep(NA,maxn)
 for(n in 2:maxn){
-  n-1->endpoint
-  res<-rep(NA,endpoint)
-  for (i in 1:endpoint){
-  theta/(theta+i)->res[i]
-  }
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    theta/(theta+i)->res[i]
+    }
   1+sum(res)->meank[n]
 }
 
 # this loop fills a vector with the variance of k for a given theta an differents n
-vark<-rep(NA,maxn)
+vark <- rep(NA,maxn)
 for(n in 2:maxn){
-  n-1->endpoint
-  res<-rep(NA,endpoint)
-  for (i in 1:endpoint){
-  (theta^2)/((theta+i)^2)->res[i]
-  }
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    (theta^2)/((theta+i)^2)->res[i]
+    }
   meank[n]-sum(res)->vark[n]
 }
 
 # now we put together a dataframe with the n,k,and var(k), run it twice changing theta to make dataframe
 meank->meank2; vark->vark2
 meank->meank10; vark->vark10
-dataSampling<-as.data.frame(cbind(c(1:maxn),meank2,vark2,meank10,vark10))
-names(dataSampling)<-c("n","expHap.t2","varHap.t2","expHap.t10","varHap.t10")
+meank->meank20; vark->vark20
 
-# plot variance
-with(dataSampling,plot(n,varHap.t10,col="red"))
-with(dataSampling,points(n,varHap.t2,col="blue"))
-legend("topleft", inset=.05, c("theta=2","theta=10"), fill=c("blue","red"), horiz=TRUE)
+# save results of each theta in a dataframe
+dataSampling<-as.data.frame(cbind(c(1:maxn),meank2,vark2,meank10,vark10,meank20,vark20))
+names(dataSampling)<-c("n","expHap.t2","varHap.t2","expHap.t10","varHap.t10","expHap.t20","varHap.t20")
+dataSampling <- dataSampling[-1,]
+row.names(dataSampling) <- NULL
 
 # save data file
-write.csv(dataSampling,"dataSamplingTheory.csv")
+write.csv(dataSampling,"dataSamplingTheory_23Jul2015.csv")
 ```
+Now we have the dataset "dataSamplingTheory_23Jul2015" and we can plot the expected number of haplotypes for each theta (and the variance).
+
+```{r plots sampling theory}
+
+# plot expected number of haplotypes
+with(dataSampling,plot(n,expHap.t20,col="red",main="Expected number of haplotypes",pch=19,ylim=c(1,50),ylab="Expected n° haplotypes",xlab="Sampling size"))
+with(dataSampling,points(n,expHap.t10,col="blue",pch=19))
+with(dataSampling,points(n,expHap.t2,col="black",pch=19))
+legend("topleft", inset=.05, c("theta=20","theta=10","theta=2"), fill=c("red","blue","black"), horiz=TRUE)
+
+# plot variance
+with(dataSampling,plot(n,varHap.t20,col="red",main="Variance in the number of haplotypes"))
+with(dataSampling,points(n,varHap.t10,col="blue"))
+with(dataSampling,points(n,varHap.t2,col="black"))
+legend("topleft", inset=.05, c("theta=20","theta=10","theta=2"), fill=c("red","blue","black"), horiz=TRUE)
+
+```
+
+```{r compare with simulated data}
+# load data with observed haplotypes in the samples
+data<-read.csv("numberHaplotypes.csv",header=T)
+
+databp<-data[with(data,order(Pop,samplingSize)),]
+row.names(databp)<-NULL
+databp$Pop.f<-as.factor(databp$Pop)
+databp$n<-as.factor(databp$samplingSize)
+
+# subsetting populations
+# no growth
+two<-databp[which(databp$Pop==2),]
+ten<-databp[which(databp$Pop==4),]
+twenty<-databp[which(databp$Pop==6),]
+
+# growth
+two.g<-databp[which(databp$Pop==1),]
+ten.g<-databp[which(databp$Pop==3),]
+twenty.g<-databp[which(databp$Pop==5),]
+
+# plot expected number of haplotypes + observed in simulations
+with(dataSampling,plot(n,expHap.t20,col="red",main="Expected number of haplotypes",pch=19,ylim=c(1,50),ylab="Ex. n° haplotypes-no growth",xlab="Sampling size",type="l",lwd=2))
+with(dataSampling,points(n,expHap.t10,col="blue",pch=19,type="l",lwd=2))
+with(dataSampling,points(n,expHap.t2,col="black",pch=19,type="l",lwd=2))
+
+
+# add points of populations with NO growth
+points(twenty$samplingSize-0.5,twenty$n.haplotypes,col="red",cex=0.5,pch=19)
+points(ten$samplingSize,ten$n.haplotypes,col="blue",cex=0.5,pch=19)
+points(two$samplingSize+0.5,two$n.haplotypes,col="black",cex=0.5,pch=19)
+
+# plot expected number of haplotypes + observed in simulations
+with(dataSampling,plot(n,expHap.t20,col="red",main="Expected number of haplotypes",pch=19,ylim=c(1,50),ylab="Ex. n° haplotypes- growth",xlab="Sampling size",type="l",lwd=2))
+with(dataSampling,points(n,expHap.t10,col="blue",pch=19,type="l",lwd=2))
+with(dataSampling,points(n,expHap.t2,col="black",pch=19,type="l",lwd=2))
+
+
+
+# add points of populations with growth
+points(twenty.g$samplingSize-0.5,twenty.g$n.haplotypes,col="red",pch=19,cex=0.5)
+points(ten.g$samplingSize,ten.g$n.haplotypes,col="blue",pch=19,cex=0.5)
+points(two.g$samplingSize+0.5,two.g$n.haplotypes,col="black",pch=19,cex=0.5)
+
+
+histogram(~n.haplotypes|Pop.f,data=databp,layout=c(2,3))
+
+ddply(databp,"Pop.f",summarise,min=min(n.haplotypes,na.rm=T),max=max(n.haplotypes,na.rm=T))
+```
+
+
 
 # Getting theta from pop gen datasets
 

@@ -226,6 +226,7 @@ two<-subset(wakdata,wakdata$Theta=="two")
 ten<-subset(wakdata,wakdata$Theta=="ten")
 twenty<-subset(wakdata,wakdata$Theta=="twenty")
 
+# here, I'm checking wich is the range of segregating sites (min and max) within each category, and then plotting the subset of Wakeley's curves that match that range
 two2<-subset(two,two$segSites<4)
 ten2<-subset(ten,ten$segSites<21)
 
@@ -233,6 +234,8 @@ ten2<-subset(ten,ten$segSites<21)
 #http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
 # Fig X2a
 ggplot(ten2, aes(x = n,y=prob,fill=segsites.f,color=segsites.f)) + geom_point()+stat_smooth(method="loess")
+
+ggplot(two2, aes(x = n,y=prob,fill=segsites.f,color=segsites.f)) + geom_point()+stat_smooth(method="loess")
 
 
 # another option may be to show the histogram of segregating sites for the simulations
@@ -252,7 +255,7 @@ with(twenty,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
 ```
 
 
-----------------until here revised------------------------------------
+
 
 # Using the sampling theory of selectively neutral alleles
 
@@ -297,12 +300,13 @@ dataSampling <- dataSampling[-1,]
 row.names(dataSampling) <- NULL
 
 # save data file
-write.csv(dataSampling,"dataSamplingTheory_23Jul2015.csv")
+#write.csv(dataSampling,"dataSamplingTheory_23Jul2015.csv")
 ```
 Now we have the dataset "dataSamplingTheory_23Jul2015" and we can plot the expected number of haplotypes for each theta (and the variance).
 
 ```{r plots sampling theory}
 
+# One type of plots
 # plot expected number of haplotypes
 with(dataSampling,plot(n,expHap.t20,col="red",main="Expected number of haplotypes",pch=19,ylim=c(1,50),ylab="Expected n° haplotypes",xlab="Sampling size"))
 with(dataSampling,points(n,expHap.t10,col="blue",pch=19))
@@ -317,16 +321,19 @@ legend("topleft", inset=.05, c("theta=20","theta=10","theta=2"), fill=c("red","b
 
 ```
 
+Now we are going to invert the plots so we have the observed number of haplotypes on the x-axis, and we are going to plot the simulated data with sampling theory, plus the standard error to mark the confidence intervals. On top of that, we add the points of the "observed" data.
+
 ```{r compare with simulated data}
 # load data with observed haplotypes in the samples
 data<-read.csv("numberHaplotypes.csv",header=T)
+theory<-read.csv("dataSamplingTheory_23Jul2015.csv",header=T)
 
+# prepare observed data and subset populations
 databp<-data[with(data,order(Pop,samplingSize)),]
 row.names(databp)<-NULL
 databp$Pop.f<-as.factor(databp$Pop)
 databp$n<-as.factor(databp$samplingSize)
 
-# subsetting populations
 # no growth
 two<-databp[which(databp$Pop==2),]
 ten<-databp[which(databp$Pop==4),]
@@ -337,24 +344,40 @@ two.g<-databp[which(databp$Pop==1),]
 ten.g<-databp[which(databp$Pop==3),]
 twenty.g<-databp[which(databp$Pop==5),]
 
-# plot expected number of haplotypes + observed in simulations
-with(dataSampling,plot(n,expHap.t20,col="red",main="Expected number of haplotypes",pch=19,ylim=c(1,50),ylab="Ex. n° haplotypes-no growth",xlab="Sampling size",type="l",lwd=2))
-with(dataSampling,points(n,expHap.t10,col="blue",pch=19,type="l",lwd=2))
-with(dataSampling,points(n,expHap.t2,col="black",pch=19,type="l",lwd=2))
-
-
-# add points of populations with NO growth
-points(twenty$samplingSize-0.5,twenty$n.haplotypes,col="red",cex=0.5,pch=19)
-points(ten$samplingSize,ten$n.haplotypes,col="blue",cex=0.5,pch=19)
-points(two$samplingSize+0.5,two$n.haplotypes,col="black",cex=0.5,pch=19)
+# calculate standard error in theory data
+theory$se.t2<-sqrt(theory$varHap.t2)
+theory$se.t10<-sqrt(theory$varHap.t10)
+theory$se.t20<-sqrt(theory$varHap.t20)
 
 # plot expected number of haplotypes + observed in simulations
-with(dataSampling,plot(n,expHap.t20,col="red",main="Expected number of haplotypes",pch=19,ylim=c(1,50),ylab="Ex. n° haplotypes- growth",xlab="Sampling size",type="l",lwd=2))
-with(dataSampling,points(n,expHap.t10,col="blue",pch=19,type="l",lwd=2))
-with(dataSampling,points(n,expHap.t2,col="black",pch=19,type="l",lwd=2))
+with(theory,plot(expHap.t20,n,col="red",main="Expected number of haplotypes",pch=19,ylim=c(1,130),xlim=c(1,50),xlab="Ex. n° haplotypes-no growth",ylab="Sampling size",type="l",lwd=2))
+with(theory,points(expHap.t10,n,col="blue",pch=19,type="l",lwd=2))
+with(theory,points(expHap.t2,n,col="black",pch=19,type="l",lwd=2))
+
+# ------add standard error
+
+# theta 2
+points(theory$expHap.t2-(2*theory$se.t2),theory$n,col="black",pch=19,type="l",lwd=1)
+points(theory$expHap.t2+(2*theory$se.t2),theory$n,col="black",pch=19,type="l",lwd=1)
+
+# theta 10
+points(theory$expHap.t10-(2*theory$se.t10),theory$n,col="blue",pch=19,type="l",lwd=1)
+points(theory$expHap.t10+(2*theory$se.t10),theory$n,col="blue",pch=19,type="l",lwd=1)
+
+# theta 20
+points(theory$expHap.t20-(2*theory$se.t20),theory$n,col="red",pch=19,type="l",lwd=1)
+points(theory$expHap.t20+(2*theory$se.t20),theory$n,col="red",pch=19,type="l",lwd=1)
+
+legend("bottomright", inset=.01, cex=0.7,c("theta=20","theta=10","theta=2"), fill=c("red","blue","black"), horiz=TRUE)
 
 
-
+# ------add points of populations with NO growth
+points(twenty$n.haplotypes,twenty$samplingSize-0.5,col="red",cex=0.5,pch=19)
+points(ten$n.haplotypes,ten$samplingSize,col="blue",cex=0.5,pch=19)
+points(two$n.haplotypes,two$samplingSize+0.5,col="black",cex=0.5,pch=19)
+```
+Maybe useful? ...other code
+```{r}
 # add points of populations with growth
 points(twenty.g$samplingSize-0.5,twenty.g$n.haplotypes,col="red",pch=19,cex=0.5)
 points(ten.g$samplingSize,ten.g$n.haplotypes,col="blue",pch=19,cex=0.5)
@@ -367,6 +390,9 @@ ddply(databp,"Pop.f",summarise,min=min(n.haplotypes,na.rm=T),max=max(n.haplotype
 ```
 
 
+
+
+----------------until here revised------------------------------------
 
 # Getting theta from pop gen datasets
 

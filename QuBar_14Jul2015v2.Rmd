@@ -1,5 +1,5 @@
 ---
-title: "Quantitative Metazoan Metabarcoding"
+title: "Attempts at Quantitative Metazoan Metabarcoding are Difficult"
 author: "John Wares and Paula Pappalardo"
 date: '`r format(Sys.time(), "%d %B, %Y")`'
 output: word_document
@@ -8,11 +8,11 @@ bibliography: QuBar_References.bib
 
 # Introduction
 
-We start with what may seem like a trivial question: assume that you have been told that a series of fair coin flips resulted in 60% 'heads', 40% 'tails'. This is the only information given, but you already have made a judgment about how many coin flips occurred, and perhaps have generated a probability distribution in your head where the highest likelihood is for 5 or 10, rather than 50 or 100, events. This is taking advantage of what we know about the probability mass function of a binomial distribution, where the observed number of 'successes' in a series is related to the probability of success (presumably 50%) and the number of trials.  
+We start with what may seem like a trivial question: assume that you have been told that a series of fair coin flips resulted in 60% 'heads', 40% 'tails'. This is the only information given, but you already have made a judgment about how many coin flips occurred, and perhaps have generated a probability distribution in your head where the highest likelihood is for 5 or 10, rather than 50 or 100, events. This is taking advantage of what we know about the probability mass function of a binomial distribution, where the observed number of 'successes' in a series is related to the probability of success (here, presumably 50%) and the number of trials.  
 
 Here, we consider whether the same principle could be used for improving the efficiency of exploring the presence, distribution, and abundance of genetic biodiversity. Documenting the distribution and abundance of biodiversity - in many habitats, at multiple scales - is perhaps more important now than ever as scientists evaluate how populations are responding to environmental change. Though technological advances have rapidly improved some elements of this [@Nagendra01; @Bourlat13], there are still glaring deficiencies in our ability to efficiently catalog diversity, even in small domains or limited taxonomic surveys.
 
-The most apparent advances have been in surveys of microbial and viral diversity. Next-generation sequencing has permitted the now-commonplace exploration of fungal, bacterial, and viral diversity by generating $10^5$ - $10^6$ sequence reads per sample and using barcoding approaches (match of sequence to known taxonomic samples for that genomic region) to identify the taxa present and their relative abundance. While there is no doubt that this has transformed our understanding of functional ecosystem processes and microbial ecology at this scale [@Nguyen14; @Turn09; @Desnues08], there are definite limitations. For example, some taxa (e.g. Archaea) may not be as readily amplified using the same ribosomal 16S "bacteria" primers, and variation in amplification efficiency certainly exists within the Eubacteria [@Acinas05]. Additionally, it is known that some bacterial genomes harbor more than one copy of this canonical locus [@Kembel12], thus muddling the relationship between read frequency and taxon frequency in a community.
+The most apparent advances have been in surveys of microbial and viral diversity. Next-generation sequencing has permitted the now-commonplace exploration of fungal, bacterial, and viral diversity by generating $10^5$ - $10^7$ sequence reads per sample and using barcoding approaches (match of sequence to known taxonomic samples for that genomic region) to identify the taxa present and their relative abundance. While there is no doubt that this has transformed our understanding of functional ecosystem processes and microbial ecology at this scale [@Nguyen14; @Turn09; @Desnues08], there are definite limitations. For example, some taxa (e.g. Archaea) may not be as readily amplified using the same ribosomal 16S "bacteria" primers, and variation in amplification efficiency certainly exists within the Eubacteria [@Acinas05]. Additionally, it is known that some bacterial genomes harbor more than one copy of this canonical locus [@Kembel12], thus muddling the relationship between read frequency and taxon frequency in a community.
 
 The same problems exist - and are exacerbated - when studying multicellular diversity. Most notably, on top of the problems of potential contamination, detecting rare taxa and/or handling singleton evidence for rare taxa, and the potentially large variance in individual sizes of organisms, the relative read abundance in a NGS data set will often wildly vary (by multiple orders of magnitude) from the abundance of actual tissue in the data set [@Nguyen14; @Piñol14; @Bohmann14]. This is caused primarily by shifts in amplification efficiency given mismatches in the primer region, and is often dealt with by analyzing data for simple incidence as well as relative read abundance, to identify patterns robust to either removal of information or inaccurate information [@Nguyen14].
 
@@ -34,7 +34,7 @@ Here we present the mathematical considerations necessary to develop these quant
 maxindivs=200
 ```
 
-The approach here is identifying information that can comfortably be used as prior information to establish the posterior probability of observing polymorphism data from an *unknown* number of input individuals for a taxon. Any type of sampling information may help to set an upper limit: for example, if it is known that only about `r maxindivs` individual specimens were originally used for isolation of DNA, then the maximum number of total individuals inferred from this approach should be about `r maxindivs`. This is perhaps not a groundbreaking numerical advance in biology, but limits our prior belief nonetheless.
+The approach here is identifying information that can comfortably be used as prior information to establish the posterior probability of observing polymorphism data from an *unknown* number of input individuals for a taxon. Any type of sampling information may help to set an upper limit: for example, if it is known that only `r maxindivs` individual specimens were originally used for isolation of DNA, then the maximum number of total individuals inferred from this approach should be `r maxindivs`. This is not a groundbreaking numerical advance in biology, but limits our prior belief nonetheless.
 
 ```{r hapdiv, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 
@@ -75,7 +75,7 @@ maxhaps<-max(probs[,1])
 
 ```
 
-There are also clear minimum bounds that can be established for the abundance of a taxon. Considering DNA sequence haplotypes as our most basic information, we ask how many *distinct* haplotypes are recovered in the data that match a particular taxon? For a haploid mitochondrial marker like the oft-applied cytochrome oxidase I (COI), this number is the minimum number of individuals present (if the number happens to be 0, it is also likely to be the maximum number of individuals in the sample). 
+There are also clear minimum bounds that can be established for the abundance of a taxon. Considering DNA sequence haplotypes as our most basic information, we ask how many *distinct* haplotypes are recovered in the data that match a particular taxon? For a haploid mitochondrial marker like the oft-applied cytochrome oxidase I (COI), this number is the minimum number of individuals present (if the number happens to be 0, it is also likely to be the maximum number of individuals in the sample!). 
 
 ## Haplotype Diversity
 

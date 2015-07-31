@@ -2,7 +2,7 @@
 title: "Attempts at Quantitative Metazoan Metabarcoding are Difficult"
 author: "John Wares and Paula Pappalardo"
 date: '`r format(Sys.time(), "%d %B, %Y")`'
-output: word_document
+output: pdf_document
 bibliography: QuBar_References.bib
 ---
 
@@ -390,7 +390,8 @@ We found that the gamma approach better approximates the simulated sampling size
 library(ggplot2)
 
 # now we have the dataframe "gammaData" with all the values we need to plot
-gammaData<-read.csv("gammaData.csv",header=T)
+#gammaData<-read.csv("gammaData.csv",header=T)
+gammaData<-read.csv("gammaData_13Jul.csv",header=T) #7/31 is this correct to change this file name? wouldn't work with just gammaData
 
 # subsetting small sampling sizes to see better what happen there
 minigamma<-gammaData[gammaData$samplingSize<33,]

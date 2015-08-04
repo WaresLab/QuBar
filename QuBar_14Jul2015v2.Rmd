@@ -270,24 +270,15 @@ hist3D(x=seq(0,1,length.out=nrow(PSKv2)),y=seq(0,1,length.out=ncol(PSKv2)),PSKv2
 
 We have suggested methods that could help to estimate the relative number of individuals in a metabarcoding sample: 1) an inference on the input sample size based on haplotype diversity, 2) inference of possible input sample sizes given the simple *number* of haplotypes observed based on Ewens' sampling theory; and 3) working from a prior assumption of $/theta$ and the observed number of segregating sites in an empirical metabarcoding dataset. 
 
-To evaluate the usefulness of each method, we simulated populations with Hudson's *ms* program [@Hudson2002] using the *gap* package in R [@RCoreTeam2013]. We simulated 4 populations, using three different population mutation rates ($/theta$ of 2, 10, and 20), and also considering populations with or without growth. The growth rate was modified in simulations to target a Tajima's D value (-1.0) similar to those observed in empirical data for marine invertebrates [@Wares10]. 
+To evaluate the potential usefulness of each method for recovering the abundance of input individuals, we simulated populations with Hudson's *ms* program [@Hudson2002] using the *gap* package in R [@RCoreTeam2013]. We simulated 6 populations, using three different population mutation rates ($/theta$ of 2, 10, and 20), and also considering populations with or without growth. The growth rate was modified in simulations to target a Tajima's D value (-1.0) similar to those observed in empirical data for marine invertebrates [@Wares10]. 
 
-From these four populations, we took "field samples" of different sizes (n), sampling without replacement. We replicate the sampling experiment 100 times, to be able to assess variation of sampling. For each replicate, we calculate the number of haplotypes and the number of segregating sites, which represent our observed values in the simulated samples. The sampling size, that it is known to us from this design, is what we are going to try to predict using the back calculations described above. All the analysis of the simulated populations was done in R [@RCoreTeam2013]. Detailed information on simulations and R code is presented in the supplementary material (for now in file "runningSimulations".
-
-
-
-
-5-3-15 we are now pretty sure that the S=k method is too insensitive (as often the case iwth coalescent, and we see that above samples of 10 the values are relatively insensitive, see Vince Buffalo's "dancing genealogies" for illustration of why even if peaks look sharper for theta 10 the possibilities are massive for the empirical stuff that fits....). So this is concerning for even being able to tell orders of magnitude apart, e.g. 10 of species A and 100 of species B probably won't happen. 
-
-So new structure of paper we think: show that haplotypes are the defined minimum number of individuals, this is the dumb but easy and factual way. Then the gamma distribution, which is a shot in the dark, makes sense but parameterization is hard to think about. Then the 'smart' coalescent way, but we figure out it is not very sensitive.
-
-And then part B of Results would be that we show empirical values of #haplotypes for samples of n given theta, identify whether this helps us parameterize the slightly-smarter approach. We may also ponder the mathematical relationship between theta and hapdiv, but of course for a given theta (truth) there is a range of theta (estimated from empirical) and a range of hapdiv (estimated from empirical)
+From these six populations, we took "field samples" of different sizes (n), sampling without replacement. We replicate the sampling experiment 100 times, to be able to assess variation of sampling. For each replicate, we calculate the number of haplotypes and the number of segregating sites, which represent our observed values in the simulated samples. The sampling size, known to us from this design, is what we are going to try to predict using the reversed inferences described above. All analysis of the simulated populations was done in R [@RCoreTeam2013]. Detailed information on simulations and R code is presented in the supplementary material (*for now in file "runningSimulations"*).
 
 
 
 # Results 
 
-The general information of the simulated populations is presented in Table 1. As expected, the haplotype diversity, number of haplotypes and number of segregating sites are higher in the two populations with theta=10. The the populations that included a growth parameter achieved a negative Tajima's D, that reflects better the natural population in many invertebrates (Wares cite, *John can we generalize what happen to marine invertebrates, or this phenomenon has also been observed in other terrestrial invertebrates?*)
+The summary statistics of the simulated population data are presented in Table 1. As expected, the haplotype diversity, number of haplotypes and number of segregating sites are higher as $/theta$ increases. Populations with simulated growth generate data consistent with the typica signature of purifying selection and/or demographic change seen in many metazoan populations [@Wares2010].
 
 ```{r Table 1 with info on simulated populations, results='asis',echo=FALSE}
 
@@ -368,7 +359,7 @@ colnames(sumTable)<-c("Population","Theta","Growth","Haplotype diversity","Tajim
 kable(sumTable)
 ```
 
-Using information from the samples of the 4 simulated populations, We first corroborated that the observed number of haplotypes sets the minimum number of individuals present (for a haploid mitochondrial marker). We observed that the sample size is always equal or larger than the minimum number of haplotypes (Figure X1, solid line represents x=y, colors represent the different populations).
+Using information from the samples of the 6 simulated populations, We first corroborated that the observed number of haplotypes sets the minimum number of individuals present (for a haploid mitochondrial marker). We observed that the sample size is always equal or larger than the minimum number of haplotypes (Figure X1, solid line represents x=y, colors represent the different populations).
 
 ```{r figure X1,echo=FALSE,message=FALSE}
 #install.packages("plyr")
@@ -492,6 +483,17 @@ n.b. Marc Feldman was concerned about the two statistics double-dipping on the s
 
 
 # Discussion
+
+
+
+5-3-15 we are now pretty sure that the S=k method is too insensitive (as often the case iwth coalescent, and we see that above samples of 10 the values are relatively insensitive, see Vince Buffalo's "dancing genealogies" for illustration of why even if peaks look sharper for theta 10 the possibilities are massive for the empirical stuff that fits....). So this is concerning for even being able to tell orders of magnitude apart, e.g. 10 of species A and 100 of species B probably won't happen. 
+
+So new structure of paper we think: show that haplotypes are the defined minimum number of individuals, this is the dumb but easy and factual way. Then the gamma distribution, which is a shot in the dark, makes sense but parameterization is hard to think about. Then the 'smart' coalescent way, but we figure out it is not very sensitive.
+
+And then part B of Results would be that we show empirical values of #haplotypes for samples of n given theta, identify whether this helps us parameterize the slightly-smarter approach. We may also ponder the mathematical relationship between theta and hapdiv, but of course for a given theta (truth) there is a range of theta (estimated from empirical) and a range of hapdiv (estimated from empirical)
+
+
+
 
 Returning to the coin flip, it is worth evaluating wherein lies the strength of inferential signal. 50% gives NO information, could be 2 or infinite flips. So it is deviation that is signal in the coin flip example. Similarly, for a system of diversity such as this we need the *potential* for diverse outcomes to evaluate: low theta means nearly all sample sizes are possible, for example. In this sense, developing this with a mind for species that are broadly distributed and highly abundant is likely a more effective strategy than endemic small populations.
 

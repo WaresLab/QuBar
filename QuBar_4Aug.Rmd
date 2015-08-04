@@ -278,7 +278,7 @@ From these six populations, we took "field samples" of different sizes (n), samp
 
 # Results 
 
-The summary statistics of the simulated population data are presented in Table 1. As expected, the haplotype diversity, number of haplotypes and number of segregating sites are higher as $/theta$ increases. Populations with simulated growth generate data consistent with the typical signature of purifying selection and/or demographic change seen in many metazoan populations [@Wares2010].
+The summary statistics of the simulated population data are presented in Table 1. As expected, the haplotype diversity, number of haplotypes and number of segregating sites are higher as $\theta$ increases. Populations with simulated growth generate data consistent with the typical signature of purifying selection and/or demographic change seen in many metazoan populations [@Wares2010].
 
 ```{r Table 1 with info on simulated populations, results='hide',message=FALSE, echo=FALSE}
 
@@ -359,27 +359,9 @@ colnames(sumTable)<-c("Population","Theta","Growth","Haplotype diversity","Tajim
 kable(sumTable)
 ```
 
-Using information from the samples of the 6 simulated populations, we first corroborated that the observed number of haplotypes sets the minimum number of individuals present (for a haploid mitochondrial marker). We observed that the sample size is always equal or larger than the minimum number of haplotypes (Figure X1, solid line represents x=y, colors represent the different populations).
+## Haplotype diversity and gamma estimation
 
-```{r figure X1,echo=FALSE,message=FALSE}
-#install.packages("plyr")
-library(plyr)
-
-# load data with observed haplotypes in the samples
-hapdata<-read.csv("numberHaplotypes.csv",header=T)
-
-hapMin<-ddply(hapdata, c("samplingSize","Pop"), summarise, MinHap = min(n.haplotypes,na.rm=T))
-data<-hapMin[order(hapMin$Pop),]
-
-palette(rainbow(6)) 
-plot(data$MinHap,data$samplingSize,col=data$Pop,pch=19,xlab="Minimum number of haplotypes observed",ylab="Sample size (n)")
-abline(0,1)
-legend("bottomright",levels(as.factor(data$Pop)),fill=c("red","yellow","green","cyan","blue","magenta"),bg="white",horiz=T)
-```
-
-## Gamma approach
-
-We found that the gamma approach better approximates the simulated sampling sizes in low sampling sizes (Figure X2a, lower than 16-32 depending the population) and when theta is larger (theta=10, Figure X2b). The effect of growth was different in the population with different thetas: in theta=2 the population with growth does a little bit better, in tetha=10 the population without growth approximates more close the observed sampling sizes (Figure X2b). But overall, the gamma method really underestimates the simulated n for larger sample sizes (Figure X2a). The probability distributions for the four populations and the 7 sampling sizes considered (2,4,8,16,32,64 and 128) are presented in the Supplementary material.
+We found that the approach using a Gamma distribution to estimate the number of input individuals does a better job of estimating the simulated sampling sizes in low input sample sizes (Figure X2a, lower than 16-32 depending the population) and when $\theta$ is larger ($\theta$=10 or 20, Figure X2b). The effect of growth - intended to reflect the typical mutational diversity in metazoan populations - varied with $\theta$ (Figure X2b). Overall, using haplotype diversity and an educated guess at how this diversity reflects the input tends to greatly underestimate the simulated sample (Figure X2a). The probability distributions for the six populations and the 7 sampling sizes considered (2,4,8,16,32,64 and 128) are presented in Supplement X.
 
 ```{r Figure X2 gamma distribution plots}
 
@@ -408,7 +390,9 @@ ggplot(gammaData, aes(x = samplingSize,y=Max.Gamma.value,fill=pops,color=pops)) 
 ggplot(minigamma, aes(x = samplingSizeF,y=Max.Gamma.value,fill=minipops,color=minipops)) + geom_boxplot(aes(fill=minipops))+ylim(0,20)
 ```
 
-Paula's note: something weird is happening here when we defined shape=H and scale=number of haplotypes, the distribution of expected nubers using the gamma es identical to the empirical distribution of number of haplotypes in the simulated samples. Is the "happrob" object representing the "expected n"? the name is confusing.
+## Haplotype number
+
+Paula here put plots of Ewens analytical results?
 
 ## Theta and segregating sites approach
 

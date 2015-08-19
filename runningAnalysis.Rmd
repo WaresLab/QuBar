@@ -255,8 +255,6 @@ with(twenty,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
 ```
 
 
-
-
 # Using the sampling theory of selectively neutral alleles
 
 For what I read, this uses the number of haplotypes, theta and the sampling n. I think we can use this to backcalculate n.

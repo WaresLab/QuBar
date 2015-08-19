@@ -114,7 +114,7 @@ library(gap)
 library(PopGenome)
 
 # reading the ms output generated in the previous chunk with gap
-# this way works for reading the object from R, but it is not useful if we want to maintain the origina same populations, because I was not able to make the "seeds" work
+# this way works for reading the object from R, but it is not useful if we want to maintain the original same populations, because I was not able to make the "seeds" work
 #read.ms.output(theta2Growth,FALSE)->pop1
 #read.ms.output(theta2NoGrowth,FALSE)->pop2
 #read.ms.output(theta10Growth,FALSE)->pop3

@@ -254,7 +254,6 @@ with(ten,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
 with(twenty,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
 ```
 
-
 # Using the sampling theory of selectively neutral alleles
 
 For what I read, this uses the number of haplotypes, theta and the sampling n. I think we can use this to backcalculate n.
@@ -264,41 +263,85 @@ For what I read, this uses the number of haplotypes, theta and the sampling n. I
 theta=20 #define theta
 maxn=128 #define max n
 
+# ----Theta 2-----
+tetha=2
 # this loop fills a vector with the expected k for a given theta an differents n
-meank <- rep(NA,maxn)
+meank2 <- rep(NA,maxn)
 for(n in 2:maxn){
     n-1->endpoint
     res<-rep(NA,endpoint)
     for (i in 1:endpoint){
     theta/(theta+i)->res[i]
     }
-  1+sum(res)->meank[n]
+  1+sum(res)->meank2[n]
 }
 
 # this loop fills a vector with the variance of k for a given theta an differents n
-vark <- rep(NA,maxn)
+vark2 <- rep(NA,maxn)
 for(n in 2:maxn){
     n-1->endpoint
     res<-rep(NA,endpoint)
     for (i in 1:endpoint){
     (theta^2)/((theta+i)^2)->res[i]
     }
-  meank[n]-sum(res)->vark[n]
+  meank2[n]-sum(res)->vark2[n]
 }
 
-# now we put together a dataframe with the n,k,and var(k), run it twice changing theta to make dataframe
-meank->meank2; vark->vark2
-meank->meank10; vark->vark10
-meank->meank20; vark->vark20
+# ----Theta 10-----
+tetha=10
 
-# save results of each theta in a dataframe
-dataSampling<-as.data.frame(cbind(c(1:maxn),meank2,vark2,meank10,vark10,meank20,vark20))
-names(dataSampling)<-c("n","expHap.t2","varHap.t2","expHap.t10","varHap.t10","expHap.t20","varHap.t20")
-dataSampling <- dataSampling[-1,]
-row.names(dataSampling) <- NULL
+meank10 <- rep(NA,maxn)
+for(n in 2:maxn){
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    theta/(theta+i)->res[i]
+    }
+  1+sum(res)->meank10[n]
+}
+
+vark10 <- rep(NA,maxn)
+for(n in 2:maxn){
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    (theta^2)/((theta+i)^2)->res[i]
+    }
+  meank10[n]-sum(res)->vark10[n]
+}
+
+# ----Theta 20-----
+tetha=20
+
+meank20 <- rep(NA,maxn)
+for(n in 2:maxn){
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    theta/(theta+i)->res[i]
+    }
+  1+sum(res)->meank20[n]
+}
+
+vark20 <- rep(NA,maxn)
+for(n in 2:maxn){
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    (theta^2)/((theta+i)^2)->res[i]
+    }
+  meank20[n]-sum(res)->vark20[n]
+}
+
+# now we put together a dataframe with the n,k,and var(k)---- 
+theta.df <- c(rep("two",128),rep("ten",128),rep("twenty",128))
+n.df <- rep(1:maxn,3) 
+exp.haplotypes <- c(meank2,meank10,meank20) 
+exp.variance <- c(vark2,vark10,vark20)
+dataSampling <- as.data.frame(cbind(theta.df,n.df,exp.haplotypes,exp.variance))
 
 # save data file
-#write.csv(dataSampling,"dataSamplingTheory_23Jul2015.csv")
+write.csv(dataSampling,"dataSamplingTheory_19Ago2015.csv")
 ```
 Now we have the dataset "dataSamplingTheory_23Jul2015" and we can plot the expected number of haplotypes for each theta (and the variance).
 

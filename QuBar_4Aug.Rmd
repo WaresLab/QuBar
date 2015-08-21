@@ -203,7 +203,7 @@ hist3D(x=seq(0,1,length.out=nrow(PSKv2)),y=seq(0,1,length.out=ncol(PSKv2)),PSKv2
 
 # Results 
 
-The summary statistics of the simulated population data are presented in Table 1. As expected, the haplotype diversity, number of haplotypes and number of segregating sites are higher as $\theta$ increases. Populations with simulated growth generate data consistent with the typical signature of purifying selection and/or demographic change seen in many metazoan populations [@Wares2010].
+The summary statistics of the simulated population data are presented in Table 1. As expected, the haplotype diversity, number of haplotypes and number of segregating sites are higher as $\theta$ increases. 
 
 ```{r Table 1 with info on simulated populations, warnings=F,message=FALSE, echo=FALSE,results='hide'}
 
@@ -291,7 +291,9 @@ kable(sumTable)
 
 ## Haplotype diversity and gamma estimation
 
-We found that the approach using a Gamma distribution to estimate the number of input individuals does a better job of estimating the simulated sampling sizes in low input sample sizes (Figure 3a, lower than 16-32 depending the population) and when $\theta$ is larger ($\theta$=10 or 20, Figure X2b). The effect of growth - intended to reflect the typical mutational diversity in metazoan populations - varied with $\theta$ (Figure X2b). Overall, using haplotype diversity and an educated guess at how this diversity reflects the input tends to greatly underestimate the simulated sample (Figure X2a). The probability distributions for the six populations and the 7 sampling sizes considered (2,4,8,16,32,64 and 128) are presented in Supplement X.
+We found that the approach using a Gamma distribution to estimate the number of input individuals does a better job of estimating the simulated sampling sizes in low input sample sizes (Figure 3). We can see in Figure 3 than for sample sizes lower than 32, the predicted values intercept the simulated sampling size, at least when the number of haplotypes is larger. The difference between the simulated sampling size and the predicted with the gamma estimation are lower when $\theta$ is larger (Figure 4). 
+
+Overall, using haplotype diversity and an educated guess at how this diversity reflects the input tends to greatly underestimate the simulated sample (Figure 3). The probability distributions for the six populations and the 7 sampling sizes considered (2,4,8,16,32,64 and 128) are presented in Supplement X.
 
 ```{r Figure 3 gamma distribution plots,message=FALSE, echo=FALSE}
 setwd("~/GitHub/QuBar")
@@ -333,6 +335,23 @@ fig3 + geom_hline(aes(yintercept = 2), subset(gammaData,samplingSize==2))+ geom_
 ```
 
 **Figure 3.** Predictions of sampling size using the gamma distribution method for each population (with thetas 2,10 and 20) against the observed number of haplotypes in the sample. The ablines in each panel represent the "real" sampling size of that sample.  
+
+```{r figure 4,message=FALSE, echo=FALSE}
+library(ggplot2)
+
+# loading data
+fullgammaData <- read.csv("gammaData_13Jul.csv",header=T) 
+
+# taking out data with growth
+gammaData <- subset(fullgammaData,fullgammaData$Growth=="no")
+droplevels(gammaData) -> gammaData
+
+# calculating the difference between "real" n and max gamma.
+gammaData$samplingSize-gammaData$Max.Gamma.value -> gammaData$dif
+
+ggplot(gammaData, aes(x=samplingSize, y=dif,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)
+```
+**Figure 4.** Difference between the simulated sampling size and the sampling size for the sample predicted using the gamma distribution method. The abline at zero shows the ideal situation with the estimation equal to the simulated sampling size.
 
 ## Haplotype number
 

@@ -260,21 +260,26 @@ For what I read, this uses the number of haplotypes, theta and the sampling n. I
 
 ```{r using sampling theory Ewens 1972}
 # calculate all the different k haplotypes given different values of n, changes thetas and save the corresponding vectors
-theta=20 #define theta
-maxn=128 #define max n
+
+maxn = 250 #define max n to get enough haplotypes to match our pops
 
 # ----Theta 2-----
-tetha=2
-# this loop fills a vector with the expected k for a given theta an differents n
-meank2 <- rep(NA,maxn)
-for(n in 2:maxn){
-    n-1->endpoint
-    res<-rep(NA,endpoint)
-    for (i in 1:endpoint){
-    theta/(theta+i)->res[i]
+theta = 2
+
+# this loop fills a vector with the expected k for a given theta and differents n
+meank2 <- rep(NA,maxn) #creates vector to save results
+
+for(n in 1:maxn){
+    if(n==1){meank2[n]<-1}
+      else{
+      n-1->endpoint
+      res<-rep(NA,endpoint)
+      for (i in 1:endpoint){
+      theta/(theta+i)->res[i]
+      }
+    1+sum(res)->meank2[n]
     }
-  1+sum(res)->meank2[n]
-}
+  }
 
 # this loop fills a vector with the variance of k for a given theta an differents n
 vark2 <- rep(NA,maxn)
@@ -285,21 +290,25 @@ for(n in 2:maxn){
     (theta^2)/((theta+i)^2)->res[i]
     }
   meank2[n]-sum(res)->vark2[n]
+  1 -> vark2[1]
 }
 
 # ----Theta 10-----
-tetha=10
+theta=10
 
 meank10 <- rep(NA,maxn)
-for(n in 2:maxn){
+for(n in 1:maxn){
+    if(n==1){meank10[n]<-1}
+    else{
     n-1->endpoint
     res<-rep(NA,endpoint)
     for (i in 1:endpoint){
     theta/(theta+i)->res[i]
     }
   1+sum(res)->meank10[n]
+  }
 }
-
+  
 vark10 <- rep(NA,maxn)
 for(n in 2:maxn){
     n-1->endpoint
@@ -308,19 +317,23 @@ for(n in 2:maxn){
     (theta^2)/((theta+i)^2)->res[i]
     }
   meank10[n]-sum(res)->vark10[n]
+  1 -> vark10[1]
 }
 
 # ----Theta 20-----
-tetha=20
+theta=20
 
 meank20 <- rep(NA,maxn)
 for(n in 2:maxn){
+  if(n==1){meank20[n]<-1}
+      else{
     n-1->endpoint
     res<-rep(NA,endpoint)
     for (i in 1:endpoint){
     theta/(theta+i)->res[i]
     }
   1+sum(res)->meank20[n]
+  }
 }
 
 vark20 <- rep(NA,maxn)
@@ -331,19 +344,29 @@ for(n in 2:maxn){
     (theta^2)/((theta+i)^2)->res[i]
     }
   meank20[n]-sum(res)->vark20[n]
+  1 -> vark20[1]
 }
 
 # now we put together a dataframe with the n,k,and var(k)---- 
-theta.df <- c(rep("two",128),rep("ten",128),rep("twenty",128))
+theta.df <- c(rep("two",250),rep("ten",250),rep("twenty",250))
 n.df <- rep(1:maxn,3) 
 exp.haplotypes <- c(meank2,meank10,meank20) 
 exp.variance <- c(vark2,vark10,vark20)
 dataSampling <- as.data.frame(cbind(theta.df,n.df,exp.haplotypes,exp.variance))
 
 # save data file
-write.csv(dataSampling,"dataSamplingTheory_19Ago2015.csv")
+write.csv(dataSampling,"dataSamplingTheory_21Ago2015.csv")
 ```
 Now we have the dataset "dataSamplingTheory_23Jul2015" and we can plot the expected number of haplotypes for each theta (and the variance).
+
+```{r check with Ewens table}
+dataSampling[which(dataSampling$n.df==250),]
+dataSampling[which(dataSampling$n.df==100),]
+dataSampling[which(dataSampling$n.df==10),]
+```
+
+
+
 
 ```{r plots sampling theory}
 

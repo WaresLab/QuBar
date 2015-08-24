@@ -200,7 +200,6 @@ hist3D(x=seq(0,1,length.out=nrow(PSKv2)),y=seq(0,1,length.out=ncol(PSKv2)),PSKv2
 
 **Figure 2.** Probability surface of observing a number of segregating sites *k* for a given sample size *n* when $\theta$ is set. In (a), $\theta$ = 2; in (b), $\theta$ = 10.
 
-
 # Results 
 
 The summary statistics of the simulated population data are presented in Table 1. As expected, the haplotype diversity, number of haplotypes and number of segregating sites are higher as $\theta$ increases. 

@@ -56,72 +56,40 @@ Now we have the dataset "dataSamplingTheory_23Jul2015" and we can plot the expec
 
 Now we are going to invert the plots so we have the observed number of haplotypes on the x-axis, and we are going to plot the simulated data with sampling theory, plus the standard error to mark the confidence intervals. On top of that, we add the points of the "observed" data.
 
-```{r compare with simulated data}
-# load data with observed haplotypes in the samples
-data<-read.csv("numberHaplotypes.csv",header=T)
-theory<-read.csv("dataSamplingTheory_23Jul2015.csv",header=T)
-
-# prepare observed data and subset populations
-databp<-data[with(data,order(Pop,samplingSize)),]
-row.names(databp)<-NULL
-databp$Pop.f<-as.factor(databp$Pop)
-databp$n<-as.factor(databp$samplingSize)
-
-# no growth
-two<-databp[which(databp$Pop==2),]
-ten<-databp[which(databp$Pop==4),]
-twenty<-databp[which(databp$Pop==6),]
-
-# growth
-two.g<-databp[which(databp$Pop==1),]
-ten.g<-databp[which(databp$Pop==3),]
-twenty.g<-databp[which(databp$Pop==5),]
-
-# calculate standard error in theory data
-theory$se.t2<-sqrt(theory$varHap.t2)
-theory$se.t10<-sqrt(theory$varHap.t10)
-theory$se.t20<-sqrt(theory$varHap.t20)
-
-# plot expected number of haplotypes + observed in simulations
-with(theory,plot(expHap.t20,n,col="red",main="Expected number of haplotypes",pch=19,ylim=c(1,130),xlim=c(1,50),xlab="Ex. n° haplotypes-no growth",ylab="Sampling size",type="l",lwd=2))
-with(theory,points(expHap.t10,n,col="blue",pch=19,type="l",lwd=2))
-with(theory,points(expHap.t2,n,col="black",pch=19,type="l",lwd=2))
-
-# ------add standard error
-
-# theta 2
-points(theory$expHap.t2-(2*theory$se.t2),theory$n,col="black",pch=19,type="l",lwd=1)
-points(theory$expHap.t2+(2*theory$se.t2),theory$n,col="black",pch=19,type="l",lwd=1)
-
-# theta 10
-points(theory$expHap.t10-(2*theory$se.t10),theory$n,col="blue",pch=19,type="l",lwd=1)
-points(theory$expHap.t10+(2*theory$se.t10),theory$n,col="blue",pch=19,type="l",lwd=1)
-
-# theta 20
-points(theory$expHap.t20-(2*theory$se.t20),theory$n,col="red",pch=19,type="l",lwd=1)
-points(theory$expHap.t20+(2*theory$se.t20),theory$n,col="red",pch=19,type="l",lwd=1)
-
-legend("bottomright", inset=.01, cex=0.7,c("theta=20","theta=10","theta=2"), fill=c("red","blue","black"), horiz=TRUE)
-
-
-# ------add points of populations with NO growth
-points(twenty$n.haplotypes,twenty$samplingSize-0.5,col="red",cex=0.5,pch=19)
-points(ten$n.haplotypes,ten$samplingSize,col="blue",cex=0.5,pch=19)
-points(two$n.haplotypes,two$samplingSize+0.5,col="black",cex=0.5,pch=19)
-```
-Trying something different
-
-```{r}
-library(reshape)
+```{r sampling theory,message=FALSE, echo=FALSE}
 library(ggplot2)
 
-# rearrenging the "theory"" dataset
-theory2 <- melt(theory, id = c("n"))
-theory2$variable -> theory2$theta
+# -----observed data------
+# load data of number of haplotypes
+data <- read.csv("numberHaplotypes.csv",header=T)
 
-# creating the theta column
-levels(theory2$theta)[match("expHap.t2",levels(theory$theta))] <- "two" 
+# taking out data with growth
+minidata <- subset(data,data$Growth == "no")
+droplevels(minidata) -> minidata
 
-fig4<-ggplot(theory, aes(x = expHap.t2,y=n)) + theme_bw()+geom_line()
-```
+row.names(minidata) <- NULL # cleaning row.names
+
+# creating and id to merge later
+myObMatrix <- as.matrix(minidata[,c("Theta","n.haplotypes")])
+minidata$id <- apply(myObMatrix, 1, paste, collapse=" ")
+
+# -----predicted data------
+# load data of Ewens sampling theory
+theory <- read.csv("dataSamplingTheory_21Ago2015.csv",header=T)
+
+# round the expected number of haplotypes
+round(theory$exp.haplotypes,0) -> theory$exp.round.hap
+
+# create id to merge
+myPredMatrix <- as.matrix(theory[,c("theta.df","exp.round.hap")])
+theory$id <- apply(myPredMatrix, 1, paste, collapse=" ")
+
+#---- merge predicted with observed data-----
+newdata <- merge(theory,minidata,by="id",all.y=T)
+
+# calculate difference between Ewens n and the simulated n
+newdata$samplingSize-newdata$n.df -> newdata$difEwens
+
+ggplot(newdata, aes(x=samplingSize, y=difEwens,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)
+
 

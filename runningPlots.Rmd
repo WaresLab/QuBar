@@ -65,9 +65,10 @@ data <- read.csv("numberHaplotypes.csv",header=T)
 
 # taking out data with growth
 minidata <- subset(data,data$Growth == "no")
+minidata[,-1] -> minidata
 droplevels(minidata) -> minidata
-
 row.names(minidata) <- NULL # cleaning row.names
+View(minidata)
 
 # creating and id to merge later
 myObMatrix <- as.matrix(minidata[,c("Theta","n.haplotypes")])
@@ -83,13 +84,28 @@ round(theory$exp.haplotypes,0) -> theory$exp.round.hap
 # create id to merge
 myPredMatrix <- as.matrix(theory[,c("theta.df","exp.round.hap")])
 theory$id <- apply(myPredMatrix, 1, paste, collapse=" ")
+View(theory)
 
 #---- merge predicted with observed data-----
 newdata <- merge(theory,minidata,by="id",all.y=T)
+newdata[is.na(newdata$n.df),] # check NA's
+newdata[complete.cases(newdata),]->newdata1
 
 # calculate difference between Ewens n and the simulated n
-newdata$samplingSize-newdata$n.df -> newdata$difEwens
+newdata1$samplingSize-newdata1$n.df -> newdata1$difEwens
 
-ggplot(newdata, aes(x=samplingSize, y=difEwens,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)
+# check weird stuff
+View(subset(newdata1,newdata1$Theta=='two'))
 
+ggplot(newdata1, aes(x=samplingSize, y=difEwens,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+facet_grid(Theta~.) 
 
+# ----ploting n vs haplotypes----
+
+# to plot Ewens data
+ewens <- ggplot(newdata1, aes(x=n.df, y=exp.round.hap,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+facet_grid(Theta~.) 
+
+# to plot our data
+sims <- ggplot(newdata1, aes(x=samplingSize, y=n.haplotypes,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+facet_grid(Theta~.)
+
+# plot both together (I need to run the function from file first)
+multiplot(ewens,sims)

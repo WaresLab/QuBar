@@ -5,7 +5,8 @@ date: "Wednesday, August 19, 2015"
 output: pdf_document
 ---
 
-T
+# Working on plots...
+
 ## Haplotype diversity and gamma estimation
 
 We found that the approach using a Gamma distribution to estimate the number of input individuals does a better job of estimating the simulated sampling sizes in low input sample sizes (Figure 3, lower than 16-32 depending the population) and when $\theta$ is larger ($\theta$=10 or 20, Figure X2b). Overall, using haplotype diversity and an educated guess at how this diversity reflects the input tends to greatly underestimate the simulated sample (Figure 3). 
@@ -68,7 +69,7 @@ minidata <- subset(data,data$Growth == "no")
 minidata[,-1] -> minidata
 droplevels(minidata) -> minidata
 row.names(minidata) <- NULL # cleaning row.names
-View(minidata)
+#View(minidata)
 
 # creating and id to merge later
 myObMatrix <- as.matrix(minidata[,c("Theta","n.haplotypes")])
@@ -84,7 +85,7 @@ round(theory$exp.haplotypes,0) -> theory$exp.round.hap
 # create id to merge
 myPredMatrix <- as.matrix(theory[,c("theta.df","exp.round.hap")])
 theory$id <- apply(myPredMatrix, 1, paste, collapse=" ")
-View(theory)
+#View(theory)
 
 #---- merge predicted with observed data-----
 newdata <- merge(theory,minidata,by="id",all.y=T)
@@ -109,3 +110,69 @@ sims <- ggplot(newdata1, aes(x=samplingSize, y=n.haplotypes,color=Theta)) + them
 
 # plot both together (I need to run the function from file first)
 multiplot(ewens,sims)
+```
+
+## Wakeley and segregating sites
+
+Now in our "QuBar_current" we can plot for each sampling size the expected value according Wakeley, and mark the abline with the observed value. And then do that for both theta. 
+
+```{r plotting Wakeley's data}
+library(ggplot2)
+library(plyr)
+
+# we have two types of data:
+# "WakeleyData"" has the result of Wakeley formula with all the possible vlues and distributions
+# "segsites" has the observed number of seg.sites in the simulations
+wakdata<-read.csv("WakeleyData.csv",header=T)
+segsites<-read.csv("numberSegSites.csv",header=T)
+
+# making factors for the ggplot2 plots
+factor(wakdata$segSites)->wakdata$segsites.f
+factor(segsites$samplingSize)->segsites$samplingSize.f
+
+# segsites
+# subsetting data with growth
+segsites1 <- subset(segsites,segsites$Growth=="no")
+droplevels(segsites1) -> segsites1
+
+# here we can check the min and max segregating sites for each combination in our simulation data
+tapply(segsites1$n.seg.sites,list(segsites1$Theta,segsites1$samplingSize),min)
+tapply(segsites1$n.seg.sites,list(segsites1$Theta,segsites1$samplingSize),max)
+
+# to check the distribution of seg sites in each combination
+ggplot(segsites1, aes(n.seg.sites)) + theme_bw()+geom_histogram()+facet_wrap(Theta~samplingSize.f) +theme(panel.grid.major = element_blank())
+
+
+# subsetting by theta
+two<-subset(wakdata,wakdata$Theta=="two")
+ten<-subset(wakdata,wakdata$Theta=="ten")
+twenty<-subset(wakdata,wakdata$Theta=="twenty")
+
+# here, I'm checking wich is the range of segregating sites (min and max) within each category, and then plotting the subset of Wakeley's curves that match that range
+two2<-subset(two,two$segSites<4)
+ten2<-subset(ten,ten$segSites<21)
+
+# plotting with ggplot, need to fix legends
+#http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
+# Fig X2a
+ggplot(ten2, aes(x = n,y=prob,fill=segsites.f,color=segsites.f)) + geom_point()+stat_smooth(method="loess")
+
+ggplot(two2, aes(x = n,y=prob,fill=segsites.f,color=segsites.f)) + geom_point()+stat_smooth(method="loess")
+
+
+# another option may be to show the histogram of segregating sites for the simulations
+
+segsites<-subset(seg.sites,seg.sites$samplingSize<170 & segsitesfull$Growth=="no")
+segsites$samplingSizeF<-as.factor(segsites$samplingSize)
+
+# first we need to subset by theta
+two<-subset(segsites,segsites$Theta=="two")
+ten<-subset(segsites,segsites$Theta=="ten")
+twenty<-subset(segsites,segsites$Theta=="twenty")
+
+# to plot multiples histogram with lattice
+with(two,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
+with(ten,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
+with(twenty,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
+with(segsites,histogram(~n.seg.sites|Theta*samplingSize.f))
+```

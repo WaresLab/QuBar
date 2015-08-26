@@ -298,7 +298,7 @@ library(ggplot2)
 # loading data
 fullgammaData <- read.csv("gammaData_13Jul.csv",header=T) 
 
-# taking out data with growth
+# subsetting data with growth
 gammaData <- subset(fullgammaData,fullgammaData$Growth=="no")
 droplevels(gammaData) -> gammaData
 
@@ -311,6 +311,7 @@ ggplot(gammaData, aes(x=samplingSize, y=dif,color=Theta)) + theme_bw()+geom_poin
 
 ## Sampling theory
 
+JOHN, not sure the figure is ok, so no text for now...
 ```{r sampling theory, echo=F,message=FALSE}
 library(ggplot2)
 
@@ -318,7 +319,7 @@ library(ggplot2)
 # load data of number of haplotypes
 data <- read.csv("numberHaplotypes.csv",header=T)
 
-# taking out data with growth
+# subsetting data with growth
 minidata <- subset(data,data$Growth == "no")
 minidata[,-1] -> minidata
 droplevels(minidata) -> minidata
@@ -352,9 +353,11 @@ newdata1$samplingSize-newdata1$n.df -> newdata1$difEwens
 # check weird stuff
 #View(subset(newdata1,newdata1$Theta=='two'))
 
-ggplot(newdata1, aes(x=samplingSize, y=difEwens,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+facet_grid(Theta~.) 
+ggplot(newdata1, aes(x=samplingSize, y=difEwens,color=Theta,alpha=0.5)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+facet_grid(Theta~.)+theme(legend.key = element_blank())
 
 ```
+
+**Figure 4.** Difference between the simulated sampling size and the sampling size for the sample predicted using Ewens's sampling theory. The abline at zero shows the ideal situation in which the estimation equals the simulated sampling size.
 
 ## Theta and segregating sites approach
 
@@ -363,7 +366,6 @@ The implementation of Wakeley's [-@Wakeley08] formula crushed for n larger than 
 ```{r plotting Wakeley data,echo=F,eval=F,message=FALSE}
 
 #install.packages("vioplot")
-
 library(lattice)
 library(plyr)
 library(vioplot)
@@ -469,7 +471,7 @@ library(ggplot2)
 fullgammaData<-read.csv("gammaData_13Jul.csv",header=T) 
 #JOHN: this one is the updated file after your new twist on gamma, I deleted the other one
 
-# taking out data with growth
+# subsetting data with growth
 gammaData<-subset(fullgammaData,fullgammaData$Growth=="no")
 droplevels(gammaData)->gammaData
 

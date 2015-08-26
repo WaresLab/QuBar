@@ -62,6 +62,7 @@ Below we calculated the distribution of sampling size according to Wakeley's for
 
 ```{r Wakeley: theta and segregating sites, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 library(reshape)
+library(plot3D)
 
 # load data with observed segregating sites in the samples
 data<-read.csv("numberSegSites.csv",header=T)
@@ -71,7 +72,6 @@ data<-read.csv("numberSegSites.csv",header=T)
 maxn=33
 maxk<-max(data$n.seg.sites,na.rm=T)
 #maxk=100
-
 
 # -----theta=2-----------
 Q = 2 #theta 
@@ -101,7 +101,7 @@ for (k in 0:maxk){
     }
 
 # check that all worked out fine
-#hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=2,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
+hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=2,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
 
 # The result of the loop is a list "theta2", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
 
@@ -198,61 +198,6 @@ write.csv(all,"WakeleyData.csv")
 
 As a result, we have a dataframe "WakeleyData" with all the estimates.
 
-Now in our "QuBar_current" we can plot for each sampling size the expected value according Wakeley, and mark the abline with the observed value. And then do that for both theta. 
-
-```{r plotting Wakeley's data}
-library(ggplot2)
-library(plyr)
-
-# we have two types of data:
-# "WakeleyData"" has the result of Wakeley formula with all the possible vlues and distributions
-# "segsites" has the observed number of seg.sites in the simulations
-wakdata<-read.csv("WakeleyData.csv",header=T)
-segsites<-read.csv("numberSegSites.csv",header=T)
-
-# making factors for the ggplot2 plots
-factor(wakdata$segSites)->wakdata$segsites.f
-
-# segsites
-# taking out data with growth
-segsites1<-subset(segsites,segsites$Growth=="no")
-
-# here we can check the min and max segregating sites for each combination in our simulation data
-tapply(segsites1$n.seg.sites,list(segsites1$Theta,segsites1$samplingSize),min)
-tapply(segsites1$n.seg.sites,list(segsites1$Theta,segsites1$samplingSize),min)
-
-# subsetting by theta
-two<-subset(wakdata,wakdata$Theta=="two")
-ten<-subset(wakdata,wakdata$Theta=="ten")
-twenty<-subset(wakdata,wakdata$Theta=="twenty")
-
-# here, I'm checking wich is the range of segregating sites (min and max) within each category, and then plotting the subset of Wakeley's curves that match that range
-two2<-subset(two,two$segSites<4)
-ten2<-subset(ten,ten$segSites<21)
-
-# plotting with ggplot, need to fix legends
-#http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
-# Fig X2a
-ggplot(ten2, aes(x = n,y=prob,fill=segsites.f,color=segsites.f)) + geom_point()+stat_smooth(method="loess")
-
-ggplot(two2, aes(x = n,y=prob,fill=segsites.f,color=segsites.f)) + geom_point()+stat_smooth(method="loess")
-
-
-# another option may be to show the histogram of segregating sites for the simulations
-
-segsites<-subset(seg.sites,seg.sites$samplingSize<170 & segsitesfull$Growth=="no")
-segsites$samplingSizeF<-as.factor(segsites$samplingSize)
-
-# first we need to subset by theta
-two<-subset(segsites,segsites$Theta=="two")
-ten<-subset(segsites,segsites$Theta=="ten")
-twenty<-subset(segsites,segsites$Theta=="twenty")
-
-# to plot multiples histogram with lattice
-with(two,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
-with(ten,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
-with(twenty,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
-```
 
 # Using the sampling theory of selectively neutral alleles
 
@@ -365,10 +310,7 @@ dataSampling[which(dataSampling$n.df==100),]
 dataSampling[which(dataSampling$n.df==10),]
 ```
 
-
-
-
-```{r plots sampling theory}
+```{r plots sampling theory first try}
 
 # One type of plots
 # plot expected number of haplotypes

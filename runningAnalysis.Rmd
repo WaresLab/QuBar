@@ -62,6 +62,7 @@ Below we calculated the distribution of sampling size according to Wakeley's for
 
 ```{r Wakeley: theta and segregating sites, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 library(reshape)
+library(plot3D)
 
 # load data with observed segregating sites in the samples
 data<-read.csv("numberSegSites.csv",header=T)
@@ -71,7 +72,6 @@ data<-read.csv("numberSegSites.csv",header=T)
 maxn=33
 maxk<-max(data$n.seg.sites,na.rm=T)
 #maxk=100
-
 
 # -----theta=2-----------
 Q = 2 #theta 
@@ -101,7 +101,7 @@ for (k in 0:maxk){
     }
 
 # check that all worked out fine
-#hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=2,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
+hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=2,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
 
 # The result of the loop is a list "theta2", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
 
@@ -198,64 +198,6 @@ write.csv(all,"WakeleyData.csv")
 
 As a result, we have a dataframe "WakeleyData" with all the estimates.
 
-Now in our "QuBar_current" we can plot for each sampling size the expected value according Wakeley, and mark the abline with the observed value. And then do that for both theta. 
-
-```{r plotting Wakeley's data}
-library(ggplot2)
-library(plyr)
-
-# we have two types of data:
-# "WakeleyData"" has the result of Wakeley formula with all the possible vlues and distributions
-# "segsites" has the observed number of seg.sites in the simulations
-wakdata<-read.csv("WakeleyData.csv",header=T)
-segsites<-read.csv("numberSegSites.csv",header=T)
-
-# making factors for the ggplot2 plots
-factor(wakdata$segSites)->wakdata$segsites.f
-
-# segsites
-# taking out data with growth
-segsites1<-subset(segsites,segsites$Growth=="no")
-
-# here we can check the min and max segregating sites for each combination in our simulation data
-tapply(segsites1$n.seg.sites,list(segsites1$Theta,segsites1$samplingSize),min)
-tapply(segsites1$n.seg.sites,list(segsites1$Theta,segsites1$samplingSize),min)
-
-# subsetting by theta
-two<-subset(wakdata,wakdata$Theta=="two")
-ten<-subset(wakdata,wakdata$Theta=="ten")
-twenty<-subset(wakdata,wakdata$Theta=="twenty")
-
-# here, I'm checking wich is the range of segregating sites (min and max) within each category, and then plotting the subset of Wakeley's curves that match that range
-two2<-subset(two,two$segSites<4)
-ten2<-subset(ten,ten$segSites<21)
-
-# plotting with ggplot, need to fix legends
-#http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
-# Fig X2a
-ggplot(ten2, aes(x = n,y=prob,fill=segsites.f,color=segsites.f)) + geom_point()+stat_smooth(method="loess")
-
-ggplot(two2, aes(x = n,y=prob,fill=segsites.f,color=segsites.f)) + geom_point()+stat_smooth(method="loess")
-
-
-# another option may be to show the histogram of segregating sites for the simulations
-
-segsites<-subset(seg.sites,seg.sites$samplingSize<170 & segsitesfull$Growth=="no")
-segsites$samplingSizeF<-as.factor(segsites$samplingSize)
-
-# first we need to subset by theta
-two<-subset(segsites,segsites$Theta=="two")
-ten<-subset(segsites,segsites$Theta=="ten")
-twenty<-subset(segsites,segsites$Theta=="twenty")
-
-# to plot multiples histogram with lattice
-with(two,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
-with(ten,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
-with(twenty,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
-```
-
-
-
 
 # Using the sampling theory of selectively neutral alleles
 
@@ -263,48 +205,112 @@ For what I read, this uses the number of haplotypes, theta and the sampling n. I
 
 ```{r using sampling theory Ewens 1972}
 # calculate all the different k haplotypes given different values of n, changes thetas and save the corresponding vectors
-theta=20 #define theta
-maxn=128 #define max n
 
-# this loop fills a vector with the expected k for a given theta an differents n
-meank <- rep(NA,maxn)
-for(n in 2:maxn){
-    n-1->endpoint
-    res<-rep(NA,endpoint)
-    for (i in 1:endpoint){
-    theta/(theta+i)->res[i]
+maxn = 250 #define max n to get enough haplotypes to match our pops
+
+# ----Theta 2-----
+theta = 2
+
+# this loop fills a vector with the expected k for a given theta and differents n
+meank2 <- rep(NA,maxn) #creates vector to save results
+
+for(n in 1:maxn){
+    if(n==1){meank2[n]<-1}
+      else{
+      n-1->endpoint
+      res<-rep(NA,endpoint)
+      for (i in 1:endpoint){
+      theta/(theta+i)->res[i]
+      }
+    1+sum(res)->meank2[n]
     }
-  1+sum(res)->meank[n]
-}
+  }
 
 # this loop fills a vector with the variance of k for a given theta an differents n
-vark <- rep(NA,maxn)
+vark2 <- rep(NA,maxn)
 for(n in 2:maxn){
     n-1->endpoint
     res<-rep(NA,endpoint)
     for (i in 1:endpoint){
     (theta^2)/((theta+i)^2)->res[i]
     }
-  meank[n]-sum(res)->vark[n]
+  meank2[n]-sum(res)->vark2[n]
+  1 -> vark2[1]
 }
 
-# now we put together a dataframe with the n,k,and var(k), run it twice changing theta to make dataframe
-meank->meank2; vark->vark2
-meank->meank10; vark->vark10
-meank->meank20; vark->vark20
+# ----Theta 10-----
+theta=10
 
-# save results of each theta in a dataframe
-dataSampling<-as.data.frame(cbind(c(1:maxn),meank2,vark2,meank10,vark10,meank20,vark20))
-names(dataSampling)<-c("n","expHap.t2","varHap.t2","expHap.t10","varHap.t10","expHap.t20","varHap.t20")
-dataSampling <- dataSampling[-1,]
-row.names(dataSampling) <- NULL
+meank10 <- rep(NA,maxn)
+for(n in 1:maxn){
+    if(n==1){meank10[n]<-1}
+    else{
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    theta/(theta+i)->res[i]
+    }
+  1+sum(res)->meank10[n]
+  }
+}
+  
+vark10 <- rep(NA,maxn)
+for(n in 2:maxn){
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    (theta^2)/((theta+i)^2)->res[i]
+    }
+  meank10[n]-sum(res)->vark10[n]
+  1 -> vark10[1]
+}
+
+# ----Theta 20-----
+theta=20
+
+meank20 <- rep(NA,maxn)
+for(n in 2:maxn){
+  if(n==1){meank20[n]<-1}
+      else{
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    theta/(theta+i)->res[i]
+    }
+  1+sum(res)->meank20[n]
+  }
+}
+
+vark20 <- rep(NA,maxn)
+for(n in 2:maxn){
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    (theta^2)/((theta+i)^2)->res[i]
+    }
+  meank20[n]-sum(res)->vark20[n]
+  1 -> vark20[1]
+}
+
+# now we put together a dataframe with the n,k,and var(k)---- 
+theta.df <- c(rep("two",250),rep("ten",250),rep("twenty",250))
+n.df <- rep(1:maxn,3) 
+exp.haplotypes <- c(meank2,meank10,meank20) 
+exp.variance <- c(vark2,vark10,vark20)
+dataSampling <- as.data.frame(cbind(theta.df,n.df,exp.haplotypes,exp.variance))
 
 # save data file
-#write.csv(dataSampling,"dataSamplingTheory_23Jul2015.csv")
+write.csv(dataSampling,"dataSamplingTheory_21Ago2015.csv")
 ```
 Now we have the dataset "dataSamplingTheory_23Jul2015" and we can plot the expected number of haplotypes for each theta (and the variance).
 
-```{r plots sampling theory}
+```{r check with Ewens table}
+dataSampling[which(dataSampling$n.df==250),]
+dataSampling[which(dataSampling$n.df==100),]
+dataSampling[which(dataSampling$n.df==10),]
+```
+
+```{r plots sampling theory first try}
 
 # One type of plots
 # plot expected number of haplotypes

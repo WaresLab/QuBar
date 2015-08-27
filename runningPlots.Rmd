@@ -1,0 +1,190 @@
+---
+title: "plots for QuBar project"
+author: "Paula Pappalardo"
+date: "Wednesday, August 19, 2015"
+output: pdf_document
+---
+
+# Working on plots...
+
+## Haplotype diversity and gamma estimation
+
+We found that the approach using a Gamma distribution to estimate the number of input individuals does a better job of estimating the simulated sampling sizes in low input sample sizes (Figure 3, lower than 16-32 depending the population) and when $\theta$ is larger ($\theta$=10 or 20, Figure X2b). Overall, using haplotype diversity and an educated guess at how this diversity reflects the input tends to greatly underestimate the simulated sample (Figure 3). 
+
+```{r Figure 3 gamma distribution plots,message=FALSE, echo=FALSE}
+setwd("~/GitHub/QuBar")
+
+#install.packages("ggplot2")
+library(ggplot2)
+
+# now we have the dataframe "gammaData_13jul" with all the updated gamma values 
+fullgammaData<-read.csv("gammaData_13Jul.csv",header=T) 
+#JOHN: this one is the updated file after your new twist on gamma, I deleted the other one
+
+# taking out data with growth
+gammaData<-subset(fullgammaData,fullgammaData$Growth=="no")
+droplevels(gammaData)->gammaData
+
+# making factors for the ggplot2 plots
+factor(gammaData$samplingSize,levels=c(2,4,8,16,32,64,128))->gammaData$samplingSizeF
+
+# subsetting small sampling sizes to see better what happen there
+#minigamma<-gammaData[gammaData$samplingSize<33,]
+
+# plotting with ggplot, need to fix legends
+#http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
+# Fig X2a
+#ggplot(gammaData, aes(x = samplingSize,y=Max.Gamma.value,fill=Theta,color=Theta)) + theme_bw()+geom_point()+geom_abline()+xlab("simulated sampling size") + ylab("predicted sampling size") 
+
+# Fig X2b
+# thinking how to plot the subset of samples sizes where gamma works a little bit better....
+#ggplot(minigamma, aes(x = samplingSizeF,y=Max.Gamma.value,fill=Theta,color=Theta)) + theme_bw()+ geom_boxplot(aes(fill=Theta)) + ylim(0,20) + xlab("simulated sampling size") + ylab("predicted sampling size")
+
+#JOHN, trying something different below
+fig3<-ggplot(gammaData, aes(x = n.haplotypes,y=Max.Gamma.value,color=samplingSizeF,size=1)) + theme_bw()+geom_point()+facet_grid(Theta~samplingSizeF) 
+fig3 + geom_hline(aes(yintercept = 2), subset(gammaData,samplingSize==2))+ geom_hline(aes(yintercept = 4), subset(gammaData,samplingSize==4))+ geom_hline(aes(yintercept = 8), subset(gammaData,samplingSize==8))+ geom_hline(aes(yintercept = 16), subset(gammaData,samplingSize==16))+ geom_hline(aes(yintercept = 32), subset(gammaData,samplingSize==32))+ geom_hline(aes(yintercept = 64), subset(gammaData,samplingSize==64))+ geom_hline(aes(yintercept = 128), subset(gammaData,samplingSize==128))+theme(panel.grid.major = element_blank())
+
+# to put different ablines in different facets we need to make a dataset, and this would be efficient but the order is all messed up so I had to figure out a not so efficient but working way ;)
+#hline.data <- data.frame(z = c(2,4,8,16,32,64,128),samplingSizeF = c(2,4,8,16,32,64,128))
+#fig3 + geom_hline(aes(yintercept = z), hline.data)
+                                                                                                                                                                                  
+```
+
+**Figure 3.** Predictions of sampling size using the gamma distribution method for each population (with thetas 2,10 and 20) against the observed number of haplotypes in the sample. The ablines in each panel represent the "real" sampling size of that sample.  
+
+## Sampling theory
+Now we have the dataset "dataSamplingTheory_23Jul2015" and we can plot the expected number of haplotypes for each theta (and the variance).
+
+Now we are going to invert the plots so we have the observed number of haplotypes on the x-axis, and we are going to plot the simulated data with sampling theory, plus the standard error to mark the confidence intervals. On top of that, we add the points of the "observed" data.
+
+```{r sampling theory,message=FALSE, echo=FALSE}
+library(ggplot2)
+
+# -----observed data------
+# load data of number of haplotypes
+data <- read.csv("numberHaplotypes.csv",header=T)
+
+
+# taking out data with growth
+minidata <- subset(data,data$Growth == "no")
+minidata[,-1] -> minidata
+droplevels(minidata) -> minidata
+row.names(minidata) <- NULL # cleaning row.names
+#View(minidata)
+
+# creating and id to merge later
+myObMatrix <- as.matrix(minidata[,c("Theta","n.haplotypes")])
+minidata$id <- apply(myObMatrix, 1, paste, collapse=" ")
+
+# -----predicted data------
+# load data of Ewens sampling theory
+theory <- read.csv("dataSamplingTheory_21Ago2015.csv",header=T)
+
+# round the expected number of haplotypes
+round(theory$exp.haplotypes,0) -> theory$exp.round.hap
+
+# create id to merge
+myPredMatrix <- as.matrix(theory[,c("theta.df","exp.round.hap")])
+theory$id <- apply(myPredMatrix, 1, paste, collapse=" ")
+#View(theory)
+
+#---- merge predicted with observed data-----
+newdata <- merge(theory,minidata,by="id",all.y=T)
+newdata[is.na(newdata$n.df),] # check NA's
+newdata[complete.cases(newdata),]->newdata1
+
+# calculate difference between Ewens n and the simulated n
+newdata1$samplingSize-newdata1$n.df -> newdata1$difEwens
+
+# check weird stuff
+View(subset(newdata1,newdata1$Theta=='two'))
+
+ggplot(newdata1, aes(x=samplingSize, y=difEwens,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+facet_grid(Theta~.) 
+
+# ----ploting n vs haplotypes----
+
+# to plot Ewens data
+ewens <- ggplot(newdata1, aes(x=n.df, y=exp.round.hap,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+facet_grid(Theta~.) 
+
+# to plot our data
+sims <- ggplot(newdata1, aes(x=samplingSize, y=n.haplotypes,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+facet_grid(Theta~.)
+
+# plot both together (I need to run the function from file first)
+multiplot(ewens,sims)
+```
+
+## Wakeley and segregating sites
+
+Now in our "QuBar_current" we can plot for each sampling size the expected value according Wakeley, and mark the abline with the observed value. And then do that for both theta. 
+
+```{r plotting Wakeley's data}
+library(ggplot2)
+library(plyr)
+
+# we have two types of data:
+# "WakeleyData"" has the result of Wakeley formula with all the possible vlues and distributions
+# "segsites" has the observed number of seg.sites in the simulations
+wakdata<-read.csv("WakeleyData.csv",header=T)
+segsites<-read.csv("numberSegSites.csv",header=T)
+
+# making factors for the ggplot2 plots
+factor(wakdata$segSites)->wakdata$segsites.f
+factor(segsites$samplingSize)->segsites$samplingSize.f
+
+# segsites
+# subsetting data with growth
+segsites1 <- subset(segsites,segsites$Growth=="no")
+droplevels(segsites1) -> segsites1
+
+# here we can check the min and max segregating sites for each combination in our simulation data
+tapply(segsites1$n.seg.sites,list(segsites1$Theta,segsites1$samplingSize),min)
+tapply(segsites1$n.seg.sites,list(segsites1$Theta,segsites1$samplingSize),max)
+
+# to check the distribution of seg sites in each combination
+ggplot(segsites1, aes(n.seg.sites)) + theme_bw()+geom_histogram()+facet_wrap(Theta~samplingSize.f) +theme(panel.grid.major = element_blank())
+
+
+# subsetting by theta
+two<-subset(wakdata,wakdata$Theta=="two")
+ten<-subset(wakdata,wakdata$Theta=="ten")
+twenty<-subset(wakdata,wakdata$Theta=="twenty")
+
+# here, I'm checking wich is the range of segregating sites (min and max) within each category, and then plotting the subset of Wakeley's curves that match that range
+two2<-subset(two,two$segSites<4)
+ten2<-subset(ten,ten$segSites<21)
+
+# plotting with ggplot, need to fix legends
+#http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
+# Fig X2a
+ggplot(ten2, aes(x = n,y=prob,fill=segsites.f,color=segsites.f)) + geom_point()+stat_smooth(method="loess")
+
+ggplot(two2, aes(x = n,y=prob,fill=segsites.f,color=segsites.f)) + geom_point()+stat_smooth(method="loess")
+
+
+# another option may be to show the histogram of segregating sites for the simulations
+
+segsites<-subset(seg.sites,seg.sites$samplingSize<170 & segsitesfull$Growth=="no")
+segsites$samplingSizeF<-as.factor(segsites$samplingSize)
+
+# first we need to subset by theta
+two<-subset(segsites,segsites$Theta=="two")
+ten<-subset(segsites,segsites$Theta=="ten")
+twenty<-subset(segsites,segsites$Theta=="twenty")
+
+# to plot multiples histogram with lattice
+with(two,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
+with(ten,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
+with(twenty,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
+with(segsites,histogram(~n.seg.sites|Theta*samplingSize.f))
+```
+
+```{r}
+library(ggplot2)
+
+all <- read.csv("hap_segSites.csv",header=)
+factor(all$samplingSize)->all$samplingSize.f
+
+ggplot(all, aes(x=n.haplotypes, y=n.seg.sites)) + theme_bw()+geom_point()+geom_point(position = "jitter")+facet_grid(Theta~samplingSize.f) 
+
+```
+

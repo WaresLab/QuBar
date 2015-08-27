@@ -64,6 +64,7 @@ library(ggplot2)
 # load data of number of haplotypes
 data <- read.csv("numberHaplotypes.csv",header=T)
 
+
 # taking out data with growth
 minidata <- subset(data,data$Growth == "no")
 minidata[,-1] -> minidata
@@ -176,3 +177,14 @@ with(ten,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
 with(twenty,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
 with(segsites,histogram(~n.seg.sites|Theta*samplingSize.f))
 ```
+
+```{r}
+library(ggplot2)
+
+all <- read.csv("hap_segSites.csv",header=)
+factor(all$samplingSize)->all$samplingSize.f
+
+ggplot(all, aes(x=n.haplotypes, y=n.seg.sites)) + theme_bw()+geom_point()+geom_point(position = "jitter")+facet_grid(Theta~samplingSize.f) 
+
+```
+

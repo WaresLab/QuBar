@@ -115,11 +115,14 @@ multiplot(ewens,sims)
 
 ## Wakeley and segregating sites
 
-Now in our "QuBar_current" we can plot for each sampling size the expected value according Wakeley, and mark the abline with the observed value. And then do that for both theta. 
+We need to do two things. First, we need to estimate the most probable observed segregating sites number (the mode) for each combination of theta and sampling size. Second, we need to get the maximum value of n according Wakeley for each segregating site using Wakeley's formula. Finally, we merge by segregating site and then we calculate the differece between Wakeley's predictions and the real sampling size.
+Because Wakeley's formula was not working for n>60 and our maximum was 32, 2,4,8,16,32 are the only ones consider in this section.
 
 ```{r plotting Wakeley's data}
 library(ggplot2)
+library(lattice)
 library(plyr)
+library(modeest)
 
 # we have two types of data:
 # "WakeleyData"" has the result of Wakeley formula with all the possible vlues and distributions
@@ -131,51 +134,58 @@ segsites<-read.csv("numberSegSites.csv",header=T)
 factor(wakdata$segSites)->wakdata$segsites.f
 factor(segsites$samplingSize)->segsites$samplingSize.f
 
-# segsites
-# subsetting data with growth
+# ------segsites
+# subsetting data with growth and cleaning non useful columns
 segsites1 <- subset(segsites,segsites$Growth=="no")
 droplevels(segsites1) -> segsites1
+row.names(segsites1) <- NULL
+segsites1$Pop <- NULL
+segsites1$Growth <- NULL
+# keep only the n<=32
+segsites2<-segsites1[which(segsites1$samplingSize<33),]
 
-# here we can check the min and max segregating sites for each combination in our simulation data
-tapply(segsites1$n.seg.sites,list(segsites1$Theta,segsites1$samplingSize),min)
-tapply(segsites1$n.seg.sites,list(segsites1$Theta,segsites1$samplingSize),max)
+# estimate the mode (the more frequent value) for each combination of sampling size and theta
+# the mode is estimated with the function mvl in the package "modeest"
+modes <- ddply(segsites2, c("Theta","samplingSize.f"), summarise, mode=unlist((mlv(n.seg.sites))[1]))
+modes$samplingSize <- as.numeric(as.character(allwak$samplingSize.f))
+modes$k <- as.character(modes$mode)
 
-# to check the distribution of seg sites in each combination
-ggplot(segsites1, aes(n.seg.sites)) + theme_bw()+geom_histogram()+facet_wrap(Theta~samplingSize.f) +theme(panel.grid.major = element_blank())
-
-
-# subsetting by theta
-two<-subset(wakdata,wakdata$Theta=="two")
-ten<-subset(wakdata,wakdata$Theta=="ten")
-twenty<-subset(wakdata,wakdata$Theta=="twenty")
-
-# here, I'm checking wich is the range of segregating sites (min and max) within each category, and then plotting the subset of Wakeley's curves that match that range
-two2<-subset(two,two$segSites<4)
-ten2<-subset(ten,ten$segSites<21)
-
-# plotting with ggplot, need to fix legends
-#http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
-# Fig X2a
-ggplot(ten2, aes(x = n,y=prob,fill=segsites.f,color=segsites.f)) + geom_point()+stat_smooth(method="loess")
-
-ggplot(two2, aes(x = n,y=prob,fill=segsites.f,color=segsites.f)) + geom_point()+stat_smooth(method="loess")
+# creating and id to merge later
+myObMatrix <- as.matrix(modes[,c("Theta","k")])
+modes$id <- apply(myObMatrix, 1, paste, collapse=" ")
 
 
-# another option may be to show the histogram of segregating sites for the simulations
+# -------Wakeley's info 
+#----make loop to find the best n's-----
+thetas<-c("two","ten","twenty")
+a<-c(rep("two",135),rep("ten",135),rep("twenty",135))
+b<-c(seq(1,135,1),seq(1,135,1),seq(1,135,1))
+goodwak<-as.data.frame(cbind(a,b))
+names(goodwak)<-c("theta","seg.sites")
 
-segsites<-subset(seg.sites,seg.sites$samplingSize<170 & segsitesfull$Growth=="no")
-segsites$samplingSizeF<-as.factor(segsites$samplingSize)
+for(i in thetas){
+  for(j in 1:nrow(goodwak)){ #Paula this wasn't working should 'mydata' be 'goodwak'??
+    goodwak$seg.sites[j]->mysegsite
+    mysubset<-subset(miniwak,miniwak$Theta==i & miniwak$segSites==mysegsite)
+    max(mysubset$prob)->maxprob
+    which(mysubset$prob==maxprob)->best
+    mysubset$n[best]->best.n
+    best.n->goodwak$best.n[j]
+    }
+}
+# now "goodwak" has theta,seg.sites and best.n
 
-# first we need to subset by theta
-two<-subset(segsites,segsites$Theta=="two")
-ten<-subset(segsites,segsites$Theta=="ten")
-twenty<-subset(segsites,segsites$Theta=="twenty")
+# creating and id to merge later
+myWakMatrix <- as.matrix(goodwak[,c("theta","seg.sites")])
+goodwak$id <- apply(myWakMatrix, 1, paste, collapse=" ")
 
-# to plot multiples histogram with lattice
-with(two,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
-with(ten,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
-with(twenty,histogram(~n.seg.sites|samplingSizeF,layout=c(1,7)))
-with(segsites,histogram(~n.seg.sites|Theta*samplingSize.f))
+# Now we want to merge the observed segregating sites with the segregating sites used to estimate Wakeley's formula, and that will allow us to plot the "real" n vs the best.n according Wakeley.
+allwak <-merge(modes,goodwak,by="id",all.x=T)
+
+allwak$dif <- allwak$samplingSize - allwak$best.n
+
+ggplot(allwak, aes(x=samplingSize, y=dif,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)
+
 ```
 
 ```{r}
@@ -186,5 +196,14 @@ factor(all$samplingSize)->all$samplingSize.f
 
 ggplot(all, aes(x=n.haplotypes, y=n.seg.sites)) + theme_bw()+geom_point()+geom_point(position = "jitter")+facet_grid(Theta~samplingSize.f) 
 
+```
+
+```{r distribution of seg sites}
+
+# to check the distribution of seg sites in each combination
+# with ggplot2
+ggplot(segsites1, aes(n.seg.sites)) + theme_bw()+geom_histogram()+facet_wrap(Theta~samplingSize.f) +theme(panel.grid.major = element_blank())
+# with lattice
+with(segsites1,histogram(~n.seg.sites|Theta*samplingSize.f))
 ```
 

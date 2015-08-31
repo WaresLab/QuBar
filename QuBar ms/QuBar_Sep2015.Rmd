@@ -441,6 +441,10 @@ This leaves metabarcode research with three options: (1) continue to individuall
 
 ___
 
+High variance (bimodality) in number of segregating sites with low sample size follows predictions of Felsenstein [-@Felsenstein92], who suggests that phylogenetic approaches to genealogical diversity likely to be more efficient than pairwise and segregating sites methods. Effectively, the comparison of a small number of sequences in a high-diversity system has a large probability of comparisons across the deepest node of a genealogy, but with very small samples also the potential that two closely-related sequences are sampled.
+
+
+
 
 Returning to the coin flip, it is worth evaluating wherein lies the strength of inferential signal. 50% gives NO information, could be 2 or infinite flips. So it is deviation that is signal in the coin flip example. Similarly, for a system of diversity such as this we need the *potential* for diverse outcomes to evaluate: low theta means nearly all sample sizes are possible, for example. In this sense, developing this with a mind for species that are broadly distributed and highly abundant is likely a more effective strategy than endemic small populations.
 

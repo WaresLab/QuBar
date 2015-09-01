@@ -288,7 +288,7 @@ kable(sumTable)
 
 ## Haplotype diversity and gamma estimation
 
-Overall, using haplotype diversity and an educated guess at how this diversity reflects the input tends to greatly underestimate the simulated sample, at least for larger sampling size (Figure 3). For the smaller sampling sizes the difference between the predicted sampling size and the simulated sampling size is close to zero, meaning the method works better; the difference is also smaller when $\theta$ is larger (Figure 3). 
+Overall, using haplotype diversity and our educated guess at how this diversity reflects the input tends to greatly underestimate the simulated sample, at least for larger sampling size (Figure 3). For the smaller sampling sizes the difference between the predicted sampling size and the simulated sampling size is close to zero, meaning the method provides little error; the difference is also smaller when $\theta$ is larger (Figure 3). 
 
 The probability distributions using this method and the predicted sampling sizes against the observed haplotypes are provided in the supplementary material. 
 
@@ -361,7 +361,7 @@ ggplot(newdata1, aes(x=samplingSize, y=difEwens,color=Theta,alpha=0.5)) + theme_
 
 ## Theta and segregating sites approach
 
-The implementation of Wakeley's [-@Wakeley08] formula crushed for n larger than 50, so we were only able to test our sampling sizes of 2,4,8,16 and 32 with this method.
+The implementation of Wakeley's [-@Wakeley08] formula for estimation of the relationship between *S*, *n*, and $\theta$ was only tested for sampling sizes of 2,4,8,16 and 32 as we noted instabilities in estimation at larger sample sizes.
 
 ```{r plotting Wakeley data,echo=F,eval=F,message=FALSE}
 
@@ -412,7 +412,7 @@ xyplot(best.n~samplingSize|Pop,data=bymedian1)
 ```
 
 
-John's part below:
+Do we still use this? I cannot see PDF yet today.
 
 ```{r nextfig, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis',eval=F}
 #  print(obsvd) #now would be easy to print 95% HPD of obsvd, so for given theta and k this is the distribution of n
@@ -425,14 +425,18 @@ abline(v=actual)
 
 Remember that the input data for this single taxon included `#r actual` individuals, the vertical line in plot above. What is likelihood function? Product of the two distributions? That is too stark in areas where they don't really overlap probabilities. Shouldn't be ZERO there?
 
-Need to then adapt this to a sample from 4-5 species for which there is known information? Or do simulated data (X species, vector of theta in simulation and hapdiv when all said and done, they are after all, related) and adjust the evenness in series of plots to see if evenness/richness gets recovered appropriately, given confidence intervals after all...
 
-n.b. Marc Feldman was concerned about the two statistics double-dipping on the same theory... is this ABC, is this borrowing strength, is this inappropriate?? **AH. but certainly *S* and *H* are not independent observations thus cannot simply use product of the two to generate a Likelihood** perhaps identify which is better, useful, or are neither sufficient?
 
 
 # Discussion
 
 What we have shown is, in effect, the high variance in genealogical and mutational data associated with the coalescent process in population genetics [@Kingman82]. Though our early efforts suggested a broad utility in ranking the abundance of taxa in a mixed sample of metabarcode data, our results overall indicate a preponderance of high-variance, downward-biased results in estimating the number of individuals in a sequence data set. **A few more sentences of summarization.**
+
+REGARDING THIS RESULT: Overall, using haplotype diversity and our educated guess at how this diversity reflects the input tends to greatly underestimate the simulated sample, at least for larger sampling size (Figure 3). For the smaller sampling sizes the difference between the predicted sampling size and the simulated sampling size is close to zero, meaning the method provides little error; the difference is also smaller when $\theta$ is larger (Figure 3). 
+
+Need to then adapt this to a sample from 4-5 species for which there is known information? Or do simulated data (X species, vector of theta in simulation and hapdiv when all said and done, they are after all, related) and adjust the evenness in series of plots to see if evenness/richness gets recovered appropriately, given confidence intervals after all...
+
+n.b. Marc Feldman was concerned about the two statistics double-dipping on the same theory... is this ABC, is this borrowing strength, is this inappropriate?? **AH. but certainly *S* and *H* are not independent observations thus cannot simply use product of the two to generate a Likelihood** perhaps identify which is better, useful, or are neither sufficient?
 
 Additionally, our approach is predicated on the idea that prior analysis of a given population - a genetically discrete and relatively homogeneous evolutionary unit - will effectively suggest the diversity to be found in subsequent samples. There are certainly instances where the diversity at a barcode locus has been so extraordinarily high that haplotype diversity approached 1, and the number of haplotypes recovered in a sample was very close to the number of individuals in that sample, such as the barnacle *Balanus glandula* [@Wares01,@Sotka04,@Wares05]. However, this same example of a hyperdiverse barnacle also requires recognition that there are at least 2 distinct evolutionary lineages in this taxon with broadly overlapping geographic ranges [@Sotka04,@Wares05], which dramatically affects our understanding of the diversity recovered as well as the underlying genealogical process and association with regional diversity.
 

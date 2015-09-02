@@ -127,7 +127,7 @@ library(modeest)
 # we have two types of data:
 # "WakeleyData"" has the result of Wakeley formula with all the possible vlues and distributions
 # "segsites" has the observed number of seg.sites in the simulations
-wakdata<-read.csv("WakeleyData.csv",header=T)
+wakdata<-read.csv("WakeleyData_31Ago2015.csv",header=T)
 segsites<-read.csv("numberSegSites.csv",header=T)
 
 # making factors for the ggplot2 plots
@@ -142,7 +142,7 @@ row.names(segsites1) <- NULL
 segsites1$Pop <- NULL
 segsites1$Growth <- NULL
 # keep only the n<=32
-segsites2<-segsites1[which(segsites1$samplingSize<33),]
+segsites2<-segsites1[which(segsites1$samplingSize<51),]
 
 # estimate the mode (the more frequent value) for each combination of sampling size and theta
 # the mode is estimated with the function mvl in the package "modeest"
@@ -157,16 +157,16 @@ modes$id <- apply(myObMatrix, 1, paste, collapse=" ")
 
 # -------Wakeley's info 
 #----make loop to find the best n's-----
-thetas<-c("two","ten","twenty")
+thetas<-c("two","two","ten","ten","twenty","twenty")
 a<-c(rep("two",135),rep("ten",135),rep("twenty",135))
 b<-c(seq(1,135,1),seq(1,135,1),seq(1,135,1))
 goodwak<-as.data.frame(cbind(a,b))
 names(goodwak)<-c("theta","seg.sites")
 
 for(i in thetas){
-  for(j in 1:nrow(goodwak)){ #Paula this wasn't working should 'mydata' be 'goodwak'??
+  for(j in 1:nrow(goodwak)){ 
     goodwak$seg.sites[j]->mysegsite
-    mysubset<-subset(miniwak,miniwak$Theta==i & miniwak$segSites==mysegsite)
+    mysubset<-subset(wakdata,wakdata$Theta==i & wakdata$segSites==mysegsite)
     max(mysubset$prob)->maxprob
     which(mysubset$prob==maxprob)->best
     mysubset$n[best]->best.n
@@ -182,11 +182,65 @@ goodwak$id <- apply(myWakMatrix, 1, paste, collapse=" ")
 # Now we want to merge the observed segregating sites with the segregating sites used to estimate Wakeley's formula, and that will allow us to plot the "real" n vs the best.n according Wakeley.
 allwak <-merge(modes,goodwak,by="id",all.x=T)
 
+# Calculate difference between real and predicted n
 allwak$dif <- allwak$samplingSize - allwak$best.n
 
 ggplot(allwak, aes(x=samplingSize, y=dif,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)
 
 ```
+
+
+```{r plotting Wakeley's data NEW DATA}
+library(ggplot2)
+library(lattice)
+library(plyr)
+library(modeest)
+
+# we have two types of data:
+# "WakeleyData"" has the result of Wakeley formula with all the possible vlues and distributions
+# "segsites" has the observed number of seg.sites in the simulations
+wakdata<-read.csv("WakeleyData_01Sep2015.csv",header=T)
+segsites<-read.csv("numberSegSites_31Ago2015.csv",header=T)
+
+# making factors for the ggplot2 plots
+factor(wakdata$wak.segsites)->wakdata$wak.segsites.f
+factor(segsites$samplingSize)->segsites$samplingSize.f
+
+# -----------------------------------
+# ------observed segsites------------
+# -----------------------------------
+segsites[,-1] -> segsites
+segsites$Pop <- NULL
+segsites$Growth <- NULL
+
+# estimate the mode (the more frequent value) for each combination of sampling size and theta
+# the mode is estimated with the function mvl in the package "modeest"
+# the warning is because there are multiple modes and I'm collapsing them with the "unlist"
+modes <- ddply(segsites, c("Theta","samplingSize.f"), summarise, mode=unlist((mlv(n.seg.sites))[1]))
+modes$samplingSize <- as.numeric(as.character(modes$samplingSize.f))
+
+# -------------------------------------
+# -------Wakeley's predictions --------
+# -------------------------------------
+
+# estimate the best n's of wakeley data
+bestprobs <- ddply(wakdata, c("Theta","wak.segsites.f"), summarise, best.prob=max(wak.prob))
+bestprobs$best.prob <-round(bestprobs$best.prob,13)
+
+# merging "bestprobs" with "wakdata" to recover the n's that match with the higher probability
+best.n <- merge(bestprobs,wakdata,by.x=c("Theta","wak.segsites.f","best.prob"),by.y=c("Theta","wak.segsites.f","wak.prob"),all.x=T)
+
+
+# Now we want to merge the observed segregating sites with the segregating sites used to estimate Wakeley's formula, and that will allow us to plot the "real" n vs the best.n according Wakeley.
+allwak <-merge(modes,best.n,by.x=c("Theta","mode"),by.y=c("Theta","wak.segsites"))
+
+# Calculate difference between real and predicted n
+allwak$dif <- allwak$samplingSize - allwak$wak.n
+
+ggplot(allwak, aes(x=samplingSize, y=dif,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)
+
+```
+
 
 ```{r}
 library(ggplot2)

@@ -69,9 +69,9 @@ data<-read.csv("numberSegSites.csv",header=T)
 
 # We need to define a maximum n, John identified that above 70 this behaves funny, actually for 60 too, so we could 50. But as our simulated sampling sizes jump from 32 to 64, we can just set a maxn of 33.
 
-maxn=33
+maxn=50
 maxk<-max(data$n.seg.sites,na.rm=T)
-maxk=33
+maxk=130
 
 # -----theta=2-----------
 Q = 2 #theta 
@@ -193,7 +193,7 @@ all<-melt(WakeleyData,id=c("Theta","n"))
 levels(all$variable)<-seq(1:135)
 names(all)<-c("Theta","n","segSites","prob")
 # save 
-write.csv(all,"WakeleyData.csv")
+write.csv(all,"WakeleyData_01Sep2015.csv")
 ```
 
 As a result, we have a dataframe "WakeleyData" with all the estimates.
@@ -300,7 +300,7 @@ exp.variance <- c(vark2,vark10,vark20)
 dataSampling <- as.data.frame(cbind(theta.df,n.df,exp.haplotypes,exp.variance))
 
 # save data file
-write.csv(dataSampling,"dataSamplingTheory_21Ago2015.csv")
+#write.csv(dataSampling,"dataSamplingTheory_21Ago2015.csv")
 ```
 Now we have the dataset "dataSamplingTheory_23Jul2015" and we can plot the expected number of haplotypes for each theta (and the variance).
 

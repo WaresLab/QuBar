@@ -78,15 +78,7 @@ probs<-t(matrix(array,nrow=3))
 probs
 #plot(probs[,1],probs[,3],col='red')
 maxhaps<-max(probs[,1])
-
-hist3D(x=seq(0,1,length.out=nrow(probs)),y=seq(0,1,length.out=ncol(probs)), probs, border="black",theta=30, phi=50, xlab="h", ylab="n", zlab="P{h}",alpha=0.35)
 ```
-
-```{r}
-PSKv[k,n]<-PSKv[k,n]+PSK
-```
-
-
 
 There are also clear minimum bounds that can be established for the abundance of a taxon. Considering DNA sequence haplotypes as our most basic information, we ask how many *distinct* haplotypes are recovered in the data that match a particular taxon? For a haploid mitochondrial marker like the oft-applied cytochrome oxidase I (COI), this number is the minimum number of individuals present (if the number happens to be zero, it is also likely to be the maximum number of individuals in the sample!). 
 
@@ -188,8 +180,8 @@ a2 <- c(1:maxn)
 b2 <- c(1:maxk)
 PSKv2 <- numeric(maxn*maxk)
 PSKv2 <- matrix(PSKv2,ncol=maxn)
-colnames(PSKv)<-a2
-rownames(PSKv)<-b2
+colnames(PSKv2)<-a2
+rownames(PSKv2)<-b2
 
 for (n in 2:maxn) {
 

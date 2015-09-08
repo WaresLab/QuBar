@@ -8,7 +8,9 @@ bibliography: QuBar_References_Sep2015.bib
 ```{r set working directory,echo=FALSE}
 setwd("~/GitHub/QuBar")
 ```
+# Abstract (200 words maximum)
 
+__Key words:__(3 to ten)
 
 # Introduction
 
@@ -70,19 +72,29 @@ while (cdf<0.95) {
 
 #par(mfrow=c(3,1))
 
+
+
 probs<-t(matrix(array,nrow=3))
 probs
 #plot(probs[,1],probs[,3],col='red')
 maxhaps<-max(probs[,1])
+
+hist3D(x=seq(0,1,length.out=nrow(probs)),y=seq(0,1,length.out=ncol(probs)), probs, border="black",theta=30, phi=50, xlab="h", ylab="n", zlab="P{h}",alpha=0.35)
 ```
+
+```{r}
+PSKv[k,n]<-PSKv[k,n]+PSK
+```
+
+
 
 There are also clear minimum bounds that can be established for the abundance of a taxon. Considering DNA sequence haplotypes as our most basic information, we ask how many *distinct* haplotypes are recovered in the data that match a particular taxon? For a haploid mitochondrial marker like the oft-applied cytochrome oxidase I (COI), this number is the minimum number of individuals present (if the number happens to be zero, it is also likely to be the maximum number of individuals in the sample!). 
 
 We suggest three methods that could help to estimate the number of individuals for a particular species in a metabarcoding sample: 1) an inference based on haplotype diversity of the field population and the observed *number of haplotypes* in the sample, 2) an inference based on the expectations of Ewens'sampling theory and the *number of haplotypes* observed in the sample; and 3) an inference based on a prior assumption of $\theta$ in the field population and the observed *number of segregating sites* in the sample . 
 
-To evaluate the potential usefulness of each method for recovering the abundance of input individuals, we simulated populations evolving under a Wright-Fisher neutral model. We performed the simulations with Hudson's *ms* program [@Hudson2002] using the *gap* [@gap2015] package in R [@RCoreTeam2015]. We simulated 3 populations, using three different population mutation rates ($\theta$ of 2, 10, and 20). For each population we estimated haplotype diversity using the PopGenome [@PopGenome2014] package in R.
+To evaluate the potential usefulness of each method for recovering the abundance of input individuals, we simulated populations evolving under a Wright-Fisher neutral model. We performed the simulations with Hudson's *ms* program [@Hudson2002] using the *gap* [@gap2015] package in R [@RCoreTeam2015]. We simulated 3 populations, using three different population mutation rates ($\theta$ of 2, 10, and 20). For each population we estimated haplotype diversity using the *PopGenome* [@PopGenome2014] package in R.
 
-From the simulated populations we took "field samples" of different sizes (n), sampling without replacement. We replicate the sampling experiment 100 times, to be able to assess variation of sampling. For each replicate, we calculate the number of haplotypes and the number of segregating sites, which represent our observed values in the simulated samples. The sampling size, known to us from this design, is what we are going to predict using the reversed inferences described below for each method. All the analysis of the simulated populations was done in R [@RCoreTeam2015]. Detailed information on simulations and R code is presented in the supplementary material (*for now in file "runningSimulations"*).
+From the simulated populations we took "field samples" of different sizes (n), sampling without replacement. We replicate the sampling experiment 100 times, to be able to assess variation of sampling. For each replicate, we calculate the number of haplotypes and the number of segregating sites, which represent our observed values in the simulated samples. The sampling size, known to us from this design, is what we are going to predict using the reversed inferences described below for each method. All the analysis of the simulated populations was done in R [@RCoreTeam2015]. Detailed information and the R code used to performed simulations is presented in the Appendix S1 in the Supplementary Material.
 
 ## Haplotype Diversity
 
@@ -120,23 +132,23 @@ For each of the three populations with theta equal to 2, 10 or 20, and through t
 
 ## Segregating Sites
 
-As noted above, there are specific probability distributions associated with a sample of sequences, the number of segregating sites *S*, and a prior assumption of $\theta$ under the standard coalescent model [@Wakeley08].
+Under the standard coalescent model there are specific probability distributions associated with a sample of sequences, the number of segregating sites *S*, and a prior assumption of $\theta$ [@Wakeley08]:
 
 $$ P(S=k) = \sum\limits_{i=2}^{n}(-1)^i{n-1 \choose i-1}\frac{i-1}{\theta+i-1}(\frac{\theta}{\theta+i-1})^k $$
 
-Figure 2a illustrates this distribution for $\theta$=2. This represents a low-diversity population, and unless few segregating sites are observed there may be a broad range of sample sizes consistent with such an observation. Figure 2b illustrates the same probability distribution, but assuming $\theta$=10. When the prior knowledge or assumption of diversity is higher, there tends to be a sharper distribution on *n* for a given *k*.
+Figure 2a illustrates this distribution for $\theta$=2, segregating sites *k* from 1 to 20, and number of individuals *n* from 1 to 20. This represents a low-diversity population, and unless few segregating sites are observed there may be a broad range of sample sizes consistent with such an observation. Figure 2b illustrates the same probability distribution, but assuming $\theta$=10, with a range of both *k* and *n* from 1 to 50. When the prior knowledge or assumption of diversity is higher, the range of segregating sites that could give a more accurate inference of *n* is higher, with a sharper distribution on *n* for lower to intermediate *k*.(__JOHN, I rephrased this since what you were seeing was because your plot was using the same set up that theta=2, that is you were not covering the real range of seg sites that you will find with at theta=10, so I updated your plots, but now for higher k the same happen, the possible n's flatten and it is hard to discern between them. If __
 
 ```{r WakeleyCh4, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 
 #install.packages("plot3D")
 library(plot3D)
+
+# ------theta = 2-------------
 Q = 2 # this is PRIOR information from what you know of input SPECIES, not that particular data set (N. scab Q about 10)
 maxn = 20 #above 70 this behaves funny???? OR IT MAY BE SOME MULTIPLE OF Q*maxn that is problem?
 
 obsvdk = 4
-maxk = 15 #must be greater than obsvdk
-
-
+maxk = 20 #must be greater than obsvdk
 
 a <- c(1:maxn)
 b <- c(1:maxk)
@@ -164,7 +176,14 @@ for (n in 2:maxn) {
   
 }
 
+# ------theta = 10-------------
 Q=10
+
+maxn = 50 
+obsvdk = 4
+maxk = 50 #must be greater than obsvdk
+
+
 a2 <- c(1:maxn)
 b2 <- c(1:maxk)
 PSKv2 <- numeric(maxn*maxk)
@@ -190,12 +209,14 @@ for (n in 2:maxn) {
   
 }
 
-
 #par(mfrow=c(2,1))
 
-hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=30,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
+# ----make Wakeley plots--------
+# NOTE: the "theta" command in the hist3D function is to define view angles and it is not related to the theta defined by us as mutation rate #
 
-hist3D(x=seq(0,1,length.out=nrow(PSKv2)),y=seq(0,1,length.out=ncol(PSKv2)),PSKv2,col=NULL,border="black",theta=30,phi=30,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
+hist3D(x=seq(0,1,length.out=nrow(PSKv)), y=seq(0,1,length.out=ncol(PSKv)), PSKv, col=NULL, border="black", theta=30,  phi=50,       xlab="k", ylab="n", zlab="P{S=k}", alpha=0.35)
+
+hist3D(x=seq(0,1,length.out=nrow(PSKv2)),y=seq(0,1,length.out=ncol(PSKv2)),PSKv2,col=NULL,border="black",theta=30,phi=50,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
 
 #par(mfrow=c(1,1))
 
@@ -203,9 +224,12 @@ hist3D(x=seq(0,1,length.out=nrow(PSKv2)),y=seq(0,1,length.out=ncol(PSKv2)),PSKv2
 
 **Figure 2.** Probability surface of observing a number of segregating sites *k* for a given sample size *n* when $\theta$ is set. In (a), $\theta$ = 2; in (b), $\theta$ = 10.
 
+For each of the three populations with theta equal to 2, 10 or 20, and with a range of sampling sizes from 1 to 50, we applied Ewens [-@Ewens1972] formula to estimate the expected number of haplotypes (and the variance) for each sampling size. We tried higher samping sizes but our computation of Ewens's formula failed for sampling sizes larger than 60 and exhibit a weird behaviour. 
+We then compared the observed number of segregating sites in each sample with the expected number of segregating sites expected using Wakeley's formula for each sampling size and estimated the "observed" sampling size in our sample. The accuracy of the method was calculated as the difference between the "real" sampling size - the one from our simulations - and the number of individuals for the sample estimated using Wakeley's method.
+
 # Results 
 
-The summary statistics of the simulated population data are presented in Table 1. As expected, the haplotype diversity, number of haplotypes and number of segregating sites are higher as $\theta$ increases. 
+The summary statistics of the simulated population data are presented in Table 1, the R code used to performed the simulations and estimate the summary statistics is presented in Appendix S1. As expected, the haplotype diversity, number of haplotypes and number of segregating sites are higher as $\theta$ increases. 
 
 ```{r Table 1 with info on simulated populations, warnings=F,message=FALSE, echo=FALSE,results='hide'}
 #install.packages("gap")
@@ -276,7 +300,7 @@ tajima<-c(Taj.t2ng,Taj.t10ng,Taj.t20ng)
 
 # summary table
 thetas<-c(2,10,20)
-pops<-c("Population 2","Population 4","Population 6")
+pops<-c("Population 1","Population 2","Population 3")
 #growth<-c("yes","no","yes","no","yes","no")
 newhap<-round(hapDiv,2)
 newtaj<-round(tajima,2)
@@ -311,7 +335,8 @@ droplevels(gammaData) -> gammaData
 # calculating the difference between "real" n and max gamma.
 gammaData$samplingSize-gammaData$Max.Gamma.value -> gammaData$dif
 
-ggplot(gammaData, aes(x=samplingSize, y=dif,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)
+# Figure 3
+ggplot(gammaData, aes(x=samplingSize, y=dif,color=Theta))+ theme_bw() + geom_point(position = "jitter", aes(alpha=0.7))+ geom_hline(yintercept = 0) + scale_alpha(guide = 'none')
 ```
 **Figure 3.** Difference between the simulated sampling size and the sampling size for the sample predicted using the gamma distribution method. The abline at zero shows the ideal situation with the estimation equal to the simulated sampling size.
 
@@ -463,7 +488,9 @@ Idea brought about by extended problem-solving session with J. Drake and colleag
 # Figure captions
 
 
-# Supplementary material
+# Supporting information 
+
+__Appendix S1.__R code used to perform simulations and to estimate genetic diversity indexes. *NOTE: we need to finish the edits to this appendix, it is just a start*
 
 ```{r Supp Fig 1 gamma distribution plots,message=FALSE, echo=FALSE}
 setwd("~/GitHub/QuBar")

@@ -1,17 +1,16 @@
 ---
-title: "Doing Simulations"
-author: "Paula Pappalardo"
-date: "Wednesday, April 22, 2015"
+title: "Appendix 1"
+author: "John Wares & Paula Pappalardo"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
 output: pdf_document
+bibliography: QuBar_References_Sep2015.bib
 ---
 
-# Running simulations
+# R code to simulate populations and estimate genetic diversity parameters
 
-After the first trials, I realized the best method is to call "ms" from R, read that from *gap* and save the file to read it also with *PopGenome*. With *gap* we are able to estimate number of haplotypes. With *PopGenome* we are able to estimate haplotype diversity and also Tajima's D for the cases that we want to simulate "real" populations.
+We simulated populations evolving under the coalescent using Hudson's *ms* software [@Hudson2002]. We called the *ms* program using the *gap* [@gap2015] package in R [@RCoreTeam2015]. We used the package *PopGenome* to estimate haplotype diversity and also Tajima's D for the cases that we want to simulate "real" populations.
 
-We are going to simulate six populations of 1000 individuals, with theta equal to 2,10 and 20, and growth rate to have have 3 populations with "good" Tajima's D.
-
-For these six populations we are going to calculate the haplotype diversity and the Tajima's D (to check).
+We are going to simulate six populations of 1000 individuals, with *theta* equal to two, ten and twenty, and growth rate to have have 3 populations with "good" Tajima's D.
 
 From each of the populations we are going to sample without replacement "field samples" of 2,4,8,16,32,64 and 128 individuals. That way we know the real n. Using the number of haplotypes and the number of segregating sites of the "field samples" we are going to do our best to back calculate the number of individuals in that sample, using as prior information the haplotype diversity of the original population (n=1000).
 
@@ -19,7 +18,7 @@ The only thing that we need to keep from each "field sample" is the number of ha
 
 NOTE: one thing to have in mind is that we are not controlling for sequence length since there are no sequences in the ms output and we are just seing the segregating sites. That's why the sequence length that is usually visibly with the summary stats in PopGenome is zero when we are reading the ms output file. It shouldn't matter for the things we discussed.
 
-Let's do it! :)
+## Simulating source populations
 
 ```{r simulating source populations, results='asis',echo=FALSE}
 library(gap)
@@ -110,7 +109,7 @@ kable(sumTable)
 
 Now that we have our 6 populations and we have H and Tajima's D for those, we need to take our "field samples". For that, we are going to use the same pop generated above and read those with gap. Then, using the matrix of the variables sites for the 1000 individuals we are going to take random samples. We are going to use sample sizes from 2 to 128 in a log2 scale (2,4,8,16,32,)
 
-# Taking "field samples"
+## Taking "field samples"
 
 ```{r taking field samples}
 library(gap)
@@ -165,7 +164,7 @@ for (i in 1:length(pop)){
 
 The object **populations** has 6 components (one for each population), each one include 7 lists (one for each sampling size), and within each of the sampling sizes we have a list with the 100 matrix sampled.
 
-# Calculating haplotypes 
+## Calculating haplotypes 
 
 Now we are going to calculate number of  haplotypes and number of segregating sites for each of the replicates in each of the samples in each of the 6 populations. The loops takes a while to be able to do it for all the replicates.
 
@@ -226,7 +225,7 @@ levels(numHaps$samplingSize)<-c("2","4","8","16","32","64","128")
 
 Now we have the dataframe "numberHaplotypes" with the number of haplotypes for each replicate, for each population, and we don't need to run the chunk everytime.
 
-# Calculating segregating sites
+## Calculating segregating sites
 
 We are going to do a similar procedure to estimate the number of segregating sites. We first created a function to estimate the number of segregating sites from the gametes matrix provided by the MS simulation. And the we apply that looping over our samples.
 

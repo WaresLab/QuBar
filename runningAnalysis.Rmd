@@ -14,7 +14,7 @@ Now we have 100 replicates of each sample size, for each population, and we want
 # Number of samples, from a log2 distribution, it is the same for all populations
 numsamp<-c(2,4,8,16,32,64,128) 
 
-# Haplotype diversity for each of the four simulated populations of 1000 individuals
+# Haplotype diversity for each of the six simulated populations of 1000 individuals
 hapdiv<-c(0.5504204, 0.3377538, 0.8915536, 0.9258679,0.7627047, 0.9565626)
 
 # The number of haplotypes for each replicate is now in a dataframe
@@ -49,10 +49,79 @@ for(i in 1:nrow(hapnum)){
   }
 
 # save result so we don't need to rerun----
-write.csv(hapnum,"gammaData_13Jul.csv")
+#write.csv(hapnum,"gammaData_13Jul.csv")
 ```
 
 All the gamma data was saved in the "gammaData.csv" file, and now we can directly call that file from our QuBar ms file to do the plots.
+
+```{r more gamma plos}
+library(ggplot2)
+# http://www.stat.berkeley.edu/~s133/factors.html
+# load data with number of haplotypes
+hapnum<-read.csv("numberHaplotypes.csv",header=T)
+hapnum$X<-NULL
+
+# Haplotype diversity for each of the six simulated populations of 1000 individuals
+hapdiv<-c(0.5504204, 0.3377538, 0.8915536, 0.9258679,0.7627047, 0.9565626)
+
+# add the column of haplotype diversity for each population
+for(i in 1:6){
+hapnum$hap.diversity[hapnum$Pop == i] <- hapdiv[i] 
+}
+
+# to check our loop, subset that
+growth <- which(hapnum$Growth == "yes")
+hapnum.test <- hapnum[-growth,]
+droplevels(hapnum.test) -> hapnum.test
+
+df.list <- list()
+for(i in 1:nrow(hapnum.test)){
+  print(paste("working in row number",i))
+    mydf<- data.frame(theta=NA,growth=NA,n=NA,hap.num=NA,p=rep(NA,500)) 
+      x=1
+      cdf=0
+      indprob=0
+      array<-NULL
+    while (cdf<0.99) {
+      cdfprev<-cdf
+      cdf<-pgamma(x,scale=hapnum.test$hap.diversity[i],shape=hapnum.test$n.haplotypes[i]) 
+      indprob<-cdf-cdfprev
+      happrob<-hapnum.test$samplingSize[i]+(x-1)
+      array<-c(array,happrob)
+      array<-c(array,cdf)
+      array<-c(array,indprob)
+      x=x+1
+      }
+    probs<-t(matrix(array,nrow=3))
+    
+    # fill dataframe
+    for (j in 1:nrow(probs)){
+    mydf$theta[j] <- as.character(hapnum.test$Theta[i])
+    mydf$growth[j] <- as.character(hapnum.test$Growth[i])
+    mydf$p[j] <- probs[j,3]
+    mydf$n[j] <- probs[j,1]
+    mydf$samplingSize[j] <- hapnum.test$samplingSize[i]
+    mydf$hap.num[j] <- hapnum.test$n.haplotypes[i]
+        }
+  mydf -> df.list[[i]]  
+  }
+
+mydata1 <- do.call("rbind", df.list)
+mydata2 <- mydata1[complete.cases(mydata1$n),]
+
+
+as.factor(mydata2$theta) -> mydata2$theta.f
+as.factor(mydata2$samplingSize) -> mydata2$samplingSize.f
+mydata2$growth <- NULL # we don't need this colum
+
+# make plots
+
+ggplot(mydata2, aes(x=n, y=p))+ geom_point()+theme_bw() + facet_grid(theta.f~samplingSize.f)
+
+# to have the plot with free scales
+ggplot(mydata2, aes(x=n, y=p))+ geom_point()+theme_bw() + facet_grid(theta.f~samplingSize.f,scales="free")
+```
+
 
 # Using theta and segregating sites (Wakeley)
 

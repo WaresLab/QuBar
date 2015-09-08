@@ -6,7 +6,9 @@ output: pdf_document
 bibliography: QuBar_References_Sep2015.bib
 ---
 ```{r set working directory,echo=FALSE}
-setwd("~/GitHub/QuBar")
+#setwd("~/GitHub/QuBar")
+#Paula we must toggle between our different paths to QuBar
+setwd("~/Documents/GitHub/QuBar")
 ```
 # Abstract (200 words maximum)
 
@@ -20,7 +22,7 @@ Here, we consider whether the same principle could be used for improving the eff
 
 The most apparent advances have been in surveys of microbial and viral diversity. Next-generation sequencing has permitted the now-commonplace exploration of fungal, bacterial, and viral diversity by generating $10^5$ - $10^7$ sequence reads per sample and using barcoding approaches (match of sequence to known taxonomic samples for that genomic region) to identify the taxa present and their relative abundance. While there is no doubt that this has transformed our understanding of functional ecosystem processes and microbial ecology at this scale [@Nguyen14; @Turn09; @Desnues08], there are definite limitations. For example, some taxa (e.g. Archaea) may not be as readily amplified using the same ribosomal 16S "bacteria" primers, and variation in amplification efficiency certainly exists within the Eubacteria [@Acinas05]. Additionally, it is known that some bacterial genomes harbor more than one copy of this canonical locus [@Kembel12], thus muddling the relationship between read frequency and taxon frequency in a community.
 
-The same problems exist - and are exacerbated - when studying multicellular diversity. On top of the problems of potential contamination, detecting rare taxa and/or handling singleton evidence for rare taxa, there is potentially a large variance in individual sizes of organisms. This, along with amplification variation given mismatches in the primer region, means that the relative read abundance in a NGS data set will often wildly vary (by multiple orders of magnitude) from the abundance of actual tissue in the data set [@Nguyen14; @Piñol14; @Bohmann14]. Researchers tend to address this by analyzing data for simple incidence as well as relative read abundance, to identify patterns robust to either removal of information or inaccurate information [@Nguyen14].
+The same problems exist - and are exacerbated - when studying multicellular diversity. On top of the problems of potential contamination, detecting rare taxa and/or handling singleton evidence for rare taxa, there is potentially a large variance in individual sizes of organisms. This, along with amplification variation given mismatches in the primer region, means that the relative read abundance in a NGS data set will often wildly vary (by multiple orders of magnitude) from the abundance of actual tissue in the data set [@Nguyen14; @Pi?ol14; @Bohmann14]. Researchers tend to address this by analyzing data for simple incidence as well as relative read abundance, to identify patterns robust to either removal of information or inaccurate information [@Nguyen14].
 
 If, however, the goal is to understand the actual relative abundance of individuals of different species in a sample - with these species harboring variation at 'barcode' loci, and often being highly divergent from one another - our question is whether there is complementary information that can be extracted from these data that does not rely on the abundance of reads that are assigned to a taxon, but relies on our understanding of diversity within populations and how that can be measured. 
 
@@ -48,6 +50,8 @@ The approach here is identifying information that can comfortably be used as pri
 numhaps=10
 Hapdiv=0.7 #minvalue 0.001 if no information; this is PRIOR information
 ####################################
+
+library(plot3D)
 
 x=1
 cdf=0
@@ -83,7 +87,8 @@ hist3D(x=seq(0,1,length.out=nrow(probs)),y=seq(0,1,length.out=ncol(probs)), prob
 ```
 
 ```{r}
-PSKv[k,n]<-PSKv[k,n]+PSK
+#PSKv[k,n]<-PSKv[k,n]+PSK
+# this is orphaned now? won't knit for me? so commented out...
 ```
 
 

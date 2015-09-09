@@ -35,16 +35,24 @@ library(knitr)
 # Simulating our source populations
 theta2Growth <- system("ms 1000 1 -t 2 -G 10", intern=TRUE)
 theta2NoGrowth <- system("ms 1000 1 -t 2", intern=TRUE)
+theta5Growth <- system("ms 1000 1 -t 5 -G 10", intern=TRUE)
+theta5NoGrowth <- system("ms 1000 1 -t 5", intern=TRUE)
 theta10Growth <- system("ms 1000 1 -t 10 -G 10", intern=TRUE)
 theta10NoGrowth <- system("ms 1000 1 -t 10", intern=TRUE)
-theta20Growth <- system("ms 1000 1 -t 10 -G 20", intern=TRUE)
+theta15Growth <- system("ms 1000 1 -t 15 -G 10", intern=TRUE)
+theta15NoGrowth <- system("ms 1000 1 -t 15", intern=TRUE)
+theta20Growth <- system("ms 1000 1 -t 20 -G 10", intern=TRUE)
 theta20NoGrowth <- system("ms 1000 1 -t 20", intern=TRUE)
 
 # we need to write the outputs so we can read them using PopGenome
 #write(theta2Growth,"theta2Growth.out")
 #write(theta2NoGrowth,"theta2NoGrowth.out")
+#write(theta5Growth,"theta5Growth.out")
+#write(theta5NoGrowth,"theta5NoGrowth.out")
 #write(theta10Growth,"theta10Growth.out")
 #write(theta10NoGrowth,"theta10NoGrowth.out")
+#write(theta15Growth,"theta15Growth.out")
+#write(theta15NoGrowth,"theta15NoGrowth.out")
 #write(theta20Growth,"theta20Growth.out")
 #write(theta20NoGrowth,"theta20NoGrowth.out")
 
@@ -52,49 +60,69 @@ theta20NoGrowth <- system("ms 1000 1 -t 20", intern=TRUE)
 # reading with PopGenome to calculate H and Tajima's D for each of the four populations
 readMS("theta2Growth.out")->popgen.t2g #gives a "genome" object
 readMS("theta2NoGrowth.out")->popgen.t2ng
+readMS("theta5Growth.out")->popgen.t5g 
+readMS("theta5NoGrowth.out")->popgen.t5ng
 readMS("theta10Growth.out")->popgen.t10g
 readMS("theta10NoGrowth.out")->popgen.t10ng
+readMS("theta15Growth.out")->popgen.t15g
+readMS("theta15NoGrowth.out")->popgen.t15ng
 readMS("theta20Growth.out")->popgen.t20g
 readMS("theta20NoGrowth.out")->popgen.t20ng
 
 # run F_ST stats and check haplotype diversity
 F_ST.stats(popgen.t2g)->popgen.t2g
 F_ST.stats(popgen.t2ng)->popgen.t2ng
+F_ST.stats(popgen.t5g)->popgen.t5g
+F_ST.stats(popgen.t5ng)->popgen.t5ng
 F_ST.stats(popgen.t10g)->popgen.t10g
 F_ST.stats(popgen.t10ng)->popgen.t10ng
+F_ST.stats(popgen.t15g)->popgen.t15g
+F_ST.stats(popgen.t15ng)->popgen.t15ng
 F_ST.stats(popgen.t20g)->popgen.t20g
 F_ST.stats(popgen.t20ng)->popgen.t20ng
 
 # get haplotype diversity for each source population
 unlist(popgen.t2g@region.stats@haplotype.diversity)->hapDiv.t2g
 unlist(popgen.t2ng@region.stats@haplotype.diversity)->hapDiv.t2ng
+unlist(popgen.t5g@region.stats@haplotype.diversity)->hapDiv.t5g
+unlist(popgen.t5ng@region.stats@haplotype.diversity)->hapDiv.t5ng
 unlist(popgen.t10g@region.stats@haplotype.diversity)->hapDiv.t10g
 unlist(popgen.t10ng@region.stats@haplotype.diversity)->hapDiv.t10ng
+unlist(popgen.t15g@region.stats@haplotype.diversity)->hapDiv.t15g
+unlist(popgen.t15ng@region.stats@haplotype.diversity)->hapDiv.t15ng
 unlist(popgen.t20g@region.stats@haplotype.diversity)->hapDiv.t20g
 unlist(popgen.t20ng@region.stats@haplotype.diversity)->hapDiv.t20ng
 
 # make a vector with the haplotype diversities for each population
-hapDiv<-c(hapDiv.t2g,hapDiv.t2ng,hapDiv.t10g,hapDiv.t10ng,hapDiv.t20g,hapDiv.t20ng)
+hapDiv<-c(hapDiv.t2g,hapDiv.t2ng,hapDiv.t5g,hapDiv.t5ng,hapDiv.t10g,hapDiv.t10ng,hapDiv.t15g,hapDiv.t15ng,hapDiv.t20g,hapDiv.t20ng)
 hapDiv
 
 # run neutrality.stats to check that Tajima's D is negative and looks real
 neutrality.stats(popgen.t2g)->popgen.t2g
 neutrality.stats(popgen.t2ng)->popgen.t2ng
+neutrality.stats(popgen.t5g)->popgen.t5g
+neutrality.stats(popgen.t5ng)->popgen.t5ng
 neutrality.stats(popgen.t10g)->popgen.t10g
 neutrality.stats(popgen.t10ng)->popgen.t10ng
+neutrality.stats(popgen.t15g)->popgen.t15g
+neutrality.stats(popgen.t15ng)->popgen.t15ng
 neutrality.stats(popgen.t20g)->popgen.t20g
 neutrality.stats(popgen.t20ng)->popgen.t20ng
 
 
-Taj.t2g<-popgen.t10g@Tajima.D
-Taj.t2ng<-popgen.t10ng@Tajima.D
+Taj.t2g<-popgen.t2g@Tajima.D
+Taj.t2ng<-popgen.t2ng@Tajima.D
+Taj.t5g<-popgen.t5g@Tajima.D
+Taj.t5ng<-popgen.t5ng@Tajima.D
 Taj.t10g<-popgen.t10g@Tajima.D
 Taj.t10ng<-popgen.t10ng@Tajima.D
+Taj.t15g<-popgen.t15g@Tajima.D
+Taj.t15ng<-popgen.t15ng@Tajima.D
 Taj.t20g<-popgen.t20g@Tajima.D
 Taj.t20ng<-popgen.t20ng@Tajima.D
 
 # make a vector with the Tajima's D value for each population
-tajima<-c(Taj.t2g,Taj.t2ng,Taj.t10g,Taj.t10ng,Taj.t20g,Taj.t20ng)
+tajima<-c(Taj.t2g,Taj.t2ng,Taj.t5g,Taj.t5ng,Taj.t10g,Taj.t10ng,Taj.t15g,Taj.t15ng,Taj.t20g,Taj.t20ng)
 tajima
 
 # make a summary table

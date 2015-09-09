@@ -6,9 +6,9 @@ output: pdf_document
 bibliography: QuBar_References_Sep2015.bib
 ---
 ```{r set working directory,echo=FALSE}
-#setwd("~/GitHub/QuBar")
-#Paula we must toggle between our different paths to QuBar
-setwd("~/Desktop/QuBar")
+# We can use this trick to avoid the issue with the working directory, after you set the working directory with "To Source File Location" (if that is the same in macs)
+mydir <- getwd()
+setwd(mydir)
 ```
 # Abstract (200 words maximum)
 
@@ -62,7 +62,9 @@ while (cdf<0.95) {
 #  cdf<-pgamma(x,1,Hapdiv) 
 #  if use 1 as shape parameter keeping shape parameter constant doesn't account for increased variance (?) as numhaps go up, 
 #  e.g. error may be higher as you observe more...once it is working run it by somebody mathier.
-  cdf<-pgamma(x,shape=(1/Hapdiv),rate=(1/numhaps)) #might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
+  cdf<-pgamma(x,shape=(1/Hapdiv),rate=(1/numhaps)) 
+# pgamma is the cumulative density function in R
+#might be that numhaps is actually the shape parameter!!!! or: something else...non-gamma.
   indprob<-cdf-cdfprev
   
   happrob<-numhaps+(x-1)
@@ -236,68 +238,62 @@ library(gap)
 library(PopGenome)
 library(knitr)
 
-# reading the simulated populations files with PopGenome----
-#readMS("theta2Growth.out")->popgen.t2g #gives a "genome" object
+# reading the simulated populations files with PopGenome (returns a "genome" object)
 readMS("theta2NoGrowth.out")->popgen.t2ng
-#readMS("theta10Growth.out")->popgen.t10g
+readMS("theta5NoGrowth.out")->popgen.t5ng
 readMS("theta10NoGrowth.out")->popgen.t10ng
-#readMS("theta20Growth.out")->popgen.t20g
+readMS("theta15NoGrowth.out")->popgen.t15ng
 readMS("theta20NoGrowth.out")->popgen.t20ng
 
 # number of segregating sites----
-#varsites.t2g<-popgen.t2g@n.biallelic.sites
 varsites.t2ng<-popgen.t2ng@n.biallelic.sites
-#varsites.t10g<-popgen.t10g@n.biallelic.sites
+varsites.t5ng<-popgen.t5ng@n.biallelic.sites
 varsites.t10ng<-popgen.t10ng@n.biallelic.sites
-#varsites.t20g<-popgen.t20g@n.biallelic.sites
+varsites.t15ng<-popgen.t15ng@n.biallelic.sites
 varsites.t20ng<-popgen.t20ng@n.biallelic.sites
-varsites<-c(varsites.t2ng,varsites.t10ng,varsites.t20ng)
+
+varsites<-c(varsites.t2ng,varsites.t5ng,varsites.t10ng,varsites.t15ng,varsites.t20ng)
 
 # run F_ST stats and check haplotype diversity
-#F_ST.stats(popgen.t2g)->popgen.t2g
 F_ST.stats(popgen.t2ng)->popgen.t2ng
-#F_ST.stats(popgen.t10g)->popgen.t10g
+F_ST.stats(popgen.t5ng)->popgen.t5ng
 F_ST.stats(popgen.t10ng)->popgen.t10ng
-#F_ST.stats(popgen.t20g)->popgen.t20g
+F_ST.stats(popgen.t15ng)->popgen.t15ng
 F_ST.stats(popgen.t20ng)->popgen.t20ng
 
 # get haplotype diversity for each source population----
-#unlist(popgen.t2g@region.stats@haplotype.diversity)->hapDiv.t2g
 unlist(popgen.t2ng@region.stats@haplotype.diversity)->hapDiv.t2ng
-#unlist(popgen.t10g@region.stats@haplotype.diversity)->hapDiv.t10g
+unlist(popgen.t5ng@region.stats@haplotype.diversity)->hapDiv.t5ng
 unlist(popgen.t10ng@region.stats@haplotype.diversity)->hapDiv.t10ng
-#unlist(popgen.t20g@region.stats@haplotype.diversity)->hapDiv.t20g
+unlist(popgen.t15ng@region.stats@haplotype.diversity)->hapDiv.t15ng
 unlist(popgen.t20ng@region.stats@haplotype.diversity)->hapDiv.t20ng
-hapDiv<-c(hapDiv.t2ng,hapDiv.t10ng,hapDiv.t20ng)
+hapDiv<-c(hapDiv.t2ng,hapDiv.t5ng,hapDiv.t10ng,hapDiv.t15ng,hapDiv.t20ng)
 
 # get haplotype counts----
-#length(unlist(popgen.t2g@region.stats@haplotype.counts)/1000)->hapCount.t2g
 length(unlist(popgen.t2ng@region.stats@haplotype.counts)/1000)->hapCount.t2ng
-#length(unlist(popgen.t10g@region.stats@haplotype.counts)/1000)->hapCount.t10g
+length(unlist(popgen.t5ng@region.stats@haplotype.counts)/1000)->hapCount.t5ng
 length(unlist(popgen.t10ng@region.stats@haplotype.counts)/1000)->hapCount.t10ng
-#length(unlist(popgen.t20g@region.stats@haplotype.counts)/1000)->hapCount.t20g
+length(unlist(popgen.t15ng@region.stats@haplotype.counts)/1000)->hapCount.t15ng
 length(unlist(popgen.t20ng@region.stats@haplotype.counts)/1000)->hapCount.t20ng
-hapcounts<-c(hapCount.t2ng,hapCount.t10ng,hapCount.t20ng)
+hapcounts<-c(hapCount.t2ng,hapCount.t5ng,hapCount.t10ng,hapCount.t15ng,hapCount.t20ng)
 
 # run neutrality.stats to check that Tajima's D is negative and looks real----
-#neutrality.stats(popgen.t2g)->popgen.t2g
 neutrality.stats(popgen.t2ng)->popgen.t2ng
-#neutrality.stats(popgen.t10g)->popgen.t10g
+neutrality.stats(popgen.t5ng)->popgen.t5ng
 neutrality.stats(popgen.t10ng)->popgen.t10ng
-#neutrality.stats(popgen.t20g)->popgen.t20g
+neutrality.stats(popgen.t15ng)->popgen.t15ng
 neutrality.stats(popgen.t20ng)->popgen.t20ng
 
-#Taj.t2g<-popgen.t10g@Tajima.D
-Taj.t2ng<-popgen.t10ng@Tajima.D
-#Taj.t10g<-popgen.t10g@Tajima.D
+Taj.t2ng<-popgen.t2ng@Tajima.D
+Taj.t5ng<-popgen.t5ng@Tajima.D
 Taj.t10ng<-popgen.t10ng@Tajima.D
-#Taj.t20g<-popgen.t20g@Tajima.D
+Taj.t15ng<-popgen.t15ng@Tajima.D
 Taj.t20ng<-popgen.t20ng@Tajima.D
-tajima<-c(Taj.t2ng,Taj.t10ng,Taj.t20ng)
+tajima<-c(Taj.t2ng,Taj.t5ng,Taj.t10ng,Taj.t15ng,Taj.t20ng)
 
 # summary table
-thetas<-c(2,10,20)
-pops<-c("Population 1","Population 2","Population 3")
+thetas<-c(2,5,10,15,20)
+pops<-c("Population 1","Population 2","Population 3","Population 4","Population 5")
 #growth<-c("yes","no","yes","no","yes","no")
 newhap<-round(hapDiv,2)
 newtaj<-round(tajima,2)

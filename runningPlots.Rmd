@@ -260,4 +260,35 @@ ggplot(segsites1, aes(n.seg.sites)) + theme_bw()+geom_histogram()+facet_wrap(The
 # with lattice
 with(segsites1,histogram(~n.seg.sites|Theta*samplingSize.f))
 ```
+# Maybe supplementary figures
 
+
+
+```{r Supp Fig X1 gamma distribution plots,message=FALSE, echo=FALSE}
+setwd("~/GitHub/QuBar")
+
+#install.packages("ggplot2")
+library(ggplot2)
+
+# now we have the dataframe "gammaData_13jul" with all the updated gamma values 
+fullgammaData<-read.csv("gammaData_13Jul.csv",header=T) 
+#JOHN: this one is the updated file after your new twist on gamma, I deleted the other one
+
+# subsetting data with growth
+gammaData<-subset(fullgammaData,fullgammaData$Growth=="no")
+droplevels(gammaData)->gammaData
+
+# making factors for the ggplot2 plots
+factor(gammaData$samplingSize,levels=c(2,4,8,16,32,64,128))->gammaData$samplingSizeF
+
+#JOHN, trying something different below
+fig3<-ggplot(gammaData, aes(x = n.haplotypes,y=Max.Gamma.value,color=samplingSizeF,size=1)) + theme_bw()+geom_point()+facet_grid(Theta~samplingSizeF) 
+fig3 + geom_hline(aes(yintercept = 2), subset(gammaData,samplingSize==2))+ geom_hline(aes(yintercept = 4), subset(gammaData,samplingSize==4))+ geom_hline(aes(yintercept = 8), subset(gammaData,samplingSize==8))+ geom_hline(aes(yintercept = 16), subset(gammaData,samplingSize==16))+ geom_hline(aes(yintercept = 32), subset(gammaData,samplingSize==32))+ geom_hline(aes(yintercept = 64), subset(gammaData,samplingSize==64))+ geom_hline(aes(yintercept = 128), subset(gammaData,samplingSize==128))+theme(panel.grid.major = element_blank())+ scale_size(guide = 'none')
+
+# to put different ablines in different facets we need to make a dataset, and this would be efficient but the order is all messed up so I had to figure out a not so efficient but working way ;)
+#hline.data <- data.frame(z = c(2,4,8,16,32,64,128),samplingSizeF = c(2,4,8,16,32,64,128))
+#fig3 + geom_hline(aes(yintercept = z), hline.data)
+                                                                                                                                                                                  
+```
+
+**Supplementary Figure X1.** Predictions of sampling size using the gamma distribution method for each population (with thetas 2,10 and 20) against the observed number of haplotypes in the sample. The ablines in each panel represent the "real" sampling size of that sample. 

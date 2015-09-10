@@ -8,136 +8,104 @@ bibliography: QuBar_References_Sep2015.bib
 
 # R code to simulate populations and estimate genetic diversity parameters
 
-We simulated populations evolving under the coalescent using Hudson's *ms* software [@Hudson2002]. We called the *ms* program using the *gap* [@gap2015] package in R [@RCoreTeam2015]. We used the package *PopGenome* to estimate haplotype diversity and also Tajima's D for the cases that we want to simulate "real" populations.
+We simulated populations evolving under the coalescent using Hudson's *ms* software [@Hudson2002]. We called the *ms* program using the *gap* [@gap2015] package in R [@RCoreTeam2015]. We used the package *PopGenome* to estimate haplotype diversity and check Tajima'ss.
 
-We are going to simulate six populations of 1000 individuals, with *theta* equal to two, ten and twenty, and growth rate to have have 3 populations with "good" Tajima's D.
+We simulated three populations of 1000 individuals, with *theta* equal to two, ten and twenty. From each of the populations we sampled without replacement to simulate our "field samples" of known sampling size (2,4,8,16,32,64 and 128 individuals), we repeated the sampling 100 times to have replicates within each sampling size. For each sample we estimated the number of haplotypes and the number of segregating sites. 
 
-From each of the populations we are going to sample without replacement "field samples" of 2,4,8,16,32,64 and 128 individuals. That way we know the real n. Using the number of haplotypes and the number of segregating sites of the "field samples" we are going to do our best to back calculate the number of individuals in that sample, using as prior information the haplotype diversity of the original population (n=1000).
-
-The only thing that we need to keep from each "field sample" is the number of haplotypes and number of segregating sites. We are going to save that in a dataframe so we don't need to run the code each time.
-
-NOTE: one thing to have in mind is that we are not controlling for sequence length since there are no sequences in the ms output and we are just seing the segregating sites. That's why the sequence length that is usually visibly with the summary stats in PopGenome is zero when we are reading the ms output file. It shouldn't matter for the things we discussed.
+NOTE: the original R files are available upon request from the authors.
 
 ## Simulating source populations
 
-```{r simulating source populations, results='asis',echo=FALSE}
+Below the code used to simulate populations and estimate summary statistics for each of the populations.
+
+```{r simulating source populations, eval=FALSE,results='asis',echo=T,comments=""}
 library(gap)
 library(PopGenome)
 library(knitr)
 
 # -----gap----
-# we can call ms from R without having to use the console and read the object directly with the gap function
-
-# with -G x we set a population growth, a negative value of x means that the population was larger in the past that at present. 
-# populations set with growth may represent reality better because they have a tendency for a negative Tajima's D, which appears to be the norm for marine invertebrates
+# we call ms from R 
+# with -t we set the mutation rate theta
+# we simulated 1 population of 1000 individuals
 
 # Simulating our source populations
-theta2Growth <- system("ms 1000 1 -t 2 -G 10", intern=TRUE)
 theta2NoGrowth <- system("ms 1000 1 -t 2", intern=TRUE)
-theta10Growth <- system("ms 1000 1 -t 10 -G 10", intern=TRUE)
 theta10NoGrowth <- system("ms 1000 1 -t 10", intern=TRUE)
-theta20Growth <- system("ms 1000 1 -t 10 -G 20", intern=TRUE)
 theta20NoGrowth <- system("ms 1000 1 -t 20", intern=TRUE)
 
-# we need to write the outputs so we can read them using PopGenome
-#write(theta2Growth,"theta2Growth.out")
+# ONLY ONCE: write the outputs so we can read them using PopGenome
+
 #write(theta2NoGrowth,"theta2NoGrowth.out")
-#write(theta10Growth,"theta10Growth.out")
 #write(theta10NoGrowth,"theta10NoGrowth.out")
-#write(theta20Growth,"theta20Growth.out")
 #write(theta20NoGrowth,"theta20NoGrowth.out")
 
-
 # reading with PopGenome to calculate H and Tajima's D for each of the four populations
-readMS("theta2Growth.out")->popgen.t2g #gives a "genome" object
 readMS("theta2NoGrowth.out")->popgen.t2ng
-readMS("theta10Growth.out")->popgen.t10g
 readMS("theta10NoGrowth.out")->popgen.t10ng
-readMS("theta20Growth.out")->popgen.t20g
 readMS("theta20NoGrowth.out")->popgen.t20ng
 
 # run F_ST stats and check haplotype diversity
-F_ST.stats(popgen.t2g)->popgen.t2g
 F_ST.stats(popgen.t2ng)->popgen.t2ng
-F_ST.stats(popgen.t10g)->popgen.t10g
 F_ST.stats(popgen.t10ng)->popgen.t10ng
-F_ST.stats(popgen.t20g)->popgen.t20g
 F_ST.stats(popgen.t20ng)->popgen.t20ng
 
 # get haplotype diversity for each source population
-unlist(popgen.t2g@region.stats@haplotype.diversity)->hapDiv.t2g
 unlist(popgen.t2ng@region.stats@haplotype.diversity)->hapDiv.t2ng
-unlist(popgen.t10g@region.stats@haplotype.diversity)->hapDiv.t10g
 unlist(popgen.t10ng@region.stats@haplotype.diversity)->hapDiv.t10ng
-unlist(popgen.t20g@region.stats@haplotype.diversity)->hapDiv.t20g
 unlist(popgen.t20ng@region.stats@haplotype.diversity)->hapDiv.t20ng
 
 # make a vector with the haplotype diversities for each population
-hapDiv<-c(hapDiv.t2g,hapDiv.t2ng,hapDiv.t10g,hapDiv.t10ng,hapDiv.t20g,hapDiv.t20ng)
+hapDiv<-c(hapDiv.t2ng,hapDiv.t10ng,hapDiv.t20ng)
 hapDiv
 
-# run neutrality.stats to check that Tajima's D is negative and looks real
-neutrality.stats(popgen.t2g)->popgen.t2g
+# run neutrality.stats to check Tajima's D 
 neutrality.stats(popgen.t2ng)->popgen.t2ng
-neutrality.stats(popgen.t10g)->popgen.t10g
 neutrality.stats(popgen.t10ng)->popgen.t10ng
-neutrality.stats(popgen.t20g)->popgen.t20g
 neutrality.stats(popgen.t20ng)->popgen.t20ng
 
-
-Taj.t2g<-popgen.t10g@Tajima.D
 Taj.t2ng<-popgen.t10ng@Tajima.D
-Taj.t10g<-popgen.t10g@Tajima.D
 Taj.t10ng<-popgen.t10ng@Tajima.D
-Taj.t20g<-popgen.t20g@Tajima.D
 Taj.t20ng<-popgen.t20ng@Tajima.D
 
 # make a vector with the Tajima's D value for each population
-tajima<-c(Taj.t2g,Taj.t2ng,Taj.t10g,Taj.t10ng,Taj.t20g,Taj.t20ng)
+tajima<-c(Taj.t2ng,Taj.t10ng,Taj.t20ng)
 tajima
 
 # make a summary table
-thetas<-c(2,2,10,10,20,20)
-pops<-c("Population 1", "Population 2", "Population 3", "Population 4","Population 5","Population 6")
-growth<-c("yes","no","yes","no","yes","no")
+thetas<-c(2,10,,20)
+pops<-c("Population 1", "Population 2", "Population 3")
 newhap<-round(hapDiv,2)
 newtaj<-round(tajima,2)
-sumTable<-cbind(pops,thetas,growth,newhap,newtaj)
-colnames(sumTable)<-c("Population","Theta","Growth","Haplotype diversity","Tajima's D")
+sumTable<-cbind(pops,thetas,newhap,newtaj)
+colnames(sumTable)<-c("Population","Theta","Haplotype diversity","Tajima's D")
 kable(sumTable)
 ```
 
-Now that we have our 6 populations and we have H and Tajima's D for those, we need to take our "field samples". For that, we are going to use the same pop generated above and read those with gap. Then, using the matrix of the variables sites for the 1000 individuals we are going to take random samples. We are going to use sample sizes from 2 to 128 in a log2 scale (2,4,8,16,32,)
+Now that we have our 3 populations and we have H and Tajima's D for those, we need to take our "field samples". 
 
 ## Taking "field samples"
 
-```{r taking field samples}
+From the simulated populations we took "field samples" using the code below. Basically, we used the matrix of the variables sites for the 1000 individuals and took samples without replacement of 2,4,8,16,32,64 and 128 individuals. We repeated the sampling 100 times for each combination of sampling size and theta.
+
+```{r taking field samples, eval=FALSE,echo=T,comments=""}
 library(gap)
 library(PopGenome)
 
-# reading the ms output generated in the previous chunk with gap
-# this way works for reading the object from R, but it is not useful if we want to maintain the original same populations, because I was not able to make the "seeds" work
-#read.ms.output(theta2Growth,FALSE)->pop1
-#read.ms.output(theta2NoGrowth,FALSE)->pop2
-#read.ms.output(theta10Growth,FALSE)->pop3
-#read.ms.output(theta10NoGrowth,FALSE)->pop4
-
-# this way, we read the same files that were simulated only once, and the same that we read with PopGenome
-pop1 <- read.ms.output("theta2Growth.out",is.file=T) 
-pop2 <- read.ms.output("theta2NoGrowth.out",is.file=T) 
-pop3 <- read.ms.output("theta10Growth.out",is.file=T) 
-pop4 <- read.ms.output("theta10NoGrowth.out",is.file=T) 
-pop5 <- read.ms.output("theta20Growth.out",is.file=T) 
-pop6 <- read.ms.output("theta20NoGrowth.out",is.file=T) 
+# we read the files that were simulated only once
+pop1 <- read.ms.output("theta2NoGrowth.out",is.file=T) 
+pop2 <- read.ms.output("theta10NoGrowth.out",is.file=T) 
+pop3 <- read.ms.output("theta20NoGrowth.out",is.file=T) 
 
 # --------sampling from each population---------
-# vector with all the populations for loops or easy coding
-pop <- list(pop1,pop2,pop3,pop4,pop5,pop6)
+# vector with all the populations for loops 
+pop <- list(pop1,pop2,pop3)
 
 # vector with the sizes we want to sample
 popsizes <- c(2,4,8,16,32,64,128)
 
-# we extract the gametes matrix for each population, from there we take the samples, we put the matrix obtained in each "sample" in a list called "samples", and the result for each population in a list called "populations"
+# we extract the gametes matrix for each population
+# from there we sample and we put fill the list called "samples"
+# the result for each population in saved in a list called "populations"
 
 populations <- list() #empty list to put results
 set.seed(123) #set seed for random sampling
@@ -159,18 +127,17 @@ for (i in 1:length(pop)){
         replicates -> samples[[name]]
       }
   samples->populations[[namepop]]
-} # now in each of the 4 components of the list "populations", we have 7 list with each component corresponding to each sample size, and within each of this list we have 100 components corresponding to each replicate of the sampled matrix.
+} 
 ```
 
-The object **populations** has 6 components (one for each population), each one include 7 lists (one for each sampling size), and within each of the sampling sizes we have a list with the 100 matrix sampled.
+The object **populations** has 3 components (one for each population), each one include 7 lists (one for each sampling size), and within each of the sampling sizes we have a list with the 100 matrix sampled.
 
 ## Calculating haplotypes 
 
-Now we are going to calculate number of  haplotypes and number of segregating sites for each of the replicates in each of the samples in each of the 6 populations. The loops takes a while to be able to do it for all the replicates.
+Now we are going to calculate the number of  haplotypes and number of segregating sites for each of the replicates in each of the samples in each of the 3 populations. The loops may take a while depending the computer.
 
-```{r calculating haplotypes}
-# Now for each sample we need to calculate the segregating sites and number of haplotypes
-# the haplotype number can be extracted by doing unique() of the matrix
+```{r calculating haplotypes,eval=FALSE,echo=T,comments=""}
+# the haplotype number can be extracted by doing unique() of the gametes matrix
 hapResults <- list()
 for (i in 1:length(pop)){
   popnow <- populations[[i]]
@@ -186,20 +153,22 @@ for (i in 1:length(pop)){
     replicates -> samples[[namesample]]
     }
   samples -> hapResults[[namepop]]
-} # now hapResults is a list of vectors with the haplotypes number for each population, in each sample size
+}
+# now hapResults is a list of vectors 
+# with the haplotypes number for each population, in each sample size
 ```
 
 Since this process is really time consuming, we want to save our results in a dataframe.
 
-```{r making haplotypes dataframe}
-# we want to loop in "hapresults" and for each population extract the number of haplotypes and put all in the same dataframe
+```{r making haplotypes dataframe,eval=FALSE,echo=T,comments=""}
+# we want to loop in the vector "hapresults" 
+# and for each population extract the number of haplotypese
 
 library(reshape)
 
 # create dataframe to hold the data
-zerodata <- data.frame(Pop=NA,Theta=NA,growth=NA,variable=NA,value=NA)
-thetas <- c("two","two","ten","ten","twenty","twenty")
-growths <- c("yes","no","yes","no","yes","no")
+zerodata <- data.frame(Pop=NA,Theta=NA,variable=NA,value=NA)
+thetas <- c("two","ten","twenty")
 
 # loop through populations and rbind data
 for (i in 1:length(pop)){
@@ -207,31 +176,33 @@ for (i in 1:length(pop)){
   haps <- data.frame(do.call(rbind, pophaps))
   as.data.frame(t(haps)) -> datahaps
   datahaps$Theta <- thetas[i]
-  datahaps$growth <- growths[i]
   datahaps$Pop <- i
-  newdata <- melt(datahaps,id=c("Pop","Theta","growth"))
+  newdata <- melt(datahaps,id=c("Pop","Theta"))
   rbind(zerodata,newdata) -> zerodata
 }
 
 # organize and save data
 zerodata[complete.cases(zerodata$Pop),]->numHaps
 as.factor(numHaps$variable)->numHaps$variable
-names(numHaps)<-c("Pop","Theta","Growth","samplingSize","n.haplotypes")
+names(numHaps)<-c("Pop","Theta","samplingSize","n.haplotypes")
 levels(numHaps$samplingSize)<-c("2","4","8","16","32","64","128")
 
 # run only once
 #write.csv(numHaps,"numberHaplotypes.csv")
 ```
 
-Now we have the dataframe "numberHaplotypes" with the number of haplotypes for each replicate, for each population, and we don't need to run the chunk everytime.
+The final product is the .csv file with the dataframe "numberHaplotypes" that for each row has information on theta, sampling size and number of haplotypes.
 
 ## Calculating segregating sites
 
-We are going to do a similar procedure to estimate the number of segregating sites. We first created a function to estimate the number of segregating sites from the gametes matrix provided by the MS simulation. And the we apply that looping over our samples.
+We are going to do a similar procedure to estimate the number of segregating sites. We first created a function to estimate the number of segregating sites from the gametes matrix provided by the MS simulation. And then we applied the custome function (called "estimate.segSites") in a loop over our samples.
 
-```{r calculating segregating sites}
-# load function to estimate segregating sites, it works taking a matrix of gametes and returning a numeric value, the number of segregating sites.
+```{r calculating segregating sites,eval=FALSE,echo=T,comments=""}
+
+# define and load the function
 estimate.segSites <- function (myMatrix){
+  # this function takes a matrix of gametes from a MS simulation
+  # and returns a numeric value, the number of segregating sites
   answers <- rep(NA,(nrow(myMatrix)-1))
   sites <- rep(NA,ncol(myMatrix))
     for (j in 1:ncol(myMatrix)){
@@ -245,7 +216,7 @@ estimate.segSites <- function (myMatrix){
     return(segSites)
   }
 
-# to get segsites for each population we need to use our custome function in a loop
+# use the function in a loop to get segreating sites
 segResults <- list()
 for(i in 1:length(pop)){
   populations[[i]] -> popnow
@@ -258,19 +229,23 @@ for(i in 1:length(pop)){
     result -> samples[[namesample]]
     }
   samples -> segResults[[namepop]]
-}  # now segResults is a list of 4 lists (one for each population), within each of those list compose of a list of 7 vectors, one for each sample size, and with a length of 100, where each component is the segregating sites for the 100 replicates. 
+} 
+# now segResults is a list of 3 lists (one for each population)
+# within each there is a list of 7 vectors, one for each sample size
+# the vector length is 100, with each component of the vector
+# holding the number of segregating sites for that replicate. 
 ```
 
 To save our results in a dataframe:
 
-```{r making segSites dataframe}
-# we want to loop in "segResults" and for each population extract the number of segregating sites and put all in the same dataframe
+```{r making segSites dataframe,eval=FALSE,echo=T,comments=""}
+# we want to loop in "segResults" and for each population extract
+# the number of segregating sites and put all in the same dataframe
 library(reshape)
 
 # create dataframe to hold the data
-zerodata <- data.frame(Pop=NA,Theta=NA,growth=NA,variable=NA,value=NA)
-thetas <- c("two","two","ten","ten","twenty","twenty")
-growths <- c("yes","no","yes","no","yes","no")
+zerodata <- data.frame(Pop=NA,Theta=NA,variable=NA,value=NA)
+thetas <- c("two","ten","twenty")
 
 # loop through populations and rbind data
 for (i in 1:length(pop)){
@@ -278,21 +253,21 @@ for (i in 1:length(pop)){
   segs <- data.frame(do.call(rbind, popsegs))
   as.data.frame(t(segs)) -> dataseg
   dataseg$Theta <- thetas[i]
-  dataseg$growth <- growths[i]
   dataseg$Pop <- i
-  newdata <- melt(dataseg,id=c("Pop","Theta","growth"))
+  newdata <- melt(dataseg,id=c("Pop","Theta"))
   rbind(zerodata,newdata) -> zerodata
 }
 
 # organize and save data
 zerodata[complete.cases(zerodata$Pop),] -> numSegSites
 as.factor(numSegSites$variable) -> numSegSites$variable
-names(numSegSites) <- c("Pop","Theta","Growth","samplingSize","n.seg.sites")
+names(numSegSites) <- c("Pop","Theta","samplingSize","n.seg.sites")
 levels(numSegSites$samplingSize) <- c("2","4","8","16","32","64","128")
 
 # run only once
 #write.csv(numSegSites,"numberSegSites.csv")
 ```
 
-Now we have the dataframe "numberSegSites" with the number of segregating sites for each replicate, for each population, and we don't need to run the chunk everytime.
+The final product is the .csv file with the dataframe "numSegSites" that for each row has information on theta, sampling size and number of segregating sites.
 
+# References

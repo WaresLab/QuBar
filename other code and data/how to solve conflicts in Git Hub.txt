@@ -1,0 +1,39 @@
+Resolving a merge conflict from the command line
+This guide demonstrates how to resolve some common conflicts via the command line. You will need a text editor to resolve some of the conflicts.
+
+Creating an edit collision
+
+This is the most common type of conflict. It happens when two branches have changed the same part of the same file, and then those branches are merged together. For example, if you make a change on a particular line in a file, and your colleague working in a repository makes a change on the exact same line, a merge conflict occurs. Git has trouble understanding which change should be used, so it asks you to help out.
+
+When this sort of conflict occurs, Git writes a special block into the file that contains the contents of both versions where the conflict occurred. To complete this type of merge, use your text editor to resolve the conflict, then add the file and commit it to complete the merge.
+
+For this example, suppose you're working in branch-a, and have made some changes to a file called planets.md. Meanwhile, your friend on the other side of the world has made a different change to the same line. If you try to merge your friend's branch into yours, there will be a merge conflict. Running git status tells you about the conflict:
+
+git status
+# # On branch branch-b
+# # You have unmerged paths.
+# #   (fix conflicts and run "git commit")
+# #
+# # Unmerged paths:
+# #   (use "git add ..." to mark resolution)
+# #
+# # both modified:      planets.md
+# #
+# no changes added to commit (use "git add" and/or "git commit -a")
+Both of you have modified planets.md. When you open the file in your text editor, you'll see both changes:
+
+the number of planets are
+<<<<<<< HEAD
+nine
+=======
+eight
+>>>>>>> branch-a
+In branch-a, you wrote the word "nine," but your friend wrote "eight." Git automatically adds conflict markers to the affected areas. A conflict-marked area begins with <<<<<<< and ends with >>>>>>>. These are also known as the conflict markers. The two conflicting blocks themselves are divided by a =======.
+
+You have several options here. You can either keep your changes, take your friend's changes, or make a brand new change. Whatever you do, you need to make sure to resolve the conflict such that the file makes sense, and everyone is happy.
+
+In this case, you'll put in a whole new version of the line that reflects what happened. The goal is to get the file to look exactly how you want it. You'll delete the conflict markers, and just type out a new change:
+
+the number of planets are
+nine, or eight, depending on who you ask.
+That's it! You can now git add this file, commit the change with a new commit message, and be on your way.

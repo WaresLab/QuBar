@@ -6,7 +6,7 @@ output: pdf_document
 bibliography: QuBar_References_Sep2015.bib
 ---
 ```{r set working directory,echo=FALSE}
-# We can use this trick to avoid the issue with the working directory, after you set the working directory with "To Source File Location" (if that is the same in macs)
+# JOHN, I think we can use this trick to avoid the issue with the working directory, after you set the working directory with "To Source File Location" (if that is the same in macs)
 mydir <- getwd()
 setwd(mydir)
 ```
@@ -77,8 +77,6 @@ while (cdf<0.95) {
 }
 
 #par(mfrow=c(3,1))
-
-
 
 probs<-t(matrix(array,nrow=3))
 probs
@@ -228,7 +226,7 @@ We then compared the observed number of segregating sites in each sample with th
 
 # Results 
 
-The summary statistics of the simulated population data are presented in Table 1, the R code used to performed the simulations and estimate the summary statistics is presented in Appendix S1. As expected, the haplotype diversity, number of haplotypes and number of segregating sites are higher as $\theta$ increases. [**hmmm yes that value of D for population 6 is strange; plus we should rename populations since there are now only 3**]
+The summary statistics of the simulated populations are presented in Table 1, the R code used to performed the simulations and estimate the summary statistics is presented in Appendix S1. As expected, the haplotype diversity, number of haplotypes and number of segregating sites are higher as $\theta$ increases. [**hmmm yes that value of D for population 6 is strange; plus we should rename populations since there are now only 3**]
 
 ```{r Table 1 with info on simulated populations, warnings=F,message=FALSE, echo=FALSE,results='hide'}
 #install.packages("gap")
@@ -325,11 +323,16 @@ fullgammaData <- read.csv("gammaData_13Jul.csv",header=T)
 gammaData <- subset(fullgammaData,fullgammaData$Growth=="no")
 droplevels(gammaData) -> gammaData
 
+# rearrenging levels of theta for plots
+gammaData$Theta <- factor(gammaData$Theta,levels=c("two","ten","twenty"))
+# making sampling size a factor
+factor(gammaData$samplingSize,levels=c(2,4,8,16,32,64,128)) -> gammaData$samplingSize.f
+
 # calculating the difference between "real" n and max gamma.
 gammaData$samplingSize-gammaData$Max.Gamma.value -> gammaData$dif
 
 # Figure 3
-ggplot(gammaData, aes(x=samplingSize, y=dif,color=Theta))+ theme_bw() + geom_point(position = "jitter", aes(alpha=0.7))+ geom_hline(yintercept = 0) + scale_alpha(guide = 'none')
+ggplot(gammaData, aes(x=samplingSize.f, y=dif,color=Theta))+ theme_bw() + geom_point(position = "jitter", aes(alpha=0.7))+ geom_hline(yintercept = 0) + scale_alpha(guide = 'none')+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Gamma distribution")
 ```
 **Figure 3.** Difference between the simulated sampling size and the sampling size for the sample predicted using the gamma distribution method. The abline at zero shows the ideal situation with the estimation equal to the simulated sampling size.
 
@@ -377,14 +380,24 @@ newdata[complete.cases(newdata),]->newdata1
 # calculate difference between Ewens n and the simulated n
 newdata1$samplingSize-newdata1$n.df -> newdata1$difEwens
 
+# rearrenging levels of theta for plots
+newdata1$Theta <- factor(newdata1$Theta,levels=c("two","ten","twenty"))
+
 # check weird stuff
 #View(subset(newdata1,newdata1$Theta=='two'))
 
-ggplot(newdata1, aes(x=samplingSize, y=difEwens,color=Theta,alpha=0.5)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+facet_grid(Theta~.)+theme(legend.key = element_blank())
+#ggplot(newdata1, aes(x=samplingSize, y=difEwens,color=Theta,alpha=0.5)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+facet_grid(Theta~.)+theme(legend.key = element_blank())+ scale_alpha(guide = 'none')
+
+factor(newdata1$samplingSize,levels=c(2,4,8,16,32,64,128)) -> newdata1$samplingSize.f
+
+ggplot(newdata1, aes(x=samplingSize.f, y=difEwens,color=Theta,alpha=0.7)) + theme_bw()+geom_violin()+geom_point(position = "jitter")+geom_hline(yintercept=0)+facet_grid(Theta~.,scales="free")+theme(legend.key = element_blank())+ scale_alpha(guide = 'none')+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Ewens's sampling theory")
+
+#factor(newdata1$samplingSize,levels=c(2,4,8,16,32,64,128)) -> newdata1$samplingSize.f
+#ggplot(newdata1, aes(x=samplingSize.f, y=difEwens,color=Theta,alpha=0.5)) + theme_bw()+geom_violin()+geom_point(position = "jitter")+geom_hline(yintercept=0)+theme(legend.key = element_blank())+ scale_alpha(guide = 'none')
 
 ```
 
-**Figure 4.** Difference between the simulated sampling size and the sampling size for the sample predicted using Ewens's sampling theory. The abline at zero shows the ideal situation in which the estimation equals the simulated sampling size. The panels separate the three different theta: two, ten and twenty.
+**Figure 4.** Difference between the simulated sampling size and the sampling size for the sample predicted using Ewens's sampling theory. The abline at zero shows the ideal situation in which the estimation equals the simulated sampling size. The panels separate the three different theta: two, ten and twenty. Please note the different y-axis between panels
 
 ## Theta and segregating sites approach
 
@@ -438,7 +451,7 @@ allwak <-merge(modes,best.n,by.x=c("Theta","mode"),by.y=c("Theta","wak.segsites"
 # Calculate difference between real and predicted n
 allwak$dif <- allwak$samplingSize - allwak$wak.n
 
-ggplot(allwak, aes(x=samplingSize, y=dif,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)
+ggplot(allwak, aes(x=samplingSize, y=dif,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Wakeley's likelihood")
 
 ```
 
@@ -468,48 +481,83 @@ Idea brought about by extended problem-solving session with J. Drake and colleag
 
 # Supporting information 
 
-__Appendix S1.__R code used to perform simulations and to estimate genetic diversity indexes. *NOTE: we need to finish the edits to this appendix, it is just a start*
+**Appendix S1.** R code used to perform simulations and to estimate genetic diversity indexes.  
 
-```{r Supp Fig 1 gamma distribution plots,message=FALSE, echo=FALSE}
-setwd("~/GitHub/QuBar")
+## Supplementary figures
 
-#install.packages("ggplot2")
+**Supplementary Figure 1.** Probability distribution of the number of individuales back calculated using the gamma approach. Each panel shows a combination of simulated sampling size and the mutation rate in the original populations.  
+
+```{r more gamma plos,echo=FALSE,message=F,warning=FALSE}
 library(ggplot2)
 
-# now we have the dataframe "gammaData_13jul" with all the updated gamma values 
-fullgammaData<-read.csv("gammaData_13Jul.csv",header=T) 
-#JOHN: this one is the updated file after your new twist on gamma, I deleted the other one
+# load data with number of haplotypes
+hapnum<-read.csv("numberHaplotypes.csv",header=T)
+hapnum$X<-NULL
 
-# subsetting data with growth
-gammaData<-subset(fullgammaData,fullgammaData$Growth=="no")
-droplevels(gammaData)->gammaData
+# Haplotype diversity for each of the six simulated populations of 1000 individuals
+hapdiv<-c(0.5504204, 0.3377538, 0.8915536, 0.9258679,0.7627047, 0.9565626)
 
-# making factors for the ggplot2 plots
-factor(gammaData$samplingSize,levels=c(2,4,8,16,32,64,128))->gammaData$samplingSizeF
+# add the column of haplotype diversity for each population
+for(i in 1:6){
+hapnum$hap.diversity[hapnum$Pop == i] <- hapdiv[i] 
+}
 
-# subsetting small sampling sizes to see better what happen there
-#minigamma<-gammaData[gammaData$samplingSize<33,]
+# to check our loop, subset that
+growth <- which(hapnum$Growth == "yes")
+hapnum.test <- hapnum[-growth,]
+droplevels(hapnum.test) -> hapnum.test
 
-# plotting with ggplot, need to fix legends
-#http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
-# Fig X2a
-#ggplot(gammaData, aes(x = samplingSize,y=Max.Gamma.value,fill=Theta,color=Theta)) + theme_bw()+geom_point()+geom_abline()+xlab("simulated sampling size") + ylab("predicted sampling size") 
+df.list <- list()
+for(i in 1:nrow(hapnum.test)){
+  #print(paste("working in row number",i))
+    mydf<- data.frame(theta=NA,growth=NA,n=NA,hap.num=NA,p=rep(NA,500)) 
+      x=1
+      cdf=0
+      indprob=0
+      array<-NULL
+    while (cdf<0.99) {
+      cdfprev<-cdf
+      cdf<-pgamma(x,shape=(1/hapnum.test$hap.diversity[i]),rate=(1/hapnum.test$n.haplotypes[i]))
+                  
+      indprob<-cdf-cdfprev
+      happrob<-hapnum.test$n.haplotypes[i]+(x-1)
+      array<-c(array,happrob)
+      array<-c(array,cdf)
+      array<-c(array,indprob)
+      x=x+1
+      }
+    probs<-t(matrix(array,nrow=3))
+    
+    # fill dataframe
+    for (j in 2:nrow(probs)){
+    mydf$theta[j] <- as.character(hapnum.test$Theta[i])
+    mydf$growth[j] <- as.character(hapnum.test$Growth[i])
+    mydf$p[j] <- probs[j,3]
+    mydf$n[j] <- probs[j,1]
+    mydf$samplingSize[j] <- hapnum.test$samplingSize[i]
+    mydf$hap.num[j] <- hapnum.test$n.haplotypes[i]
+        }
+  mydf -> df.list[[i]]  
+  }
 
-# Fig X2b
-# thinking how to plot the subset of samples sizes where gamma works a little bit better....
-#ggplot(minigamma, aes(x = samplingSizeF,y=Max.Gamma.value,fill=Theta,color=Theta)) + theme_bw()+ geom_boxplot(aes(fill=Theta)) + ylim(0,20) + xlab("simulated sampling size") + ylab("predicted sampling size")
+mydata1 <- do.call("rbind", df.list)
+mydata2 <- mydata1[complete.cases(mydata1$n),]
 
-#JOHN, trying something different below
-fig3<-ggplot(gammaData, aes(x = n.haplotypes,y=Max.Gamma.value,color=samplingSizeF,size=1)) + theme_bw()+geom_point()+facet_grid(Theta~samplingSizeF) 
-fig3 + geom_hline(aes(yintercept = 2), subset(gammaData,samplingSize==2))+ geom_hline(aes(yintercept = 4), subset(gammaData,samplingSize==4))+ geom_hline(aes(yintercept = 8), subset(gammaData,samplingSize==8))+ geom_hline(aes(yintercept = 16), subset(gammaData,samplingSize==16))+ geom_hline(aes(yintercept = 32), subset(gammaData,samplingSize==32))+ geom_hline(aes(yintercept = 64), subset(gammaData,samplingSize==64))+ geom_hline(aes(yintercept = 128), subset(gammaData,samplingSize==128))+theme(panel.grid.major = element_blank())
 
-# to put different ablines in different facets we need to make a dataset, and this would be efficient but the order is all messed up so I had to figure out a not so efficient but working way ;)
-#hline.data <- data.frame(z = c(2,4,8,16,32,64,128),samplingSizeF = c(2,4,8,16,32,64,128))
-#fig3 + geom_hline(aes(yintercept = z), hline.data)
-                                                                                                                                                                                  
+as.factor(mydata2$theta) -> mydata2$theta.f
+as.factor(mydata2$samplingSize) -> mydata2$samplingSize.f
+mydata2$growth <- NULL # we don't need this colum
+
+# make plots
+
+ggplot(mydata2, aes(x=n, y=p))+ geom_point()+theme_bw() + facet_grid(theta.f~samplingSize.f)
+
+# to have the plot with free scales
+ggplot(mydata2, aes(x=n, y=p))+ geom_point()+theme_bw() + facet_grid(theta.f~samplingSize.f,scales="free")
+
+ View(mydata2[which(mydata2$theta=="two" & mydata2$hap.num==4),])
 ```
 
-**Supplementary Figure 1.** Predictions of sampling size using the gamma distribution method for each population (with thetas 2,10 and 20) against the observed number of haplotypes in the sample. The ablines in each panel represent the "real" sampling size of that sample.  
 
 # Literature Cited
 

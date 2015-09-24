@@ -133,7 +133,7 @@ Under the standard coalescent model there are specific probability distributions
 
 $$ P(S=k) = \sum\limits_{i=2}^{n}(-1)^i{n-1 \choose i-1}\frac{i-1}{\theta+i-1}(\frac{\theta}{\theta+i-1})^k $$
 
-Figure 2a illustrates this distribution for $\theta$=2, segregating sites *k* from 1 to 20, and number of individuals *n* from 1 to 20. This represents a low-diversity population, and unless few segregating sites are observed there may be a broad range of sample sizes consistent with such an observation. Figure 2b illustrates the same probability distribution, but assuming $\theta$=10, with a range of both *k* and *n* from 1 to 50. When the prior knowledge or assumption of diversity is higher, the range of segregating sites that could give a more accurate inference of *n* is higher, with a sharper distribution on *n* for lower to intermediate *k*.(__JOHN, I rephrased this since what you were seeing was because your plot was using the same set up that theta=2, that is you were not covering the real range of seg sites that you will find with at theta=10, so I updated your plots, but now for higher k the same happen, the possible n's flatten and it is hard to discern between them. If __
+Figure 2a illustrates this distribution for $\theta$=2, segregating sites *k* from 1 to 20, and number of individuals *n* from 1 to 20. This represents a low-diversity population, and unless few segregating sites are observed there may be a broad range of sample sizes consistent with such an observation. Figure 2b illustrates the same probability distribution, but assuming $\theta$=10, with a range of both *k* and *n* from 1 to 50. When the prior knowledge or assumption of diversity is higher, the range of segregating sites that could give a more accurate inference of *n* is higher, with a sharper distribution on *n* for lower to intermediate *k*.
 
 ```{r WakeleyCh4, echo=FALSE,warning=FALSE,results='hide',message=FALSE,fig.show='asis'}
 
@@ -221,7 +221,7 @@ hist3D(x=seq(0,1,length.out=nrow(PSKv2)),y=seq(0,1,length.out=ncol(PSKv2)),PSKv2
 
 **Figure 2.** Probability surface of observing a number of segregating sites *k* for a given sample size *n* when $\theta$ is set. In (a), $\theta$ = 2; in (b), $\theta$ = 10.
 
-For each of the three populations with theta equal to 2, 10 or 20, and with a range of sampling sizes from 1 to 50, we applied Ewens [-@Ewens1972] formula to estimate the expected number of haplotypes (and the variance) for each sampling size. We tried higher samping sizes but our computation of Ewens's formula failed for sampling sizes larger than 60 and exhibit a weird behaviour. 
+For each of the three populations with theta equal to 2, 10 or 20, and with a range of sampling sizes from 1 to 50, we applied Wakeley's [@Wakeley08] formula to estimate the expected number of segregating sites for each sampling size. We tried higher samping sizes but our computation of Ewens's formula failed for sampling sizes larger than 60 and exhibit a weird behaviour. 
 We then compared the observed number of segregating sites in each sample with the expected number of segregating sites expected using Wakeley's formula for each sampling size and estimated the "observed" sampling size in our sample. The accuracy of the method was calculated as the difference between the "real" sampling size - the one from our simulations - and the number of individuals for the sample estimated using Wakeley's method.
 
 # Results 
@@ -313,7 +313,7 @@ Overall, using haplotype diversity and our educated guess at how this diversity 
 
 The probability distributions using this method and the predicted sampling sizes against the observed haplotypes are provided in the supplementary material. 
 
-```{r figure 3,message=FALSE, echo=FALSE}
+```{r figure 3,message=FALSE, echo=FALSE} 
 library(ggplot2)
 
 # loading data
@@ -346,7 +346,8 @@ library(ggplot2)
 # -----observed data------
 # ------------------------
 # load data of number of haplotypes
-hapdata <- read.csv("numberHaplotypes.csv",header=T)
+hapdata <- read.csv("numberHaplotypes_10Sep2015.csv",header=T)
+hapdata$Growth <- "no"
 
 # subsetting data with growth
 minidata <- subset(hapdata,hapdata$Growth == "no")
@@ -362,7 +363,7 @@ minidata$id <- apply(myObMatrix, 1, paste, collapse=" ")
 # -----predicted data------
 #--------------------------
 # load data of Ewens sampling theory
-theory <- read.csv("dataSamplingTheory_21Ago2015.csv",header=T)
+theory <- read.csv("dataSamplingTheory_10Sep2015.csv",header=T)
 
 # round the expected number of haplotypes
 round(theory$exp.haplotypes,0) -> theory$exp.round.hap
@@ -381,7 +382,7 @@ newdata[complete.cases(newdata),]->newdata1
 newdata1$samplingSize-newdata1$n.df -> newdata1$difEwens
 
 # rearrenging levels of theta for plots
-newdata1$Theta <- factor(newdata1$Theta,levels=c("two","ten","twenty"))
+newdata1$Theta <- factor(newdata1$Theta,levels=c("two","five","ten","fifteen","twenty"))
 
 # check weird stuff
 #View(subset(newdata1,newdata1$Theta=='two'))
@@ -413,8 +414,8 @@ library(modeest)
 # we have two types of data:
 # "WakeleyData"" has the result of Wakeley formula with all the possible vlues and distributions
 # "segsites" has the observed number of seg.sites in the simulations
-wakdata<-read.csv("WakeleyData_01Sep2015.csv",header=T)
-segsites<-read.csv("numberSegSites_31Ago2015.csv",header=T)
+wakdata<-read.csv("WakeleyData_10Sep2015.csv",header=T)
+segsites<-read.csv("numberSegSites_10Sep2015.csv",header=T)
 
 # making factors for the ggplot2 plots
 factor(wakdata$wak.segsites)->wakdata$wak.segsites.f
@@ -439,7 +440,6 @@ modes$samplingSize <- as.numeric(as.character(modes$samplingSize.f))
 
 # estimate the best n's of wakeley data
 bestprobs <- ddply(wakdata, c("Theta","wak.segsites.f"), summarise, best.prob=max(wak.prob))
-bestprobs$best.prob <-round(bestprobs$best.prob,13)
 
 # merging "bestprobs" with "wakdata" to recover the n's that match with the higher probability
 best.n <- merge(bestprobs,wakdata,by.x=c("Theta","wak.segsites.f","best.prob"),by.y=c("Theta","wak.segsites.f","wak.prob"),all.x=T)
@@ -451,7 +451,7 @@ allwak <-merge(modes,best.n,by.x=c("Theta","mode"),by.y=c("Theta","wak.segsites"
 # Calculate difference between real and predicted n
 allwak$dif <- allwak$samplingSize - allwak$wak.n
 
-ggplot(allwak, aes(x=samplingSize, y=dif,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Wakeley's likelihood")
+ggplot(allwak, aes(x=samplingSize.f, y=dif,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Wakeley's likelihood")
 
 ```
 

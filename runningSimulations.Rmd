@@ -152,16 +152,19 @@ library(PopGenome)
 #read.ms.output(theta10NoGrowth,FALSE)->pop4
 
 # this way, we read the same files that were simulated only once, and the same that we read with PopGenome
-pop1 <- read.ms.output("theta2Growth.out",is.file=T) 
+#pop1 <- read.ms.output("theta2Growth.out",is.file=T) 
 pop2 <- read.ms.output("theta2NoGrowth.out",is.file=T) 
-pop3 <- read.ms.output("theta10Growth.out",is.file=T) 
+#pop3 <- read.ms.output("theta10Growth.out",is.file=T) 
 pop4 <- read.ms.output("theta10NoGrowth.out",is.file=T) 
-pop5 <- read.ms.output("theta20Growth.out",is.file=T) 
+#pop5 <- read.ms.output("theta20Growth.out",is.file=T) 
 pop6 <- read.ms.output("theta20NoGrowth.out",is.file=T) 
+pop7 <- read.ms.output("theta5NoGrowth.out",is.file=T)
+pop8 <- read.ms.output("theta15NoGrowth.out",is.file=T)
 
 # --------sampling from each population---------
 # vector with all the populations for loops or easy coding
-pop <- list(pop1,pop2,pop3,pop4,pop5,pop6)
+#pop <- list(pop1,pop2,pop3,pop4,pop5,pop6)
+pop <- list(pop2,pop4,pop6,pop7,pop8)
 
 # vector with the sizes we want to sample
 popsizes <- c(2,4,8,16,32,64,128)
@@ -249,7 +252,38 @@ names(numHaps)<-c("Pop","Theta","Growth","samplingSize","n.haplotypes")
 levels(numHaps$samplingSize)<-c("2","4","8","16","32","64","128")
 
 # run only once
-#write.csv(numHaps,"numberHaplotypes.csv")
+write.csv(numHaps,"numberHaplotypes_10Sep2015.csv")
+```
+
+
+```{r making haplotypes dataframe for FIVE thetas no growth}
+# we want to loop in "hapresults" and for each population extract the number of haplotypes and put all in the same dataframe
+
+library(reshape)
+
+# create dataframe to hold the data
+zerodata <- data.frame(Pop=NA,Theta=NA,variable=NA,value=NA)
+thetas <- c("two","ten","twenty","five","fifteen")
+
+# loop through populations and rbind data
+for (i in 1:length(pop)){
+  hapResults[[i]] -> pophaps
+  haps <- data.frame(do.call(rbind, pophaps))
+  as.data.frame(t(haps)) -> datahaps
+  datahaps$Theta <- thetas[i]
+  datahaps$Pop <- i
+  newdata <- melt(datahaps,id=c("Pop","Theta"))
+  rbind(zerodata,newdata) -> zerodata
+}
+
+# organize and save data
+zerodata[complete.cases(zerodata$Pop),]->numHaps
+as.factor(numHaps$variable)->numHaps$variable
+names(numHaps)<-c("Pop","Theta","samplingSize","n.haplotypes")
+levels(numHaps$samplingSize)<-c("2","4","8","16","32","64","128")
+
+# run only once
+#write.csv(numHaps,"numberHaplotypes_10Sep2015.csv")
 ```
 
 Now we have the dataframe "numberHaplotypes" with the number of haplotypes for each replicate, for each population, and we don't need to run the chunk everytime.
@@ -324,4 +358,34 @@ levels(numSegSites$samplingSize) <- c("2","4","8","16","32","64","128")
 ```
 
 Now we have the dataframe "numberSegSites" with the number of segregating sites for each replicate, for each population, and we don't need to run the chunk everytime.
+
+
+```{r making segSites dataframe for FIVE THETAS and NO GROWTH}
+# we want to loop in "segResults" and for each population extract the number of segregating sites and put all in the same dataframe
+library(reshape)
+
+# create dataframe to hold the data
+zerodata <- data.frame(Pop=NA,Theta=NA,variable=NA,value=NA)
+thetas <- c("two","ten","twenty","five","fifteen")
+
+# loop through populations and rbind data
+for (i in 1:length(pop)){
+  segResults[[i]] -> popsegs
+  segs <- data.frame(do.call(rbind, popsegs))
+  as.data.frame(t(segs)) -> dataseg
+  dataseg$Theta <- thetas[i]
+  dataseg$Pop <- i
+  newdata <- melt(dataseg,id=c("Pop","Theta"))
+  rbind(zerodata,newdata) -> zerodata
+}
+
+# organize and save data
+zerodata[complete.cases(zerodata$Pop),] -> numSegSites
+as.factor(numSegSites$variable) -> numSegSites$variable
+names(numSegSites) <- c("Pop","Theta","samplingSize","n.seg.sites")
+levels(numSegSites$samplingSize) <- c("2","4","8","16","32","64","128")
+
+# run only once
+#write.csv(numSegSites,"numberSegSites_10Sep2015.csv")
+```
 

@@ -125,6 +125,14 @@ ggplot(mydata2, aes(x=n, y=p))+ geom_point()+theme_bw() + facet_grid(theta.f~sam
 # View(mydata2[which(mydata2$theta=="two" & mydata2$hap.num==4),])
 ```
 
+Histograms of observed data...
+```{r}
+library(lattice)
+
+histogram(~n.haplotypes|Theta,data=hapnum, type="density")
+```
+
+
 # Using theta and segregating sites (Wakeley)
 
 There are specific probability distributions associated with a sample of sequences, the number of segregating sites *S*, and a prior assumption of $\theta$ [@Wakeley08].
@@ -140,9 +148,9 @@ data<-read.csv("numberSegSites.csv",header=T)
 
 # We need to define a maximum n, John identified that above 70 this behaves funny, actually for 60 too, so we could 50. But as our simulated sampling sizes jump from 32 to 64, we can just set a maxn of 33.
 
-maxn=50
+maxn=52
 maxk<-max(data$n.seg.sites,na.rm=T)
-maxk=130
+maxk=25
 
 # -----theta=2-----------
 Q = 2 #theta 
@@ -172,7 +180,7 @@ for (k in 0:maxk){
     }
 
 # check that all worked out fine
-#hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=35,phi=40,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
+hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=35,phi=40,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
 
 # The result of the loop is a list "theta2", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
 
@@ -246,9 +254,6 @@ for (k in 0:maxk){
       obsvd->theta20[[name]]
       }
     }
-# check that all worked out fine
-#hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=35,phi=40,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
-# The result of the loop is a list "theta20", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
 
 # put data in a dataframe to handle it more easy
 theta.20 <-t(data.frame(do.call(rbind, theta20)))  
@@ -257,14 +262,88 @@ data20$Theta<-"twenty"
 data20$n<-seq(1,maxn,1)
 row.names(data20)<-NULL
 
+# -----theta=5-----------
+Q = 5 #theta 
+# creating empty list to put the results
+theta5<-list()
+
+  a <- c(1:maxn)
+  b <- c(1:maxk)
+  PSKv <- numeric(maxn*maxk)
+  PSKv <- matrix(PSKv,ncol=maxn)
+  colnames(PSKv)<-a
+  rownames(PSKv)<-b
+
+# looping in segdata and running Wakeley formula
+for (k in 0:maxk){
+  name<-paste("seg",k,sep="")
+  obsvdk<-k
+  
+  for (n in 2:maxn) {
+        PSK=0
+        for (i in 2:n) {
+             PSK<-PSK + ((-1)^i)*(choose((n-1),(i-1)))*((i-1)/(Q+i-1))*(Q/(Q+i-1))^obsvdk
+        }
+        PSKv[obsvdk,n]<-PSKv[obsvdk,n]+PSK
+      obsvd<-PSKv[obsvdk,]
+      obsvd->theta5[[name]]
+      }
+    }
+
+# put data in a dataframe to handle it more easy
+theta.5 <-t(data.frame(do.call(rbind, theta5)))  
+as.data.frame(theta.5)->data5
+data5$Theta<-"five"
+data5$n<-seq(1,maxn,1)
+row.names(data5)<-NULL
+
+# -----theta=15-----------
+Q = 15#theta 
+# creating empty list to put the results
+theta15<-list()
+
+  a <- c(1:maxn)
+  b <- c(1:maxk)
+  PSKv <- numeric(maxn*maxk)
+  PSKv <- matrix(PSKv,ncol=maxn)
+  colnames(PSKv)<-a
+  rownames(PSKv)<-b
+
+# looping in segdata and running Wakeley formula
+for (k in 0:maxk){
+  name<-paste("seg",k,sep="")
+  obsvdk<-k
+  
+  for (n in 2:maxn) {
+        PSK=0
+        for (i in 2:n) {
+             PSK<-PSK + ((-1)^i)*(choose((n-1),(i-1)))*((i-1)/(Q+i-1))*(Q/(Q+i-1))^obsvdk
+        }
+        PSKv[obsvdk,n]<-PSKv[obsvdk,n]+PSK
+      obsvd<-PSKv[obsvdk,]
+      obsvd->theta15[[name]]
+      }
+    }
+
+# put data in a dataframe to handle it more easy
+theta.15<- t(data.frame(do.call(rbind, theta15)))  
+as.data.frame(theta.15)->data15
+data15$Theta<-"fifteen"
+data15$n<-seq(1,maxn,1)
+row.names(data15<-NULL
+# check that all worked out fine
+#hist3D(x=seq(0,1,length.out=nrow(PSKv)),y=seq(0,1,length.out=ncol(PSKv)),PSKv,col=NULL,border="black",theta=35,phi=40,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
+# The result of the loop is a list "theta20", with each component being one observed segregating site value, and within that a vector with length maxn, and the components are the probability values for that segsite according to Wakeley.
+
+
 # join dataframes and save file----
-rbind(data2,data10,data20)->WakeleyData
+rbind(data2,data10,data20,data5,data15)->WakeleyData
 # reorder the data
 all<-melt(WakeleyData,id=c("Theta","n"))
 levels(all$variable)<-seq(1:135)
 names(all)<-c("Theta","n","segSites","prob")
 # save 
-write.csv(all,"WakeleyData_01Sep2015.csv")
+write.csv(all,"WakeleyData_10Sep2015.csv")
 ```
 
 As a result, we have a dataframe "WakeleyData" with all the estimates.
@@ -363,15 +442,69 @@ for(n in 2:maxn){
   1 -> vark20[1]
 }
 
+# ----Theta 5-----
+theta=5
+
+meank5 <- rep(NA,maxn)
+for(n in 2:maxn){
+  if(n==1){meank5[n]<-1}
+      else{
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    theta/(theta+i)->res[i]
+    }
+  1+sum(res)->meank5[n]
+  }
+}
+
+vark5 <- rep(NA,maxn)
+for(n in 2:maxn){
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    (theta^2)/((theta+i)^2)->res[i]
+    }
+  meank5[n]-sum(res)->vark5[n]
+  1 -> vark5[1]
+}
+
+# ----Theta 15-----
+theta=15
+
+meank15 <- rep(NA,maxn)
+for(n in 2:maxn){
+  if(n==1){meank15[n]<-1}
+      else{
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    theta/(theta+i)->res[i]
+    }
+  1+sum(res)->meank15[n]
+  }
+}
+
+vark15 <- rep(NA,maxn)
+for(n in 2:maxn){
+    n-1->endpoint
+    res<-rep(NA,endpoint)
+    for (i in 1:endpoint){
+    (theta^2)/((theta+i)^2)->res[i]
+    }
+  meank15[n]-sum(res)->vark15[n]
+  1 -> vark15[1]
+}
+
 # now we put together a dataframe with the n,k,and var(k)---- 
-theta.df <- c(rep("two",250),rep("ten",250),rep("twenty",250))
-n.df <- rep(1:maxn,3) 
-exp.haplotypes <- c(meank2,meank10,meank20) 
-exp.variance <- c(vark2,vark10,vark20)
+theta.df <- c(rep("two",250),rep("ten",250),rep("twenty",250),rep("five",250),rep("fifteen",250))
+n.df <- rep(1:maxn,5) 
+exp.haplotypes <- c(meank2,meank10,meank20,meank5,meank15) 
+exp.variance <- c(vark2,vark10,vark20,vark5,vark15)
 dataSampling <- as.data.frame(cbind(theta.df,n.df,exp.haplotypes,exp.variance))
 
 # save data file
-#write.csv(dataSampling,"dataSamplingTheory_21Ago2015.csv")
+#write.csv(dataSampling,"dataSamplingTheory_10Sep2015.csv")
 ```
 Now we have the dataset "dataSamplingTheory_23Jul2015" and we can plot the expected number of haplotypes for each theta (and the variance).
 

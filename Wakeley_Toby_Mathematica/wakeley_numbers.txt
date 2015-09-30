@@ -1,0 +1,16 @@
+
+n = 20
+kmax = 130
+mmax = 200
+outtable = Table[0, {k, 2, kmax*(mmax - 1) + 1}];
+
+For[m = 2, m <= mmax, m = m + 1,   
+ For[k = 0, k < kmax, k = k + 1, 
+  outtable[[(m - 2)*kmax + k + 1]] = {m, k, 
+     N[Sum[((-1)^i)*(Binomial[ m - 1, 
+          i - 1])*((i - 1)/(n + i - 1))*(n/(n + i - 1))^k, {i, 2, 
+        m}]]};
+  ]
+ ]
+
+Export["theta20.dat", outtable]

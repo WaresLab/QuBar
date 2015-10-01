@@ -303,14 +303,46 @@ droplevels(gammaData) -> gammaData
 
 # rearrenging levels of theta for plots
 gammaData$Theta <- factor(gammaData$Theta,levels=c("two","ten","twenty"))
+
 # making sampling size a factor
 factor(gammaData$samplingSize,levels=c(2,4,8,16,32,64,128)) -> gammaData$samplingSize.f
+
+# subsetting the haplotypes for each combination that are between defined quantiles
+thetas <- c("two", "ten", "twenty")
+ns <- unique(minidata$samplingSize)
+
+mygammalist <- list()
+for(i in thetas){
+    for(j in ns){
+      name <- paste(i,j)
+      my.comb <- gammaData[which(minidata$Theta == i & gammaData$samplingSize == j),]
+      quant <- quantile(my.comb$n.haplotypes,c(0.75,0.25))
+      names(quant) <- NULL
+      keep <- subset(my.comb,my.comb$n.haplotypes >= quant[2] & my.comb$n.haplotypes <= quant[1])
+      droplevels(keep) -> keep
+      keep -> mygammalist[[name]]
+    }
+  }
+  
+my.good.gamma <- do.call("rbind", mygammalist)
+row.names(my.good.gamma) <- NULL
+
+my.good.gamma ->gammaData
 
 # calculating the difference between "real" n and max gamma.
 gammaData$samplingSize-gammaData$Max.Gamma.value -> gammaData$dif
 
 # Figure 3
-ggplot(gammaData, aes(x=samplingSize.f, y=dif,color=Theta))+ theme_bw() + geom_point(position = "jitter", aes(alpha=0.5))+ geom_hline(yintercept = 0) + scale_alpha(guide = 'none')+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Gamma distribution")
+gamma.plot <- ggplot(gammaData, aes(x=samplingSize.f, y=dif,color=Theta))+ theme_bw() + geom_point(position = "jitter", aes(alpha=0.5))+ geom_hline(yintercept = 0) + scale_alpha(guide = 'none')+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Gamma distribution")
+
+gamma.plot+ geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
+            geom_segment(x=1.5,y=4,xend=2.5,yend=4,colour="red")+
+            geom_segment(x=2.5,y=8,xend=3.5,yend=8,colour="red")+
+            geom_segment(x=3.5,y=16,xend=4.5,yend=16,colour="red")+
+            geom_segment(x=4.5,y=32,xend=5.5,yend=32,colour="red")+
+            geom_segment(x=5.5,y=64,xend=6.5,yend=64,colour="red")+
+            geom_segment(x=6.5,y=128,xend=7.5,yend=128,colour="red")
+        
 ```
 
 **Figure 3.** Difference between the simulated sampling size and the sampling size for the sample predicted using the gamma distribution method. The abline at zero shows the ideal situation with the estimation equal to the simulated sampling size.
@@ -335,9 +367,27 @@ droplevels(minidata) -> minidata
 row.names(minidata) <- NULL # cleaning row.names
 #View(minidata)
 
-# creating and id to merge later
-myObMatrix <- as.matrix(minidata[,c("Theta","n.haplotypes")])
-minidata$id <- apply(myObMatrix, 1, paste, collapse=" ")
+# subsetting the haplotypes for each combination that are between defined quantiles
+thetas <- c("two", "ten", "twenty")
+ns <- unique(minidata$samplingSize)
+
+myhaplist <- list()
+for(i in thetas){
+    for(j in ns){
+      name <- paste(i,j)
+      my.comb <- minidata[which(minidata$Theta == i & minidata$samplingSize == j),]
+      quant <- quantile(my.comb$n.haplotypes,c(0.75,0.25))
+      names(quant) <- NULL
+      keep <- subset(my.comb,my.comb$n.haplotypes >= quant[2] & my.comb$n.haplotypes <= quant[1])
+      droplevels(keep) -> keep
+      keep -> myhaplist[[name]]
+    }
+  }
+  
+my.good.haps <- do.call("rbind", myhaplist)
+row.names(my.good.haps) <- NULL
+
+
 
 # -----predicted data------
 #--------------------------
@@ -349,14 +399,9 @@ theory <- droplevels(theory)
 # round the expected number of haplotypes
 round(theory$exp.haplotypes,0) -> theory$exp.round.hap
 
-# create id to merge
-myPredMatrix <- as.matrix(theory[,c("theta.df","exp.round.hap")])
-theory$id <- apply(myPredMatrix, 1, paste, collapse=" ")
-#View(theory)
-
 #---- merge predicted with observed data-----
-newdata <- merge(theory,minidata,by="id",all.y=T)
-newdata <- merge(theory,minidata,by.x=c("theta.df","exp.round.hap"),by.y=c("Theta","n.haplotypes"),all.y=T)
+#newdata <- merge(theory,minidata,by.x=c("theta.df","exp.round.hap"),by.y=c("Theta","n.haplotypes"),all.y=T)
+newdata <- merge(theory,my.good.haps,by.x=c("theta.df","exp.round.hap"),by.y=c("Theta","n.haplotypes"),all.y=T)
 
 #newdata[is.na(newdata$n.df),] # check NA's
 newdata[complete.cases(newdata),]->newdata1
@@ -367,17 +412,24 @@ newdata1$samplingSize-newdata1$n.df -> newdata1$difEwens
 # rearrenging levels of theta for plots
 newdata1$Theta <- factor(newdata1$theta.df,levels=c("two","ten","twenty"))
 
-# check weird stuff
-#View(subset(newdata1,newdata1$Theta=='two'))
-
-#ggplot(newdata1, aes(x=samplingSize, y=difEwens,color=Theta,alpha=0.5)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+facet_grid(Theta~.)+theme(legend.key = element_blank())+ scale_alpha(guide = 'none')
-
 factor(newdata1$samplingSize,levels=c(2,4,8,16,32,64,128)) -> newdata1$samplingSize.f
 
-ggplot(newdata1, aes(x=samplingSize.f, y=difEwens,color=Theta,alpha=0.2)) + theme_bw()+geom_violin()+geom_point(position = "jitter")+geom_hline(yintercept=0)+facet_grid(Theta~.,scales="free")+theme(legend.key = element_blank())+ scale_alpha(guide = 'none')+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Ewens's sampling theory")
+ewens.plot <- ggplot(newdata1, aes(x=samplingSize.f, y=difEwens,color=Theta,alpha=0.2)) + theme_bw()+geom_violin()+geom_point(position = "jitter")+geom_hline(yintercept=0)+facet_grid(Theta~.,scales="free")+theme(legend.key = element_blank())+ scale_alpha(guide = 'none')+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Ewens's sampling theory")
 
-#factor(newdata1$samplingSize,levels=c(2,4,8,16,32,64,128)) -> newdata1$samplingSize.f
-#ggplot(newdata1, aes(x=samplingSize.f, y=difEwens,color=Theta,alpha=0.5)) + theme_bw()+geom_violin()+geom_point(position = "jitter")+geom_hline(yintercept=0)+theme(legend.key = element_blank())+ scale_alpha(guide = 'none')
+ewens.plot+ geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
+         geom_segment(x=0.5,y=-2,xend=1.5,yend=-2,colour="red")+
+         geom_segment(x=1.5,y=4,xend=2.5,yend=4,colour="red")+
+         geom_segment(x=1.5,y=-4,xend=2.5,yend=-4,colour="red")+
+         geom_segment(x=2.5,y=8,xend=3.5,yend=8,colour="red")+
+         geom_segment(x=2.5,y=-8,xend=3.5,yend=-8,colour="red")+
+         geom_segment(x=3.5,y=16,xend=4.5,yend=16,colour="red")+
+         geom_segment(x=3.5,y=-16,xend=4.5,yend=-16,colour="red")+
+         geom_segment(x=4.5,y=32,xend=5.5,yend=32,colour="red")+
+         geom_segment(x=4.5,y=-32,xend=5.5,yend=-32,colour="red")+
+         geom_segment(x=5.5,y=64,xend=6.5,yend=64,colour="red")+
+         geom_segment(x=5.5,y=-64,xend=6.5,yend=-64,colour="red")+
+         geom_segment(x=6.5,y=128,xend=7.5,yend=128,colour="red")+
+         geom_segment(x=6.5,y=-128,xend=7.5,yend=-128,colour="red")
 ```
 
 **Figure 4.** Difference between the simulated sampling size and the sampling size for the sample predicted using Ewens's sampling theory. The abline at zero shows the ideal situation in which the estimation equals the simulated sampling size. The panels separate the three different theta: two, ten and twenty. Please note the different y-axis between panels
@@ -393,9 +445,9 @@ library(plyr)
 library(modeest)
 
 # we have two types of data:
-# "WakeleyData"" has the result of Wakeley formula with all the possible vlues and distributions
+# "WakeleyData" with results of Wakeley formula for all k and n combinations
 # "segsites" has the observed number of seg.sites in the simulations
-wakdata<-read.csv("WakeleyData_10Sep2015.csv",header=T)
+wakdata<-read.csv("Wakeley_Toby_30Sep2015.csv",header=T)
 segsites<-read.csv("numberSegSites_10Sep2015.csv",header=T)
 
 # making factors for the ggplot2 plots
@@ -412,8 +464,28 @@ segsites$Growth <- NULL
 # estimate the mode (the more frequent value) for each combination of sampling size and theta
 # the mode is estimated with the function mvl in the package "modeest"
 # the warning is because there are multiple modes and I'm collapsing them with the "unlist"
-modes <- ddply(segsites, c("Theta","samplingSize.f"), summarise, mode=unlist((mlv(n.seg.sites))[1]))
-modes$samplingSize <- as.numeric(as.character(modes$samplingSize.f))
+#modes <- ddply(segsites, c("Theta","samplingSize.f"), summarise, mode=unlist((mlv(n.seg.sites))[1]))
+#modes$samplingSize <- as.numeric(as.character(modes$samplingSize.f))
+
+# subsetting the segregating sites for each combination that are between defined quantiles
+thetas <- c("two", "ten", "twenty")
+ns <- unique(segsites$samplingSize)
+
+mylist <- list()
+for(i in thetas){
+    for(j in ns){
+      name <- paste(i,j)
+      my.comb <- segsites[which(segsites$Theta == i & segsites$samplingSize == j),]
+      quant <- quantile(my.comb$n.seg.sites,c(0.75,0.25))
+      names(quant) <- NULL
+      keep <- subset(my.comb,my.comb$n.seg.sites >= quant[2] & my.comb$n.seg.sites <= quant[1])
+      droplevels(keep) -> keep
+      keep -> mylist[[name]]
+    }
+  }
+  
+my.good.segs <- do.call("rbind", mylist)
+row.names(my.good.segs) <- NULL
 
 # -------------------------------------
 # -------Wakeley's predictions --------
@@ -425,19 +497,30 @@ bestprobs <- ddply(wakdata, c("Theta","wak.segsites.f"), summarise, best.prob=ma
 # merging "bestprobs" with "wakdata" to recover the n's that match with the higher probability
 best.n <- merge(bestprobs,wakdata,by.x=c("Theta","wak.segsites.f","best.prob"),by.y=c("Theta","wak.segsites.f","wak.prob"),all.x=T)
 
-
 # Now we want to merge the observed segregating sites with the segregating sites used to estimate Wakeley's formula, and that will allow us to plot the "real" n vs the best.n according Wakeley.
-allwak <-merge(modes,best.n,by.x=c("Theta","mode"),by.y=c("Theta","wak.segsites"))
+#allwak <-merge(modes,best.n,by.x=c("Theta","mode"),by.y=c("Theta","wak.segsites"))
+allwak <- merge(my.good.segs,best.n,by.x=c("Theta","n.seg.sites"),by.y=c("Theta","wak.segsites"))
 
 # Calculate difference between real and predicted n
 allwak$dif <- allwak$samplingSize - allwak$wak.n
 
-ggplot(allwak, aes(x=samplingSize.f, y=dif,color=Theta)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Wakeley's likelihood")
+myplot <- ggplot(allwak, aes(x=samplingSize.f, y=dif,color=Theta,alpha=0.2)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Wakeley's likelihood") + scale_alpha(guide = 'none') + scale_y_continuous(limits = c(-150, 150))
 
+myplot + geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
+         geom_segment(x=0.5,y=-2,xend=1.5,yend=-2,colour="red")+
+         geom_segment(x=1.5,y=4,xend=2.5,yend=4,colour="red")+
+         geom_segment(x=1.5,y=-4,xend=2.5,yend=-4,colour="red")+
+         geom_segment(x=2.5,y=8,xend=3.5,yend=8,colour="red")+
+         geom_segment(x=2.5,y=-8,xend=3.5,yend=-8,colour="red")+
+         geom_segment(x=3.5,y=16,xend=4.5,yend=16,colour="red")+
+         geom_segment(x=3.5,y=-16,xend=4.5,yend=-16,colour="red")+
+         geom_segment(x=4.5,y=32,xend=5.5,yend=32,colour="red")+
+         geom_segment(x=4.5,y=-32,xend=5.5,yend=-32,colour="red")+
+         geom_segment(x=5.5,y=64,xend=6.5,yend=64,colour="red")+
+         geom_segment(x=5.5,y=-64,xend=6.5,yend=-64,colour="red")+
+         geom_segment(x=6.5,y=128,xend=7.5,yend=128,colour="red")+
+         geom_segment(x=6.5,y=-128,xend=7.5,yend=-128,colour="red")
 ```
-
-
-
 
 # Discussion
 
@@ -451,14 +534,11 @@ This leaves metabarcode research with three options: (1) continue to individuall
 
 Though there are concerns about how well read/sequence frequency reflects the relative abundance of populations in an environmental sample - driven largely by differential amplification success of target genomes [@Nguyen14; @Pinol14; @Bohmann14], it is worth noting that among high-$\theta$ populations there may still be comparisons appropriate in a relative sense: greater haplotypic diversity from a metabarcode sample would suggest more individuals of that species were in the sample. In this way we can evaluate order-of-magnitude results, and have less need for prior information from a population. As a complementary recognition that the number of haplotypes provides us with more information than simple presence/absence, we may start to improve on our ability to recover actual ecology from actual molecules.
 
-
-
 # Acknowledgments
 
-Idea brought about by extended problem-solving session with J. Drake and colleagues in the Odum School of Ecology and Department of Genetics at The University of Georgia (UGA). Our work was improved greatly by suggestions from C. Ewers-Saucedo and K. Bockrath. We thank Toby Brett for his help to code in Mathematica. This work was supported by funding from NSF (OCE-1029526) and the UGA Department of Genetics.
+Idea brought about by extended problem-solving session with J. Drake and colleagues in the Odum School of Ecology and Department of Genetics at The University of Georgia (UGA). Our work was improved greatly by suggestions from Ana Bento, C. Ewers-Saucedo and K. Bockrath. We thank Toby Brett for his help to code in Mathematica. This work was supported by funding from NSF (OCE-1029526) and the UGA Department of Genetics.
 
 # Figure captions
-
 
 # Supporting information 
 

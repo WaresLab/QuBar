@@ -22,7 +22,7 @@ Here, we consider whether the same principle could be used for improving the eff
 
 The most apparent advances have been in surveys of microbial and viral diversity. Next-generation sequencing has permitted the now-commonplace exploration of fungal, bacterial, and viral diversity by generating $10^5$ - $10^7$ sequence reads per sample and using barcoding approaches (match of sequence to known taxonomic samples for that genomic region) to identify the taxa present and their relative abundance. While there is no doubt that this has transformed our understanding of functional ecosystem processes and microbial ecology at this scale [@Nguyen14; @Turn09; @Desnues08], there are definite limitations. For example, some taxa (e.g. Archaea) may not be as readily amplified using the same ribosomal 16S "bacteria" primers, and variation in amplification efficiency certainly exists within the Eubacteria [@Acinas05]. Additionally, it is known that some bacterial genomes harbor more than one copy of this canonical locus [@Kembel12], thus muddling the relationship between read frequency and taxon frequency in a community.
 
-The same problems exist - and are exacerbated - when studying multicellular diversity. On top of the problems of potential contamination, detecting rare taxa and/or handling singleton evidence for rare taxa, there is potentially a large variance in individual sizes of organisms. This, along with amplification variation given mismatches in the primer region, means that the relative read abundance in a NGS data set will often wildly vary (by multiple orders of magnitude) from the abundance of actual tissue in the data set [@Nguyen14; @Pi?ol14; @Bohmann14]. Researchers tend to address this by analyzing data for simple incidence as well as relative read abundance, to identify patterns robust to either removal of information or inaccurate information [@Nguyen14].
+The same problems exist - and are exacerbated - when studying multicellular diversity. On top of the problems of potential contamination, detecting rare taxa and/or handling singleton evidence for rare taxa, there is potentially a large variance in individual sizes of organisms. This, along with amplification variation given mismatches in the primer region, means that the relative read abundance in a NGS data set will often wildly vary (by multiple orders of magnitude) from the abundance of actual tissue in the data set [@Nguyen14; @Piñol14; @Bohmann14]. Researchers tend to address this by analyzing data for simple incidence as well as relative read abundance, to identify patterns robust to either removal of information or inaccurate information [@Nguyen14].
 
 If, however, the goal is to understand the actual relative abundance of individuals of different species in a sample - with these species harboring variation at 'barcode' loci, and often being highly divergent from one another - our question is whether there is complementary information that can be extracted from these data that does not rely on the abundance of reads that are assigned to a taxon, but relies on our understanding of diversity within populations and how that can be measured. 
 
@@ -87,11 +87,13 @@ maxhaps<-max(probs[,1])
 
 There are also clear minimum bounds that can be established for the abundance of a taxon. Considering DNA sequence haplotypes as our most basic information, we ask how many *distinct* haplotypes are recovered in the data that match a particular taxon? For a haploid mitochondrial marker like the oft-applied cytochrome oxidase I (COI), this number is the minimum number of individuals present (if the number happens to be zero, it is also likely to be the maximum number of individuals in the sample!). 
 
-We suggest three methods that could help to estimate the number of individuals for a particular species in a metabarcoding sample: 1) an inference based on haplotype diversity of the field population and the observed *number of haplotypes* in the sample, 2) an inference based on the expectations of Ewens'sampling theory and the *number of haplotypes* observed in the sample; and 3) an inference based on a prior assumption of $\theta$ in the field population and the observed *number of segregating sites* in the sample . 
+We suggest three methods that could help to estimate the number of individuals for a particular species in a metabarcoding sample: 1) an inference based on haplotype diversity of the field population and the observed *number of haplotypes* in the sample, 2) an inference based on the expectations of Ewens'sampling theory and the *number of haplotypes* observed in the sample; and 3) an inference based on a prior assumption of $\theta$ in the field population and the observed *number of segregating sites* in the sample. 
 
 To evaluate the potential usefulness of each method for recovering the abundance of input individuals, we simulated populations evolving under a Wright-Fisher neutral model. We performed the simulations with Hudson's *ms* program [@Hudson2002] using the *gap* [@gap2015] package in R [@RCoreTeam2015]. We simulated 3 populations, using three different population mutation rates ($\theta$ of 2, 10, and 20). For each population we then calculated summary statistics using the *PopGenome* [@PopGenome2014] package in R.
 
-From the simulated populations we took "field samples" of different sizes (2, 4, 8, 16, 32, 64, 128), sampling without replacement. We replicate the sampling experiment 100 times, to be able to assess variation of sampling. For each replicate, we calculate the number of haplotypes and the number of segregating sites, which represent our observed values in the simulated samples. The sampling size, known to us from this design, is what we are going to predict using the reversed inferences described below for each method. All the analysis of the simulated populations was done in R [@RCoreTeam2015]. Detailed information and the R code used to performed simulations is presented in the Appendix S1 in the Supplementary Material.
+From the simulated populations with the three tethas (2, 10 and 20) we took "field samples" of different sizes (2, 4, 8, 16, 32, 64, 128), sampling without replacement. We replicate the sampling experiment 100 times, to be able to assess variation of sampling. For each replicate, we calculate the number of haplotypes and the number of segregating sites, which represent our observed values in the simulated samples. From these distributions of observed values (haplotypes and segregating sites) in each combination of theta and sampling size we selected the values within the percentiles 0.25 and 0.75 to use in the back calculations of the number of individuals in the sample. The distributions are presented in the Supplementary Material (Figures S2 and S3). The sampling size, known to us from this design, is what we are going to predict using the reversed inferences described below for each method. 
+
+All the analysis of the simulated populations was done in R [@RCoreTeam2015], with the exception of the estimation of predicted segregating sites according Wakeley [-@Wakeley08] that were performed in the software Mathematica (https://www.wolfram.com/mathematica/) due to problems with precision of large numbers in R. Detailed information and the R code used to performed simulations is presented in the Appendix S1 in the Supplementary Material.
 
 ## Haplotype Diversity
 
@@ -287,9 +289,7 @@ kable(sumTable)
 
 ## Haplotype diversity and gamma estimation
 
-Overall, using haplotype diversity and our educated guess at how this diversity reflects the input tends to greatly underestimate the simulated sample, at least for larger sampling size (Figure 3). For the smaller sampling sizes the difference between the predicted sampling size and the simulated sampling size is close to zero, meaning the method provides little error; the difference is also smaller when $\theta$ is larger (Figure 3). 
-
-The probability distributions using this method and the predicted sampling sizes against the observed haplotypes are provided in the supplementary material. 
+Overall, using haplotype diversity and our educated guess at how this diversity reflects the input tends to greatly underestimate the simulated sample, at least for larger sampling size (Figure 3). For the smaller sampling sizes the difference between the predicted sampling size and the simulated sampling size is close to zero, meaning the method provides little error; the difference is also smaller when $\theta$ is larger (Figure 3). The probability distributions using this method and the predicted sampling sizes for each combination of theta and sampling size are are provided in the supplementary material (Figure S3). 
 
 ```{r figure 3,message=FALSE, echo=FALSE} 
 library(ggplot2)
@@ -309,13 +309,14 @@ factor(gammaData$samplingSize,levels=c(2,4,8,16,32,64,128)) -> gammaData$samplin
 
 # subsetting the haplotypes for each combination that are between defined quantiles
 thetas <- c("two", "ten", "twenty")
-ns <- unique(minidata$samplingSize)
+ns <- unique(gammaData$samplingSize)
 
 mygammalist <- list()
 for(i in thetas){
     for(j in ns){
       name <- paste(i,j)
-      my.comb <- gammaData[which(minidata$Theta == i & gammaData$samplingSize == j),]
+      my.comb <- gammaData[which(gammaData$Theta == i & gammaData$samplingSize == j),]
+      mode <- my.comb
       quant <- quantile(my.comb$n.haplotypes,c(0.75,0.25))
       names(quant) <- NULL
       keep <- subset(my.comb,my.comb$n.haplotypes >= quant[2] & my.comb$n.haplotypes <= quant[1])
@@ -333,25 +334,29 @@ my.good.gamma ->gammaData
 gammaData$samplingSize-gammaData$Max.Gamma.value -> gammaData$dif
 
 # Figure 3
-gamma.plot <- ggplot(gammaData, aes(x=samplingSize.f, y=dif,color=Theta))+ theme_bw() + geom_point(position = "jitter", aes(alpha=0.5))+ geom_hline(yintercept = 0) + scale_alpha(guide = 'none')+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Gamma distribution")
+gamma.plot <- ggplot(gammaData, aes(x=samplingSize.f, y=dif,color=Theta))+ theme_bw() + geom_point(position = "jitter", alpha=0.3,aes(colour=Theta)) + geom_hline(yintercept = 0) + scale_alpha(guide = 'none') + xlab("Simulated sampling size") + ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Gamma distribution") + scale_colour_manual(values=c("darkgoldenrod1", "dodgerblue","maroon4"))
 
 gamma.plot+ geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
+            geom_segment(x=0.5,y=-2,xend=1.5,yend=-2,colour="red")+
             geom_segment(x=1.5,y=4,xend=2.5,yend=4,colour="red")+
+            geom_segment(x=1.5,y=-4,xend=2.5,yend=-4,colour="red")+
             geom_segment(x=2.5,y=8,xend=3.5,yend=8,colour="red")+
+            geom_segment(x=2.5,y=-8,xend=3.5,yend=-8,colour="red")+
             geom_segment(x=3.5,y=16,xend=4.5,yend=16,colour="red")+
             geom_segment(x=4.5,y=32,xend=5.5,yend=32,colour="red")+
             geom_segment(x=5.5,y=64,xend=6.5,yend=64,colour="red")+
-            geom_segment(x=6.5,y=128,xend=7.5,yend=128,colour="red")
+            geom_segment(x=6.5,y=128,xend=7.5,yend=128,colour="red") +
+            coord_cartesian(ylim = c(-10,130))
         
 ```
 
-**Figure 3.** Difference between the simulated sampling size and the sampling size for the sample predicted using the gamma distribution method. The abline at zero shows the ideal situation with the estimation equal to the simulated sampling size.
+**Figure 3.** Difference between the simulated sampling size and the predicted sampling size using the gamma distribution method. The abline at zero shows the ideal situation with the estimation equal to the simulated sampling size. The red lines show the limit where the difference between simulated and predicted equals the sampling size, that is, beyond the red lines the error is too large to make a sensible prediction. Please note that the data are jittered to enhace visualization.
 
 ## Sampling theory
 
-Using Ewens's sampling theory and backcalculating the sampling size from the number of haplotypes gives a difference between the simulated and predicted sampling size that is centered to zero. The efficacy of this method (the difference between observed and predicted sampling size) decreases with an increase in sampling size and increases when the original population has a larger theta (from two to twenty). 
+Using Ewens's sampling theory to estimate the number of individuals from the number of haplotypes gives a difference between the simulated and predicted sampling size that is centered to zero and that only has larger error for tetha= 2 (Fig. 4 A,B). The precision of the method increases for larger thetas. 
 
-```{r sampling theory, echo=FALSE,message=FALSE}
+```{r figure 4 sampling theory, echo=FALSE,message=FALSE}
 library(ggplot2)
 
 # -----observed data------
@@ -412,9 +417,14 @@ newdata1$samplingSize-newdata1$n.df -> newdata1$difEwens
 # rearrenging levels of theta for plots
 newdata1$Theta <- factor(newdata1$theta.df,levels=c("two","ten","twenty"))
 
+# making factor of sampling size 
 factor(newdata1$samplingSize,levels=c(2,4,8,16,32,64,128)) -> newdata1$samplingSize.f
 
-ewens.plot <- ggplot(newdata1, aes(x=samplingSize.f, y=difEwens,color=Theta,alpha=0.2)) + theme_bw()+geom_violin()+geom_point(position = "jitter")+geom_hline(yintercept=0)+facet_grid(Theta~.,scales="free")+theme(legend.key = element_blank())+ scale_alpha(guide = 'none')+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Ewens's sampling theory")
+# dividing dataset in two
+newdata2 <- newdata1[which(newdata1$samplingSize==2|newdata1$samplingSize==4|newdata1$samplingSize==8|newdata1$samplingSize==16),]
+newdata3 <- newdata1[which(newdata1$samplingSize==32|newdata1$samplingSize==64|newdata1$samplingSize==128),]
+
+ewens.plot <- ggplot(newdata2, aes(x=samplingSize.f, y=difEwens)) + theme_bw() + geom_point(position = "jitter",alpha=0.4,aes(colour=Theta)) + geom_hline(yintercept=0) + theme(legend.key = element_blank())+ scale_alpha(guide = 'none') + xlab("Simulated sampling size") + ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Ewens's sampling theory")+ scale_colour_manual(values=c("darkgoldenrod1", "dodgerblue","maroon4"))+ scale_y_continuous(limits = c(-20, 20))+facet_grid(Theta~.)
 
 ewens.plot+ geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
          geom_segment(x=0.5,y=-2,xend=1.5,yend=-2,colour="red")+
@@ -423,20 +433,25 @@ ewens.plot+ geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
          geom_segment(x=2.5,y=8,xend=3.5,yend=8,colour="red")+
          geom_segment(x=2.5,y=-8,xend=3.5,yend=-8,colour="red")+
          geom_segment(x=3.5,y=16,xend=4.5,yend=16,colour="red")+
-         geom_segment(x=3.5,y=-16,xend=4.5,yend=-16,colour="red")+
-         geom_segment(x=4.5,y=32,xend=5.5,yend=32,colour="red")+
-         geom_segment(x=4.5,y=-32,xend=5.5,yend=-32,colour="red")+
-         geom_segment(x=5.5,y=64,xend=6.5,yend=64,colour="red")+
-         geom_segment(x=5.5,y=-64,xend=6.5,yend=-64,colour="red")+
-         geom_segment(x=6.5,y=128,xend=7.5,yend=128,colour="red")+
-         geom_segment(x=6.5,y=-128,xend=7.5,yend=-128,colour="red")
+         geom_segment(x=3.5,y=-16,xend=4.5,yend=-16,colour="red")
+        
+newdata3 <- newdata1[which(newdata1$samplingSize==32|newdata1$samplingSize==64|newdata1$samplingSize==128),]
+
+ewens.plot2 <- ggplot(newdata3, aes(x=samplingSize.f, y=difEwens)) + theme_bw() + geom_point(position = "jitter",alpha=0.4,aes(colour=Theta)) + geom_hline(yintercept=0) + theme(legend.key = element_blank())+ scale_alpha(guide = 'none') + xlab("Simulated sampling size") + ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Ewens's sampling theory")+ scale_colour_manual(values=c("darkgoldenrod1", "dodgerblue","maroon4"))+ scale_y_continuous(limits = c(-130, 130))+facet_grid(Theta~.)
+
+ewens.plot2 + geom_segment(x=0.5,y=32,xend=1.5,yend=32,colour="red")+
+         geom_segment(x=0.5,y=-32,xend=1.5,yend=-32,colour="red")+
+         geom_segment(x=1.5,y=64,xend=2.5,yend=64,colour="red")+
+         geom_segment(x=1.5,y=-64,xend=2.5,yend=-64,colour="red")+
+         geom_segment(x=2.5,y=128,xend=3.5,yend=128,colour="red")+
+         geom_segment(x=2.5,y=-128,xend=3.5,yend=-128,colour="red")
 ```
 
-**Figure 4.** Difference between the simulated sampling size and the sampling size for the sample predicted using Ewens's sampling theory. The abline at zero shows the ideal situation in which the estimation equals the simulated sampling size. The panels separate the three different theta: two, ten and twenty. Please note the different y-axis between panels
+**Figure 4.** Difference between the simulated sampling size and the sampling size for the sample predicted using Ewens's sampling theory. A) sampling sizes of 2,4,8 and 16; B) sampling sizes of 32, 64 and 128. The panels separate the three different theta: two, ten and twenty. The abline at zero shows the ideal situation in which the estimation equals the simulated sampling size. The red lines show the limit where the difference between simulated and predicted equals the sampling size, that is, beyond the red lines the error is too large to make a sensible prediction. Please note that the data are jittered to enhace visualization.
 
 ## Theta and segregating sites approach
 
-The implementation of Wakeley's [-@Wakeley08] formula for estimation of the relationship between *S*, *n*, and $\theta$ was tested for sample sizes up to 50; instabilities in estimation at large samples limited our ability to explore larger samples, but instead we focused on the full range of each sample size from 2-50.
+The implementation of Wakeley's [-@Wakeley08] formula for estimation of the relationship between the number of segregating sites *k*, the number of individuals *n* and $\theta$ presented the larger differences of precision between populations with different thetas. The estimation of n for theta=20 are totally flawed, with predicted values that overstimate the real n and errors that are far larger than the sampling size (Fig. 5). The estimations of n tend to be understimated in theta=2 and overstimated in theta=10, in particular for smaller sampling sizes (Fig. 5).
 
 ```{r plotting Wakeley data NEW DATA,echo=FALSE,message=FALSE,warning=FALSE}
 library(ggplot2)
@@ -501,10 +516,13 @@ best.n <- merge(bestprobs,wakdata,by.x=c("Theta","wak.segsites.f","best.prob"),b
 #allwak <-merge(modes,best.n,by.x=c("Theta","mode"),by.y=c("Theta","wak.segsites"))
 allwak <- merge(my.good.segs,best.n,by.x=c("Theta","n.seg.sites"),by.y=c("Theta","wak.segsites"))
 
+# rearrenging levels of theta for plots
+allwak$Theta <- factor(allwak$Theta,levels=c("two","ten","twenty"))
+
 # Calculate difference between real and predicted n
 allwak$dif <- allwak$samplingSize - allwak$wak.n
 
-myplot <- ggplot(allwak, aes(x=samplingSize.f, y=dif,color=Theta,alpha=0.2)) + theme_bw()+geom_point()+geom_point(position = "jitter")+geom_hline(yintercept=0)+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Wakeley's likelihood") + scale_alpha(guide = 'none') + scale_y_continuous(limits = c(-150, 150))
+myplot <- ggplot(allwak, aes(x=samplingSize.f, y=dif,color=Theta,alpha=0.2)) + theme_bw()+geom_point()+geom_point(position = "jitter",aes(colour=Theta))+geom_hline(yintercept=0)+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Wakeley's likelihood") + scale_alpha(guide = 'none') + scale_y_continuous(limits = c(-150, 150))+ scale_colour_manual(values=c("darkgoldenrod1", "dodgerblue","maroon4"))
 
 myplot + geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
          geom_segment(x=0.5,y=-2,xend=1.5,yend=-2,colour="red")+
@@ -521,6 +539,8 @@ myplot + geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
          geom_segment(x=6.5,y=128,xend=7.5,yend=128,colour="red")+
          geom_segment(x=6.5,y=-128,xend=7.5,yend=-128,colour="red")
 ```
+
+**Figure 5.** Difference between the simulated sampling size and the sampling size for the sample predicted using Wakeley's segregating sites theory. The abline at zero shows the ideal situation in which the estimation equals the simulated sampling size. The red lines show the limit where the difference between simulated and predicted equals the sampling size, that is, beyond the red lines the error is too large to make a sensible prediction. Please note that the data are jittered to enhace visualization.
 
 # Discussion
 
@@ -546,42 +566,84 @@ Idea brought about by extended problem-solving session with J. Drake and colleag
 
 ## Supplementary figures
 
-**Supplementary Figure 1.** Probability distribution of the number of individuales back calculated using the gamma approach. Each panel shows a combination of simulated sampling size and the mutation rate in the original populations.  
+**Supplementary Figure 1.** Distribution of the number of haplotypes for each combination of theta (two, ten, twenty) and sampling size (2, 4, 8, 16, 32, 64, 128). 
 
-```{r more gamma plos,echo=FALSE,message=F,warning=FALSE}
+```{r histogram of haplotypes,echo=FALSE,message=F,warning=FALSE}
+# load data from simulations
+fullgammaData <- read.csv("gammaData_13Jul.csv",header=T) 
+
+# subsetting data with growth
+gammaData <- subset(fullgammaData,fullgammaData$Growth=="no")
+droplevels(gammaData) -> gammaData
+
+# rearrenging levels of theta for plots
+gammaData$Theta <- factor(gammaData$Theta,levels=c("two","ten","twenty"))
+
+# making sampling size a factor
+factor(gammaData$samplingSize,levels=c(2,4,8,16,32,64,128)) -> gammaData$samplingSize.f
+
+dist.hap<-ggplot(gammaData, aes(x = n.haplotypes)) + theme_bw() + geom_histogram() + facet_grid(Theta~samplingSize.f) + xlab("Number of haplotypes") + ylab("Frequency")
+dist.hap
+```
+
+**Supplementary Figure 2.** Distribution of the number of segregating sites for each combination of theta (two, ten, twenty) and sampling size (2, 4, 8, 16, 32, 64, 128). 
+
+```{r histogram of seg sites,echo=FALSE,message=F,warning=FALSE}
+# load data from simulations
+segsites<-read.csv("numberSegSites_10Sep2015.csv",header=T)
+
+# making factors for the ggplot2 plots
+factor(segsites$samplingSize)->segsites$samplingSize.f
+
+segsites[,-1] -> segsites
+segsites$Pop <- NULL
+segsites$Growth <- NULL
+segsites1 <- segsites[which(segsites$Theta=="two"|segsites$Theta=="ten"|segsites$Theta=="twenty"),]
+droplevels(segsites1) -> segsites2
+
+# rearrenging levels of theta for plots
+segsites2$Theta <- factor(segsites2$Theta,levels=c("two","ten","twenty"))
+
+dist.seg<-ggplot(segsites2, aes(x = n.seg.sites)) + theme_bw() + geom_histogram() + facet_grid(Theta~samplingSize.f) + xlab("Number of segregating sites") + ylab("Frequency")
+dist.seg
+```
+
+
+**Supplementary Figure 3.** Probability distribution of the number of individuales back calculated using the gamma approach. Each panel shows a combination of simulated sampling size and the mutation rate in the original populations.  
+
+```{r SuppFig3 Gamma probs,echo=FALSE,message=F,warning=FALSE}
 library(ggplot2)
 
 # load data with number of haplotypes
-hapnum<-read.csv("numberHaplotypes.csv",header=T)
+hapnum<-read.csv("numberHaplotypes_10Sep2015.csv",header=T)
 hapnum$X<-NULL
 
+# subsetting only theta 2, 10, 20
+hapnum1 <- hapnum[which(hapnum$Theta=="two"|segsites$Theta=="ten"|segsites$Theta=="twenty"),]
+droplevels(hapnum1) -> hapnum2
+
 # Haplotype diversity for each of the six simulated populations of 1000 individuals
-hapdiv<-c(0.5504204, 0.3377538, 0.8915536, 0.9258679,0.7627047, 0.9565626)
+hapdiv <- c(0.3377538, 0.9258679, 0.9565626)
 
 # add the column of haplotype diversity for each population
-for(i in 1:6){
-hapnum$hap.diversity[hapnum$Pop == i] <- hapdiv[i] 
+for(i in 1:3){
+hapnum2$hap.diversity[hapnum2$Pop == i] <- hapdiv[i] 
 }
 
-# to check our loop, subset that
-growth <- which(hapnum$Growth == "yes")
-hapnum.test <- hapnum[-growth,]
-droplevels(hapnum.test) -> hapnum.test
-
 df.list <- list()
-for(i in 1:nrow(hapnum.test)){
+for(i in 1:nrow(hapnum2)){
   #print(paste("working in row number",i))
-    mydf<- data.frame(theta=NA,growth=NA,n=NA,hap.num=NA,p=rep(NA,500)) 
+    mydf<- data.frame(theta=NA,n=NA,hap.num=NA,p=rep(NA,500)) 
       x=1
       cdf=0
       indprob=0
       array<-NULL
     while (cdf<0.99) {
       cdfprev<-cdf
-      cdf<-pgamma(x,shape=(1/hapnum.test$hap.diversity[i]),rate=(1/hapnum.test$n.haplotypes[i]))
+      cdf<-pgamma(x,shape=(1/hapnum2$hap.diversity[i]),rate=(1/hapnum2$n.haplotypes[i]))
                   
       indprob<-cdf-cdfprev
-      happrob<-hapnum.test$n.haplotypes[i]+(x-1)
+      happrob<-hapnum2$n.haplotypes[i]+(x-1)
       array<-c(array,happrob)
       array<-c(array,cdf)
       array<-c(array,indprob)
@@ -591,32 +653,33 @@ for(i in 1:nrow(hapnum.test)){
     
     # fill dataframe
     for (j in 2:nrow(probs)){
-    mydf$theta[j] <- as.character(hapnum.test$Theta[i])
-    mydf$growth[j] <- as.character(hapnum.test$Growth[i])
+    mydf$theta[j] <- as.character(hapnum2$Theta[i])
     mydf$p[j] <- probs[j,3]
     mydf$n[j] <- probs[j,1]
-    mydf$samplingSize[j] <- hapnum.test$samplingSize[i]
-    mydf$hap.num[j] <- hapnum.test$n.haplotypes[i]
+    mydf$samplingSize[j] <- hapnum2$samplingSize[i]
+    mydf$hap.num[j] <- hapnum2$n.haplotypes[i]
         }
   mydf -> df.list[[i]]  
   }
 
+# make dataframe from list
 mydata1 <- do.call("rbind", df.list)
 mydata2 <- mydata1[complete.cases(mydata1$n),]
+row.names(mydata2) <- NULL
 
-
-as.factor(mydata2$theta) -> mydata2$theta.f
+# add factor to plot
 as.factor(mydata2$samplingSize) -> mydata2$samplingSize.f
-mydata2$growth <- NULL # we don't need this colum
+as.factor(mydata2$theta) -> mydata2$theta.f
+
+# rearrenging levels of theta for plots
+mydata2$theta.f <- factor(mydata2$theta.f,levels=c("two","ten","twenty"))
+
 
 # make plots
-
-ggplot(mydata2, aes(x=n, y=p))+ geom_point()+theme_bw() + facet_grid(theta.f~samplingSize.f)
-
 # to have the plot with free scales
-ggplot(mydata2, aes(x=n, y=p))+ geom_point()+theme_bw() + facet_grid(theta.f~samplingSize.f,scales="free")
+ggplot(mydata2, aes(x=n, y=p))+ geom_point()+theme_bw() + facet_grid(theta.f ~ samplingSize.f,scales="free") + xlab("Number of individuals") + ylab("Probability")
 
- View(mydata2[which(mydata2$theta=="two" & mydata2$hap.num==4),])
+#View(mydata2[which(mydata2$theta=="two" & mydata2$hap.num==4),])
 ```
 
 

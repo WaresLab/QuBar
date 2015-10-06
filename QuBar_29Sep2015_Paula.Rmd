@@ -212,14 +212,17 @@ for (n in 2:maxn) {
   
 }
 
-#par(mfrow=c(2,1))
+par(mfrow=c(1,1))
 
 # ----make Wakeley plots--------
 # NOTE: the "theta" command in the hist3D function is to define view angles and it is not related to the theta defined by us as mutation rate #
 
-hist3D(x=seq(0,1,length.out=nrow(PSKv)), y=seq(0,1,length.out=ncol(PSKv)), PSKv, col=NULL, border="black", theta=30,  phi=50,       xlab="k", ylab="n", zlab="P{S=k}", alpha=0.35)
+hist3D(x=seq(0,1,length.out=nrow(PSKv)), y=seq(0,1,length.out=ncol(PSKv)), PSKv, col=NULL, border=NA, theta=30,  phi=50, xlab="k", ylab="n", zlab="P{S=k}", alpha=0.35,colkey=FALSE)
 
-hist3D(x=seq(0,1,length.out=nrow(PSKv2)),y=seq(0,1,length.out=ncol(PSKv2)),PSKv2,col=NULL,border="black",theta=30,phi=50,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
+#hist3D(x=seq(0,1,length.out=nrow(PSKv2)),y=seq(0,1,length.out=ncol(PSKv2)),PSKv2,col=NULL,border="black",theta=30,phi=50,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35)
+
+hist3D(x=seq(0,1,length.out=nrow(PSKv2)),y=seq(0,1,length.out=ncol(PSKv2)),PSKv2,col=NULL,border=NA,theta=30,phi=50,xlab="k",ylab="n",zlab="P{S=k}",alpha=0.35,colkey=FALSE)
+
 
 #par(mfrow=c(1,1))
 

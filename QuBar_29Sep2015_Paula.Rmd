@@ -289,7 +289,7 @@ kable(sumTable)
 
 ## Haplotype diversity and gamma estimation
 
-Overall, using haplotype diversity and our educated guess at how this diversity reflects the input tends to greatly underestimate the simulated sample, at least for larger sampling size (Figure 3). For the smaller sampling sizes the difference between the predicted sampling size and the simulated sampling size is close to zero, meaning the method provides little error; the difference is also smaller when $\theta$ is larger (Figure 3). The probability distributions using this method and the predicted sampling sizes for each combination of theta and sampling size are are provided in the supplementary material (Figure S3). 
+Overall, using haplotype diversity (and our educated guess at how this diversity reflects the input) tends to greatly underestimate the simulated sample, at least for larger sampling size (Figure 3). For the smaller sampling sizes the difference between the predicted sampling size and the simulated sampling size is close to zero, meaning the method provides little error; the difference is also smaller when $\theta$ is larger (Figure 3). The probability distributions using this method and the predicted sampling sizes for each combination of theta and sampling size are provided in the supplementary material (Figure S3). 
 
 ```{r figure 3,message=FALSE, echo=FALSE} 
 library(ggplot2)
@@ -354,7 +354,7 @@ gamma.plot+ geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
 
 ## Sampling theory
 
-Using Ewens's sampling theory to estimate the number of individuals from the number of haplotypes gives a difference between the simulated and predicted sampling size that is centered to zero and that only has larger error for tetha= 2 (Fig. 4 A,B). The precision of the method increases for larger thetas. 
+Using Ewens's sampling theory to estimate the number of individuals from the number of haplotypes gives a difference between the simulated and predicted sampling size that is centered to zero and that only has larger error for $\theta$ = 2 (Fig. 4 A,B). The precision of the method increases for larger values of $\theta$. 
 
 ```{r figure 4 sampling theory, echo=FALSE,message=FALSE}
 library(ggplot2)
@@ -447,11 +447,11 @@ ewens.plot2 + geom_segment(x=0.5,y=32,xend=1.5,yend=32,colour="red")+
          geom_segment(x=2.5,y=-128,xend=3.5,yend=-128,colour="red")
 ```
 
-**Figure 4.** Difference between the simulated sampling size and the sampling size for the sample predicted using Ewens's sampling theory. A) sampling sizes of 2,4,8 and 16; B) sampling sizes of 32, 64 and 128. The panels separate the three different theta: two, ten and twenty. The abline at zero shows the ideal situation in which the estimation equals the simulated sampling size. The red lines show the limit where the difference between simulated and predicted equals the sampling size, that is, beyond the red lines the error is too large to make a sensible prediction. Please note that the data are jittered to enhace visualization.
+**Figure 4.** Difference between the simulated sampling size and the sampling size for the sample predicted using Ewens's sampling theory. A) sampling sizes of 2,4,8 and 16; B) sampling sizes of 32, 64 and 128. The panels separate the three different values of $\theta$: two, ten and twenty. The vertical line at zero shows the ideal situation in which the estimation equals the simulated sampling size. The red lines show the limit where the difference between simulated and predicted equals the sampling size, that is, beyond the red lines the error is too large to make a sensible prediction. Please note that the results are jittered to enhance visualization.
 
 ## Theta and segregating sites approach
 
-The implementation of Wakeley's [-@Wakeley08] formula for estimation of the relationship between the number of segregating sites *k*, the number of individuals *n* and $\theta$ presented the larger differences of precision between populations with different thetas. The estimation of n for theta=20 are totally flawed, with predicted values that overstimate the real n and errors that are far larger than the sampling size (Fig. 5). The estimations of n tend to be understimated in theta=2 and overstimated in theta=10, in particular for smaller sampling sizes (Fig. 5).
+The implementation of Wakeley's [-@Wakeley08] formula for estimation of the relationship between the number of segregating sites *k*, the number of individuals *n* and $\theta$ presented the larger differences of precision between populations with different $\theta$. The estimation of *n* for $\theta$=20 are totally flawed, with predicted values that overestimate the real *n* and errors that are far larger than the sampling size (Fig. 5). The estimations of *n* tend to be understimated in $\theta$=2 and overestimated in $\theta$=10, in particular for smaller sampling sizes (Fig. 5).
 
 ```{r plotting Wakeley data NEW DATA,echo=FALSE,message=FALSE,warning=FALSE}
 library(ggplot2)

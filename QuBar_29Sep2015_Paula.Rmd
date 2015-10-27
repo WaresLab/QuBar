@@ -525,7 +525,7 @@ allwak$Theta <- factor(allwak$Theta,levels=c("two","ten","twenty"))
 # Calculate difference between real and predicted n
 allwak$dif <- allwak$samplingSize - allwak$wak.n
 
-myplot <- ggplot(allwak, aes(x=samplingSize.f, y=dif,color=Theta,alpha=0.2)) + theme_bw()+geom_point()+geom_point(position = "jitter",aes(colour=Theta))+geom_hline(yintercept=0)+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Wakeley's likelihood") + scale_alpha(guide = 'none') + scale_y_continuous(limits = c(-150, 150))+ scale_colour_manual(values=c("darkgoldenrod1", "dodgerblue","maroon4"))
+myplot <- ggplot(allwak, aes(x=samplingSize.f, y=dif,color=Theta,alpha=0.2)) + theme_bw()+geom_point()+geom_point(position = "jitter",aes(colour=Theta))+geom_hline(yintercept=0)+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Wakeley's likelihood") + scale_alpha(guide = 'none') + scale_y_continuous(limits = c(-350, 350))+ scale_colour_manual(values=c("darkgoldenrod1", "dodgerblue","maroon4"))
 
 myplot + geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
          geom_segment(x=0.5,y=-2,xend=1.5,yend=-2,colour="red")+

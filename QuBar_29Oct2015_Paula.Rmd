@@ -28,7 +28,7 @@ If, however, the goal is to understand the actual relative abundance of individu
 
 The summary statistics for DNA sequence diversity are well established and generally recognize the population mutation rate $\theta$ at a given locus; as a population increases in size (N), or as the mutation rate $\mu$ at that locus increases, more polymorphisms and more diversity will be found ($\theta$ is proportional to N*x*$\mu$). There are limitations to this approach based on Kimura's neutral theory, as various forms of genomic selection will limit the direct relationship between population size and population diversity [e.g., @Bazin06; @Wares10; @Corbett15]. Nevertheless, these summary statistics - including Watterson's $\theta$, a sample-normalized estimator that uses the number of segregating sites *S* in a sample - may provide information necessary to generate *some* inference of relative abundance from NGS data. This information also has its limits: nucleotide diversity ($\pi$) requires information on polymorphic site frequencies that will be biased by differential amplification across individuals, as well as relatively uninformative - or diminishing - returns as the number of sampled individuals increases [@Wakeley08]. Haplotype diversity (*H*) is likely sufficient to set a minimum boundary on the number of individuals sampled, and *H* along with *S* may provide enough information to generate a probabilistic distribution associated with larger numbers of individuals.
 
-Here we present the mathematical considerations necessary to develop estimates of the relative abundance of species in a barcoding sample of unknown individuals. The tools combine previous information on genetic diversity in the sampled population (that is, a species or population that has previously been analyzed at the same locus) with observed properties of the sample, such as the number of haplotypes and the number of segregating sites for each species. We then evaluate the situations in which there is sufficient power to make meaningful statements about relative abundance from polymorphism data alone. 
+Here we present the mathematical considerations necessary to develop estimates of the relative abundance of species in a barcoding sample of unknown number of individuals. The tools combine previous information on genetic diversity in the sampled population (that is, a species or population that has previously been analyzed at the same locus) with observed properties of the sample, such as the number of haplotypes and the number of segregating sites for each species. We then evaluate the situations in which there is sufficient power to make meaningful statements about relative abundance from polymorphism data alone. 
 
 # Methods
 
@@ -230,7 +230,11 @@ hist3D(x=seq(0,1,length.out=nrow(PSKv2)),main="Theta= 10",y=seq(0,1,length.out=n
 
 **Figure 2.** Probability surface of observing a number of segregating sites *k* for a given sample size *n* when $\theta$ is set. In (a), $\theta$ = 2; in (b), $\theta$ = 10.
 
-For each of the three populations with theta equal to 2, 10 or 20, and with a range of sampling sizes from 2 to 128, we applied Wakeley's [-@Wakeley08] equation 4.3 to estimate the expected number of segregating sites for each sampling size. We then compared the observed number of segregating sites in each sample with the expected number of segregating sites for each sampling size and estimated the "observed" sampling size in our sample. The accuracy of the method was calculated as the difference between the "real" sampling size - the one from our simulations - and the inferred number of individuals in the sample.
+For each of the three populations with theta equal to 2, 10 or 20, and with a range of sampling sizes from 2 to 128, we applied Wakeley's [-@Wakeley08] equation 4.3 (presented above) to estimate the expected number of segregating sites for each sampling size. We then compared the observed number of segregating sites in each sample with the expected number of segregating sites for each sampling size and estimated the "observed" sampling size in our sample. The accuracy of the method was calculated as the difference between the "real" sampling size - the one from our simulations - and the inferred number of individuals in the sample.
+
+## Comparing methods
+
+To summarize and compare the three methods we calculated the mean of the difference between simulated and predicted for each combination of Theta and type of method.
 
 # Results 
 
@@ -292,10 +296,12 @@ kable(sumTable)
 
 ## Haplotype diversity and gamma estimation
 
-Overall, using haplotype diversity (and our educated guess at how this diversity reflects the input) tends to greatly underestimate the simulated sample, at least for larger sampling size (Figure 3). For the smaller sampling sizes the difference between the predicted sampling size and the simulated sampling size is close to zero, meaning the method provides little error; the difference is also smaller when $\theta$ is larger (Figure 3). The probability distributions using this method and the predicted sampling sizes for each combination of theta and sampling size are provided in the supplementary material (Figure S3). 
+Overall, using haplotype diversity (and our educated guess at how this diversity reflects the input) tends to underestimate the simulated sample (Figure 3). For the smaller sampling sizes the difference between the predicted sampling size and the simulated sampling size is close to zero, meaning the method provides little error (Figure 3a). But for larger sampling sizes (Figure 3b) the predicted value greatly overstimates the number of individuals and the error is big. The efficiency of the method improves for larger $\theta$, theta=20 has smaller differences between simulated and predicted sampling size (Figure 3).
+The probability distributions using the gamma method and the predicted sampling sizes for each combination of theta and sampling size are provided in the supplementary material (Figure S3). 
 
 ```{r Figure 3,message=FALSE, echo=FALSE} 
 library(ggplot2)
+library(plyr)
 
 # loading data
 fullgammaData <- read.csv("gammaData_13Jul.csv",header=T) 
@@ -336,31 +342,45 @@ my.good.gamma ->gammaData
 # calculating the difference between "real" n and max gamma.
 gammaData$samplingSize-gammaData$Max.Gamma.value -> gammaData$dif
 
-# Figure 3
-gamma.plot <- ggplot(gammaData, aes(x=samplingSize.f, y=dif,color=Theta))+ theme_bw() + geom_point(position = "jitter", alpha=0.3,aes(colour=Theta)) + geom_hline(yintercept = 0) + scale_alpha(guide = 'none') + xlab("Simulated sampling size") + ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Gamma distribution") + scale_colour_manual(values=c("darkgoldenrod1", "dodgerblue","maroon4"))
+# making summary of difference for later
+summaryGamma <- ddply(gammaData,.(samplingSize.f,Theta),summarise,mean=mean(dif))
+#xyplot(mean~samplingSize.f|Theta,data=summaryGamma)
 
-gamma.plot+ geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
+
+# dividing datasets in two
+gammaData1 <- gammaData[which(gammaData$samplingSize==2|gammaData$samplingSize==4|gammaData$samplingSize==8|gammaData$samplingSize==16),]
+gammaData2 <- gammaData[which(gammaData$samplingSize==32|gammaData$samplingSize==64|gammaData$samplingSize==128),]
+
+
+# Figure 3
+gamma.plot1 <- ggplot(gammaData1, aes(x=samplingSize.f, y=dif,color=Theta))+ theme_bw() + geom_point(position = "jitter", alpha=0.4,aes(colour=Theta)) + geom_hline(yintercept = 0) + scale_alpha(guide = 'none') + xlab("Simulated sampling size") + ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Gamma distribution") + scale_colour_manual(values=c("darkgoldenrod1", "dodgerblue","maroon4")) + scale_y_continuous(limits = c(-20, 20))
+
+gamma.plot1 + geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
             geom_segment(x=0.5,y=-2,xend=1.5,yend=-2,colour="red")+
             geom_segment(x=1.5,y=4,xend=2.5,yend=4,colour="red")+
             geom_segment(x=1.5,y=-4,xend=2.5,yend=-4,colour="red")+
             geom_segment(x=2.5,y=8,xend=3.5,yend=8,colour="red")+
-            geom_segment(x=2.5,y=-8,xend=3.5,yend=-8,colour="red")+
+            geom_segment(x=2.5,y=-8,xend=3.5,yend=-8,colour="red") +  
             geom_segment(x=3.5,y=16,xend=4.5,yend=16,colour="red")+
-            geom_segment(x=4.5,y=32,xend=5.5,yend=32,colour="red")+
-            geom_segment(x=5.5,y=64,xend=6.5,yend=64,colour="red")+
-            geom_segment(x=6.5,y=128,xend=7.5,yend=128,colour="red") +
-            coord_cartesian(ylim = c(-10,130))
+            geom_segment(x=3.5,y=-16,xend=4.5,yend=-16,colour="red")
+
+gamma.plot2 <- ggplot(gammaData2, aes(x=samplingSize.f, y=dif,color=Theta))+ theme_bw() + geom_point(position = "jitter", alpha=0.4,aes(colour=Theta)) + geom_hline(yintercept = 0) + scale_alpha(guide = 'none') + xlab("Simulated sampling size") + ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Gamma distribution") + scale_colour_manual(values=c("darkgoldenrod1", "dodgerblue","maroon4")) + scale_y_continuous(limits = c(-10, 130))
+
+gamma.plot2 + geom_segment(x=0.5,y=32,xend=1.5,yend=32,colour="red") +
+            geom_segment(x=1.5,y=64,xend=2.5,yend=64,colour="red")+
+            geom_segment(x=2.5,y=128,xend=3.5,yend=128,colour="red") 
         
 ```
 
-**Figure 3.** Difference between the simulated sampling size and the predicted sampling size using the gamma distribution method. The abline at zero shows the ideal situation with the estimation equal to the simulated sampling size. The red lines show the limit where the difference between simulated and predicted equals the sampling size, that is, beyond the red lines the error is too large to make a sensible prediction. Please note that the data are jittered to enhace visualization.
+**Figure 3.** Difference between the simulated sampling size and the predicted sampling size using the gamma distribution method. (a) sampling sizes of 2, 4, 8 and 16; (b) sampling sizes of 32, 64 and 128. The abline at zero shows the ideal situation with the estimation equal to the simulated sampling size. The red lines show the limit where the difference between simulated and predicted equals the sampling size, that is, beyond the red lines the error is too large to make a sensible prediction. Please note that the data are jittered to enhace visualization, and that the y-axis differs between (a) and (b).
 
 ## Sampling theory
 
-Using Ewens's sampling theory to estimate the number of individuals from the number of haplotypes gives a difference between the simulated and predicted sampling size that is centered to zero and that only has larger error for $\theta$ = 2 (Fig. 4 A,B). The precision of the method increases for larger values of $\theta$. 
+Using Ewens's sampling theory to estimate the number of individuals from the number of haplotypes gives a difference between the simulated and predicted sampling size that is centered to zero and that only has larger error for $\theta$ = 2 (Figure 4). The precision of the method increases for larger values of $\theta$. 
 
 ```{r Figure 4 sampling theory, echo=FALSE,message=FALSE}
 library(ggplot2)
+library(plyr)
 
 # -----observed data------
 # ------------------------
@@ -423,6 +443,10 @@ newdata1$Theta <- factor(newdata1$theta.df,levels=c("two","ten","twenty"))
 # making factor of sampling size 
 factor(newdata1$samplingSize,levels=c(2,4,8,16,32,64,128)) -> newdata1$samplingSize.f
 
+# making summary of differences for later
+summaryEwens <- ddply(newdata1,.(samplingSize.f,Theta),summarise,mean=mean(difEwens))
+#xyplot(mean~samplingSize.f|Theta,data=summaryEwens)
+
 # dividing dataset in two
 newdata2 <- newdata1[which(newdata1$samplingSize==2|newdata1$samplingSize==4|newdata1$samplingSize==8|newdata1$samplingSize==16),]
 newdata3 <- newdata1[which(newdata1$samplingSize==32|newdata1$samplingSize==64|newdata1$samplingSize==128),]
@@ -450,11 +474,11 @@ ewens.plot2 + geom_segment(x=0.5,y=32,xend=1.5,yend=32,colour="red")+
          geom_segment(x=2.5,y=-128,xend=3.5,yend=-128,colour="red")
 ```
 
-**Figure 4.** Difference between the simulated sampling size and the sampling size for the sample predicted using Ewens's sampling theory. (a) sampling sizes of 2,4,8 and 16; (b) sampling sizes of 32, 64 and 128. The panels separate the three different values of $\theta$: two, ten and twenty. The vertical line at zero shows the ideal situation in which the estimation equals the simulated sampling size. The red lines show the limit where the difference between simulated and predicted equals the sampling size, that is, beyond the red lines the error is too large to make a sensible prediction. Please note that the results are jittered to enhance visualization.
+**Figure 4.** Difference between the simulated sampling size and the sampling size for the sample predicted using Ewens's sampling theory. (a) sampling sizes of 2, 4, 8 and 16; (b) sampling sizes of 32, 64 and 128. The panels separate the three different values of $\theta$: two, ten and twenty. The vertical line at zero shows the ideal situation in which the estimation equals the simulated sampling size. The red lines show the limit where the difference between simulated and predicted equals the sampling size, that is, beyond the red lines the error is too large to make a sensible prediction. Please note that the data are jittered to enhace visualization, and that the y-axis differs between (a) and (b).
 
 ## Theta and segregating sites approach
 
-The implementation of Wakeley's [-@Wakeley08] formula for estimation of the relationship between the number of segregating sites *k*, the number of individuals *n* and $\theta$ presented the larger differences of precision between populations with different $\theta$. The estimation of *n* for $\theta$=20 are totally flawed, with predicted values that overestimate the real *n* and errors that are far larger than the sampling size (Fig. 5). The estimations of *n* tend to be understimated in $\theta$=2 and overestimated in $\theta$=10, in particular for smaller sampling sizes (Fig. 5).
+The implementation of Wakeley's [-@Wakeley08] formula for estimation of the relationship between the number of segregating sites *k*, the number of individuals *n* and $\theta$ presented the larger differences of precision between populations with different $\theta$. The estimation of *n* for $\theta$=20 are totally flawed, with predicted values that overestimate the real *n* and errors that are far larger than the sampling size (Figure 5). The estimations of *n* tend to be understimated in $\theta$= 2 and overestimated in $\theta$= 10, in particular for smaller sampling sizes (Figure 5a). The differences in the estimation between theta 2 and ten are reduced for larger sampling sizes (Figure 5b).
 
 ```{r Figure 5 Wakeley data,echo=FALSE,message=FALSE,warning=FALSE}
 library(ggplot2)
@@ -525,11 +549,14 @@ allwak$Theta <- factor(allwak$Theta,levels=c("two","ten","twenty"))
 # Calculate difference between real and predicted n
 allwak$dif <- allwak$samplingSize - allwak$wak.n
 
+# making summary of differences for later
+summaryWak <- ddply(allwak,.(samplingSize.f,Theta),summarise,mean=mean(dif))
+
 # dividing dataset in two
 allwak1 <- allwak[which(allwak$samplingSize==2|allwak$samplingSize==4|allwak$samplingSize==8|allwak$samplingSize==16),]
 allwak2 <- allwak[which(allwak$samplingSize==32|allwak$samplingSize==64|allwak$samplingSize==128),]
 
-myplot1 <- ggplot(allwak1, aes(x=samplingSize.f, y=dif,color=Theta,alpha=0.2)) + theme_bw()+geom_point()+geom_point(position = "jitter",aes(colour=Theta))+geom_hline(yintercept=0)+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Wakeley's likelihood") + scale_alpha(guide = 'none') + scale_y_continuous(limits = c(-20, 20))+ scale_colour_manual(values=c("darkgoldenrod1", "dodgerblue","maroon4"))
+myplot1 <- ggplot(allwak1, aes(x=samplingSize.f, y=dif,color=Theta,alpha=0.2)) + theme_bw()+geom_point()+geom_point(position = "jitter",aes(colour=Theta))+geom_hline(yintercept=0)+xlab("Simulated sampling size")+ylab("Difference in simulated vs predicted sampling size") + ggtitle("Predictive method: Wakeley's likelihood") + scale_alpha(guide = 'none') + scale_y_continuous(limits = c(-60, 60))+ scale_colour_manual(values=c("darkgoldenrod1", "dodgerblue","maroon4"))
 
 myplot1 + geom_segment(x=0.5,y=2,xend=1.5,yend=2,colour="red")+
          geom_segment(x=0.5,y=-2,xend=1.5,yend=-2,colour="red")+
@@ -550,7 +577,27 @@ myplot2+ geom_segment(x=0.5,y=32,xend=1.5,yend=32,colour="red")+
          geom_segment(x=2.5,y=-128,xend=3.5,yend=-128,colour="red")
 ```
 
-**Figure 5.** Difference between the simulated sampling size and the sampling size for the sample predicted using Wakeley's segregating sites theory. (a) sampling sizes of 2,4,8 and 16; (b) sampling sizes of 32, 64 and 128. The zero abline shows the ideal situation in which the estimation equals the simulated sampling size. The red lines show the limit where the difference between simulated and predicted equals the sampling size, that is, beyond the red lines the error is too large to make a sensible prediction. Please note that the data are jittered to enhace visualization. 
+**Figure 5.** Difference between the simulated sampling size and the sampling size for the sample predicted using Wakeley's segregating sites theory. (a) sampling sizes of 2, 4, 8 and 16; (b) sampling sizes of 32, 64 and 128. The zero abline shows the ideal situation in which the estimation equals the simulated sampling size. The red lines show the limit where the difference between simulated and predicted equals the sampling size, that is, beyond the red lines the error is too large to make a sensible prediction. Please note that the data are jittered to enhace visualization, and that the y-axis differs between (a) and (b).
+
+## Comparing methods
+
+In Figure 7 we can see that the method of sampling theory is the one more efficient, with the mean difference between simulated and predicted close to zero, particularly for theta ten and twenty. The gamma method is only useful for small sampling sizes (2, 4 and 8), and the method of segregating sites works relatively fine for theta ten, but is biased for theta 2 or 20.
+
+```{r summary datasets,echo=FALSE,message=FALSE,warning=FALSE}
+summaryGamma$id <- "Gamma"
+summaryEwens$id <- "Sampling theory"
+summaryWak$id <- "Segregating sites"
+
+summary <- rbind(summaryGamma, summaryEwens, summaryWak)
+
+# to have the summary plot with free scales
+ggplot(summary, aes(x= samplingSize.f, y= mean)) + geom_point(alpha=0.9,size=3, aes(colour=Theta)) + theme_bw() + facet_grid(Theta ~ id,scales="free") + xlab("Sampling size") + ylab("Mean difference between simulated and predicted") +  scale_alpha(guide = 'none') + scale_colour_manual(values=c("darkgoldenrod1", "dodgerblue","maroon4")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + geom_hline(yintercept = 0, colour= "darkgreen")
+                                                                                                                                                                                                                                         
+                                                                                                                                                                                                                                                       
+```
+
+**Figure 6.** Mean difference between the simulated and the predicted sampling size for each combination of method (Ewens, Gamma, Wakeley) and Theta (two, ten, twenty). The zero abline (in green) shows the ideal situation in which the estimation equals the simulated sampling size. Please note that the y-axis differ between theta panels. 
+
 
 # Discussion
 
@@ -565,6 +612,8 @@ Additionally, our approach is predicated on the idea that prior analysis of a gi
 The statistics we evaluate are not independent from one another; they pertain to the same genealogical process assumed to underlie a sample of DNA sequence data and are different ways of summarizing this coalescent process. Although some methods, e.g. approximate Bayesian computation, have been used to infer the demographic history of a sample of sequences using the aggregate of summary statistics available (e.g. Ilves et al. 2010), the relationship shown here appears to be too tenuous to make an advance in our ability to estimate relative abundance of taxa from such metabarcode data. It does seem that among high-$\theta$ populations there may still be comparisons appropriate in a relative sense: greater haplotypic diversity from a metabarcode sample would suggest more individuals of that species were in the sample. In this way we can evaluate order-of-magnitude results, and have less need for prior information from a population. From the metabarcoding data themselves, each discrete population offers an estimate of $\theta$ and a number of observed, distinct haplotypes; this information is likely sufficient to bin abundances into more inclusive groupings of "common", "intermediate", and "rare" (e.g. a simplified Preston or Whittaker plot; [@Magurran2004]).
 
 This leaves metabarcode research with three options: (1) continue to individually sequence using Sanger methods; (2) only use metabarcode data for presence/absence of a taxon; (3) in cases where the amplification bias may be considered negligible, as with closely-related lineages, the frequency of reads may be useful for approximating the *relative* but not absolute abundance of lineages in a sample. Though there are concerns about how well read/sequence frequency reflects the relative abundance of populations in an environmental sample - driven largely by differential amplification success of target genomes [@Nguyen14; @Pinol14; @Bohmann14], it is worth noting that at least one recent study found a strong correlation between the proportion of metabarcoding reads from a taxon and the relative abundance of that taxon given point counts [@Leray15], as well as a strong correlation with taxon frequency from individual barcode data. If this relationship is supported in further studies, and if we can use information such as the number of haplotypes in a taxon as complementary information for minimum abundance, then we may start to improve on our ability to recover actual ecology from actual molecules.
+
+*maybe we can add somewhere that the hypothesis that theta=2 will not work well was confirmed by the three methods?*
 
 # Acknowledgments
 
